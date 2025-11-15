@@ -2723,7 +2723,12 @@ async function manualRefresh() {
 }
 
 
-
+ /***********************
+   * Load sale product select helper (if needed elsewhere)
+   ***********************/
+  function loadProductsForSaleFromCache(){
+    // not used directly now (we populate selects per-row), but keep for compatibility
+  }
 
 
 
@@ -14227,6 +14232,7 @@ console.log('✅ All functions made globally available');
   
 </body>
 </html>
+
 
 
 
