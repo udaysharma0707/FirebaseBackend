@@ -3161,10 +3161,11 @@ async function saveProductToSheet(product, isEdit = false) {
 }
 
 
-// ==========================================
-// SAVE SALE TO FIRESTORE
-// ==========================================
-
+/**
+ * ==========================================
+ * SAVE SALE TO FIRESTORE - UPDATED
+ * ==========================================
+ */
 async function saveSaleToSheet(item) {
   const user = window.auth.currentUser;
   
@@ -3186,6 +3187,14 @@ async function saveSaleToSheet(item) {
     });
     
     console.log('✅ Sale saved:', docRef.id);
+    
+    // ✅ AUTO-RELOAD SALES LIST AFTER SAVING
+    setTimeout(() => {
+      if (typeof loadRecentSales === 'function') {
+        loadRecentSales();
+      }
+    }, 500);
+    
     return { success: true, id: docRef.id };
     
   } catch (error) {
@@ -3193,7 +3202,6 @@ async function saveSaleToSheet(item) {
     return { success: false, error: error.message };
   }
 }
-
 
 
     
@@ -3352,10 +3360,11 @@ function toggleAdvancedOptions() {
   }
 }
 
-// ==========================================
-// BACKGROUND QUEUE PROCESSOR (FIREBASE)
-// ==========================================
-
+/**
+ * ==========================================
+ * BACKGROUND QUEUE PROCESSOR - FIXED
+ * ==========================================
+ */
 const backgroundSaveQueue = [];
 let isProcessingQueue = false;
 let backgroundSyncActive = false;
@@ -3440,13 +3449,21 @@ async function processBackgroundSaveQueue() {
   
   console.log('✅ Background queue processing complete!');
   
+  // ✅ ONLY SYNC IF WE'RE NOT IN THE MIDDLE OF SOMETHING
   setTimeout(() => {
     console.log('🔄 Starting background sync from Firestore...');
-    syncFromFirestore();
+    
+    // ✅ TRY/CATCH to prevent errors from breaking the app
+    try {
+      if (typeof syncFromFirestore === 'function') {
+        syncFromFirestore();
+      }
+    } catch (error) {
+      console.error('❌ Background save error:', error);
+      // ✅ DON'T let this error stop the app
+    }
   }, 2000);
 }
-
-
 
 
 
@@ -13936,6 +13953,7 @@ console.log('✅ Navigation functions made globally available');
  */
 window.loadRecentSales = loadRecentSales;
 window.displayRecentSales = displayRecentSales;
+window.saveSaleToSheet = saveSaleToSheet;
 window.viewSaleDetail = viewSaleDetail;
 window.confirmDeleteSale = confirmDeleteSale;
 
@@ -14741,6 +14759,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
