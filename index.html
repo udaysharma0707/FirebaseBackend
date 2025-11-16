@@ -13377,6 +13377,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+/**
+ * ==========================================
+ * AUTO-LOAD PURCHASES ON PAGE LOAD
+ * ==========================================
+ */
+
+// Add this to your DOMContentLoaded or authentication handler
+document.addEventListener('DOMContentLoaded', function() {
+  // Wait for authentication
+  onAuthStateChanged(window.auth, async (user) => {
+    if (user) {
+      console.log('✅ User authenticated, loading data...');
+      
+      // Load all data
+      if (typeof syncFromFirestore === 'function') {
+        await syncFromFirestore();
+      }
+      
+      // ✅ AUTO-LOAD PURCHASES
+      if (typeof loadRecentPurchases === 'function') {
+        await loadRecentPurchases();
+      }
+      
+      // ✅ AUTO-LOAD SALES
+      if (typeof loadRecentSales === 'function') {
+        await loadRecentSales();
+      }
+      
+      console.log('✅ All data loaded');
+    }
+  });
+});
 
 
 
@@ -13430,6 +13462,34 @@ window.deletePurchase = deletePurchase;
 window.deleteCustomer = deleteCustomer;
 
 console.log('✅ All functions made globally available');
+
+
+
+
+    /**
+ * ==========================================
+ * MAKE PURCHASE FUNCTIONS GLOBAL
+ * ==========================================
+ */
+window.submitPurchaseEntry = submitPurchaseEntry;
+window.loadRecentPurchases = loadRecentPurchases;
+window.openRecordPurchaseModal = openRecordPurchaseModal;
+window.closeRecordPurchaseModal = closeRecordPurchaseModal;
+window.addPurchaseProductRow = addPurchaseProductRow;
+window.removePurchaseProductRow = removePurchaseProductRow;
+window.calculatePurchaseRowAmount = calculatePurchaseRowAmount;
+window.viewPurchaseDetail = viewPurchaseDetail;
+window.confirmDeletePurchase = confirmDeletePurchase;
+window.handlePurchasePhotoUpload = handlePurchasePhotoUpload;
+window.clearPurchasePhoto = clearPurchasePhoto;
+window.openPurchaseCamera = openPurchaseCamera;
+window.togglePaymentSection = togglePaymentSection;
+window.triggerPhotoInput = triggerPhotoInput;
+window.viewPurchasePhotoPreview = viewPurchasePhotoPreview;
+window.openPurchasePhotoLightbox = openPurchasePhotoLightbox;
+window.togglePaymentModeCheckmark = togglePaymentModeCheckmark;
+
+console.log('✅ Purchase functions made globally available');
 
 
     
@@ -14232,6 +14292,7 @@ console.log('✅ All functions made globally available');
   
 </body>
 </html>
+
 
 
 
