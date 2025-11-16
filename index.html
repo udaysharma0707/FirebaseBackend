@@ -13507,28 +13507,29 @@ async function loadRecentSales() {
     return;
   }
   
-  const tbody = document.getElementById('salesList'); // ✅ CORRECT ID
+  const tbody = document.getElementById('salesList');
   
   if (!tbody) {
-    console.error('❌ Sales table body not found (id: salesList)');
+    console.error('❌ Sales table not found');
     return;
   }
   
-  // Show loading state
   tbody.innerHTML = `
     <tr>
-      <td colspan="5" style="text-align: center; padding: 20px; color: #999;">
+      <td colspan="5" style="text-align: center; padding: 20px;">
         <span class="spinner-border spinner-border-sm"></span> Loading sales...
       </td>
     </tr>
   `;
   
   try {
-    const { collection, getDocs, query, orderBy, limit } = window.firebaseImports;
+    const { collection, getDocs } = window.firebaseImports;
     
+    // ✅ REMOVE orderBy - just get all sales
     const salesRef = collection(window.db, 'tenants', user.uid, 'sales');
-    const q = query(salesRef, orderBy('date', 'desc'), limit(10));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(salesRef);
+    
+    console.log(`✅ Got ${snapshot.size} sales from Firestore`);
     
     const sales = [];
     snapshot.forEach((doc) => {
@@ -13538,21 +13539,25 @@ async function loadRecentSales() {
       });
     });
     
-    console.log(`✅ Loaded ${sales.length} sales from Firestore`);
+    // Sort by date in JavaScript (more flexible)
+    sales.sort((a, b) => {
+      const dateA = a.date ? new Date(a.date).getTime() : 0;
+      const dateB = b.date ? new Date(b.date).getTime() : 0;
+      return dateB - dateA; // Newest first
+    });
     
-    // Display sales
+    console.log('✅ Sales loaded and sorted:', sales.length);
+    
     displayRecentSales(sales);
-    
-    // Cache sales
     window.cachedSales = sales;
     
   } catch (error) {
-    console.error('❌ Error loading sales:', error.message);
+    console.error('❌ Error loading sales:', error);
     tbody.innerHTML = `
       <tr>
         <td colspan="5" style="text-align: center; padding: 20px; color: #dc3545;">
           <i class="bi bi-exclamation-triangle"></i> Failed to load sales<br>
-          <small style="color: #666;">${error.message}</small>
+          <small>${error.message}</small>
         </td>
       </tr>
     `;
@@ -14689,6 +14694,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
