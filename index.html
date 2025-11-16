@@ -2626,10 +2626,11 @@ async function handleSignUp(event) {
 
 
 
-// ==========================================
-// SYNC FROM FIRESTORE
-// ==========================================
-
+/**
+ * ==========================================
+ * SYNC FROM FIRESTORE - SAFE VERSION
+ * ==========================================
+ */
 async function syncFromFirestore() {
   const user = window.auth.currentUser;
   
@@ -2647,7 +2648,7 @@ async function syncFromFirestore() {
     
     console.log('🔄 Syncing data for user:', userId);
     
-    // Fetch products from Firestore
+    // ✅ Fetch products from Firestore
     const productsRef = collection(window.db, 'tenants', userId, 'products');
     const productsSnap = await getDocs(productsRef);
     
@@ -2664,34 +2665,92 @@ async function syncFromFirestore() {
     
     console.log(`✅ Loaded ${cachedProducts.length} products`);
     
-    // Fetch sales from Firestore
-    const salesRef = collection(window.db, 'tenants', userId, 'sales');
-    const salesQuery = query(salesRef, orderBy('date', 'desc'));
-    const salesSnap = await getDocs(salesQuery);
-    
-    let allSales = [];
-    salesSnap.forEach((doc) => {
-      allSales.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-    
-    // Filter out deleted sales
-    let deletedSaleIds = JSON.parse(localStorage.getItem('deletedSaleIds') || '[]');
-    cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
-    
-    console.log(`📊 Loaded ${allSales.length} sales from Firestore, showing ${cachedSales.length} (${allSales.length - cachedSales.length} deleted)`);
+    // ✅ Fetch sales from Firestore - SAFE VERSION
+    try {
+      const salesRef = collection(window.db, 'tenants', userId, 'sales');
+      
+      // ✅ TRY with orderBy first
+      try {
+        const salesQuery = query(salesRef, orderBy('date', 'desc'));
+        const salesSnap = await getDocs(salesQuery);
+        
+        let allSales = [];
+        salesSnap.forEach((doc) => {
+          allSales.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        // Filter out deleted sales
+        let deletedSaleIds = JSON.parse(localStorage.getItem('deletedSaleIds') || '[]');
+        cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
+        
+        console.log(`📊 Loaded ${allSales.length} sales, showing ${cachedSales.length}`);
+        
+      } catch (orderError) {
+        // ✅ If orderBy fails (invalid dates), get all sales and sort in JS
+        console.warn('⚠️ OrderBy failed, fetching all sales:', orderError.message);
+        
+        const salesSnap = await getDocs(salesRef);
+        
+        let allSales = [];
+        salesSnap.forEach((doc) => {
+          allSales.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        // Sort by date in JavaScript
+        allSales.sort((a, b) => {
+          const dateA = a.date ? new Date(a.date).getTime() : 0;
+          const dateB = b.date ? new Date(b.date).getTime() : 0;
+          return dateB - dateA; // Newest first
+        });
+        
+        let deletedSaleIds = JSON.parse(localStorage.getItem('deletedSaleIds') || '[]');
+        cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
+        
+        console.log(`📊 Loaded ${allSales.length} sales (sorted in JS), showing ${cachedSales.length}`);
+      }
+      
+    } catch (salesError) {
+      console.error('❌ Failed to load sales:', salesError.message);
+      cachedSales = [];
+    }
     
     // Mark initial load complete
     hasInitialLoaded = true;
     
-    // Render both products and sales
-    renderProducts();
-    renderSales();
+    // ✅ Render both products and sales
+    try {
+      renderProducts();
+    } catch (e) {
+      console.error('❌ Failed to render products:', e.message);
+    }
     
-    // Update dashboard metrics
-    updateSummaryFromCache();
+    try {
+      renderSales();
+    } catch (e) {
+      console.error('❌ Failed to render sales:', e.message);
+    }
+    
+    // ✅ Update dashboard metrics
+    try {
+      updateSummaryFromCache();
+    } catch (e) {
+      console.error('❌ Failed to update summary:', e.message);
+    }
+    
+    // ✅ Also call loadRecentSales for homepage
+    try {
+      if (typeof loadRecentSales === 'function') {
+        loadRecentSales();
+      }
+    } catch (e) {
+      console.error('❌ Failed to load recent sales:', e.message);
+    }
     
     showSyncIndicator('Synced!', 900);
     
@@ -2699,7 +2758,7 @@ async function syncFromFirestore() {
     console.error('❌ Sync error:', err.message);
     showSyncIndicator('Sync failed', 1500);
     
-    // Try to load from cache
+    // ✅ Try to load from cache
     try {
       cachedProducts = JSON.parse(localStorage.getItem('inventory_products_cache') || '[]');
       cachedSales = JSON.parse(localStorage.getItem('inventory_sales_cache') || '[]');
@@ -3161,6 +3220,11 @@ async function saveProductToSheet(product, isEdit = false) {
 }
 
 
+/**
+ * ==========================================
+ * SAVE SALE TO FIRESTORE - FINAL VERSION
+ * ==========================================
+ */
 async function saveSaleToSheet(item) {
   const user = window.auth.currentUser;
   
@@ -3173,10 +3237,11 @@ async function saveSaleToSheet(item) {
     const { collection, addDoc, doc, updateDoc, getDoc } = window.firebaseImports;
     const userId = user.uid;
     
-    // Save sale
+    // ✅ Save sale
     const salesRef = collection(window.db, 'tenants', userId, 'sales');
     const docRef = await addDoc(salesRef, {
       ...item,
+      date: item.date || new Date().toISOString(), // Ensure date exists
       createdAt: new Date().toISOString(),
       userId: userId
     });
@@ -3197,22 +3262,29 @@ async function saveSaleToSheet(item) {
             stock: Math.max(0, newStock) // Don't go negative
           });
           
-          console.log(`✅ Stock updated: ${currentStock} → ${newStock}`);
+          console.log(`✅ Stock updated: ${item.productId} (${currentStock} → ${newStock})`);
         } else {
           console.warn(`⚠️ Product ${item.productId} not found, skipping stock update`);
         }
       } catch (stockError) {
         console.warn('⚠️ Could not update stock:', stockError.message);
-        // Don't fail the sale if stock update fails
+        // ✅ Don't fail the sale if stock update fails
       }
     }
     
-    // ✅ AUTO-RELOAD SALES LIST
+    // ✅ AUTO-RELOAD SALES LIST (for homepage Recent Sales)
     setTimeout(() => {
       if (typeof loadRecentSales === 'function') {
         loadRecentSales();
       }
     }, 500);
+    
+    // ✅ ALSO UPDATE CACHED SALES (for main sales page)
+    setTimeout(() => {
+      if (typeof syncFromFirestore === 'function') {
+        syncFromFirestore();
+      }
+    }, 1000);
     
     return { success: true, id: docRef.id };
     
@@ -3377,7 +3449,6 @@ function toggleAdvancedOptions() {
     console.log('📂 Advanced options closed');
   }
 }
-
 /**
  * ==========================================
  * BACKGROUND QUEUE PROCESSOR - FIXED
@@ -3482,8 +3553,6 @@ async function processBackgroundSaveQueue() {
     }
   }, 2000);
 }
-
-
 
 
 
@@ -13884,7 +13953,7 @@ window.showAllProducts = showAllProducts;
 window.showPhotoProducts = showPhotoProducts;
 window.toggleSidebar = toggleSidebar;
 window.openSalesModal = openSalesModal;
-window.openAddProductModal = openAddProductModal;
+window.openAddProduct = openAddProduct;
 window.openProductByPhotoModal = openProductByPhotoModal;
 
 // Navigation functions
@@ -14777,6 +14846,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
