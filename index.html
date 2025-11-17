@@ -5003,10 +5003,9 @@ function calculatePurchaseRowAmount(rowId) {
   amountInput.value = amount.toFixed(2);
 }
 /**
- * Handle photo upload with PREVIEW
- */
-/**
- * Handle photo upload with mobile-optimized preview
+ * ==========================================
+ * HANDLE PHOTO UPLOAD WITH COMPRESSION
+ * ==========================================
  */
 function handlePurchasePhotoUpload(input) {
   const file = input.files[0];
@@ -5018,13 +5017,6 @@ function handlePurchasePhotoUpload(input) {
   
   console.log('📷 Photo selected:', file.name, file.size, 'bytes');
   
-  // Check file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    alert('❌ Photo is too large! Please select a photo under 5MB.');
-    input.value = '';
-    return;
-  }
-  
   // Check file type
   if (!file.type.startsWith('image/')) {
     alert('❌ Please select an image file.');
@@ -5032,87 +5024,137 @@ function handlePurchasePhotoUpload(input) {
     return;
   }
   
+  // ✅ COMPRESS IMAGE IF TOO LARGE
   const reader = new FileReader();
   
   reader.onload = function(e) {
-    const base64 = e.target.result;
-    window.purchasePhotoBase64 = base64;
+    const img = new Image();
     
-    console.log('✅ Photo loaded as base64');
-    console.log('   Length:', base64.length);
-    
-    // ✅ SHOW MOBILE-OPTIMIZED PHOTO PREVIEW
-    const previewContainer = document.getElementById('purchasePhotoPreview');
-    if (previewContainer) {
-      previewContainer.innerHTML = `
-        <div style="position: relative; width: 100%; max-width: 300px;">
-          <img 
-            src="${base64}" 
-            onclick="viewPurchasePhotoPreview(); event.stopPropagation();"
-            style="
-              width: 100%; 
-              height: auto;
-              max-height: 200px; 
-              object-fit: cover; 
-              border-radius: 8px; 
-              box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    img.onload = function() {
+      // ✅ COMPRESS TO MAX 800px WIDTH
+      const MAX_WIDTH = 800;
+      const MAX_HEIGHT = 800;
+      let width = img.width;
+      let height = img.height;
+      
+      // Calculate new dimensions
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height = height * (MAX_WIDTH / width);
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width = width * (MAX_HEIGHT / height);
+          height = MAX_HEIGHT;
+        }
+      }
+      
+      // Create canvas and compress
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Convert to base64 with compression (0.7 quality = 70%)
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      
+      // Check if still too large
+      const sizeInBytes = (compressedBase64.length * 3) / 4;
+      const sizeInKB = (sizeInBytes / 1024).toFixed(0);
+      const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
+      
+      console.log(`✅ Photo compressed: ${file.size} → ${sizeInBytes} bytes (${sizeInKB} KB)`);
+      
+      // If still > 1MB, compress more
+      if (sizeInBytes > 1000000) {
+        console.warn('⚠️ Photo still too large, compressing further...');
+        const extraCompressed = canvas.toDataURL('image/jpeg', 0.5);
+        const newSize = (extraCompressed.length * 3) / 4;
+        
+        if (newSize > 1000000) {
+          alert('❌ Photo is too large even after compression!\n\nPlease use a smaller photo (< 2MB original size).');
+          input.value = '';
+          return;
+        }
+        
+        window.purchasePhotoBase64 = extraCompressed;
+        console.log(`✅ Extra compression applied: ${newSize} bytes`);
+      } else {
+        window.purchasePhotoBase64 = compressedBase64;
+      }
+      
+      // ✅ SHOW MOBILE-OPTIMIZED PHOTO PREVIEW
+      const previewContainer = document.getElementById('purchasePhotoPreview');
+      if (previewContainer) {
+        previewContainer.innerHTML = `
+          <div style="position: relative; width: 100%; max-width: 300px;">
+            <img 
+              src="${window.purchasePhotoBase64}" 
+              onclick="viewPurchasePhotoPreview(); event.stopPropagation();"
+              style="
+                width: 100%; 
+                height: auto;
+                max-height: 200px; 
+                object-fit: cover; 
+                border-radius: 8px; 
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                cursor: pointer;
+                transition: transform 0.2s;
+              "
+              onmouseover="this.style.transform='scale(1.02)'"
+              onmouseout="this.style.transform='scale(1)'"
+              title="Click to view full size"
+              alt="Purchase Photo Preview">
+            <div style="
+              position: absolute;
+              top: 8px;
+              right: 8px;
+              background: rgba(220, 53, 69, 0.9);
+              color: white;
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
               cursor: pointer;
-              transition: transform 0.2s;
+              font-size: 1.2rem;
+              font-weight: bold;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+              transition: all 0.2s;
             "
-            onmouseover="this.style.transform='scale(1.02)'"
-            onmouseout="this.style.transform='scale(1)'"
-            title="Click to view full size"
-            alt="Purchase Photo Preview">
+            onclick="clearPurchasePhoto(); event.stopPropagation();"
+            onmouseover="this.style.background='rgba(220, 53, 69, 1)'; this.style.transform='scale(1.1)'"
+            onmouseout="this.style.background='rgba(220, 53, 69, 0.9)'; this.style.transform='scale(1)'"
+            title="Remove photo">
+              ✕
+            </div>
+          </div>
           <div style="
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(220, 53, 69, 0.9);
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            margin-top: 10px; 
+            color: #28a745; 
+            font-size: 0.85rem; 
+            font-weight: 500;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            font-weight: bold;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            transition: all 0.2s;
-          "
-          onclick="clearPurchasePhoto(); event.stopPropagation();"
-          onmouseover="this.style.background='rgba(220, 53, 69, 1)'; this.style.transform='scale(1.1)'"
-          onmouseout="this.style.background='rgba(220, 53, 69, 0.9)'; this.style.transform='scale(1)'"
-          title="Remove photo">
-            ✕
+            gap: 6px;
+          ">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>${file.name} (${sizeInKB} KB)</span>
           </div>
-        </div>
-        <div style="
-          margin-top: 10px; 
-          color: #28a745; 
-          font-size: 0.85rem; 
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-        ">
-          <i class="bi bi-check-circle-fill"></i>
-          <span>${file.name}</span>
-        </div>
-      `;
-      
-      previewContainer.style.border = '2px solid #28a745';
-      previewContainer.style.background = '#f0f9f4';
-      previewContainer.style.padding = '15px';
-      
-      // Show remove button (optional, since we have X button)
-      const removeBtn = document.getElementById('clearPurchasePhotoBtn');
-      if (removeBtn) {
-        removeBtn.style.display = 'inline-block';
+        `;
+        
+        previewContainer.style.border = '2px solid #28a745';
+        previewContainer.style.background = '#f0f9f4';
+        previewContainer.style.padding = '15px';
       }
-    }
+    };
+    
+    img.src = e.target.result;
   };
   
   reader.onerror = function(error) {
@@ -14932,6 +14974,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
