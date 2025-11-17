@@ -537,6 +537,87 @@
 
   <!-- YOUR EXISTING NAVBAR, DASHBOARD, ETC. GOES HERE -->
 
+<!-- ==========================================
+     HOMEPAGE WITH USER MENU
+     ========================================== -->
+<div id="homePage" style="display: none;">
+  
+  <!-- ✅ USER MENU - FIXED POSITION TOP-RIGHT -->
+  <div style="position: fixed; top: 15px; right: 15px; z-index: 1050;">
+    <div class="dropdown">
+      <button 
+        class="btn btn-light dropdown-toggle" 
+        type="button" 
+        id="userMenuDropdown" 
+        data-bs-toggle="dropdown" 
+        aria-expanded="false"
+        style="
+          padding: 8px 15px;
+          border-radius: 25px;
+          font-weight: 600;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.9rem;
+          background: white;
+          border: 1px solid #dee2e6;
+        ">
+        <i class="bi bi-person-circle" style="font-size: 1.2rem; color: #667eea;"></i>
+        <span id="userEmailDisplay" style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          Loading...
+        </span>
+        <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
+      </button>
+      
+      <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 240px; padding: 8px; margin-top: 5px;">
+        <!-- User Info Header -->
+        <li style="padding: 12px 15px; border-bottom: 2px solid #e9ecef; margin-bottom: 5px;">
+          <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+            Signed in as
+          </div>
+          <div id="userEmailDropdown" style="font-weight: 600; color: #333; word-break: break-all; font-size: 0.9rem;"></div>
+        </li>
+        
+        <!-- Change Password -->
+        <li>
+          <a class="dropdown-item" href="#" onclick="openChangePasswordModal(); return false;" 
+             style="padding: 10px 15px; border-radius: 6px; transition: background 0.2s;">
+            <i class="bi bi-key" style="margin-right: 10px; color: #17a2b8;"></i>
+            Change Password
+          </a>
+        </li>
+        
+        <!-- Change Email -->
+        <li>
+          <a class="dropdown-item" href="#" onclick="openChangeEmailModal(); return false;" 
+             style="padding: 10px 15px; border-radius: 6px; transition: background 0.2s;">
+            <i class="bi bi-envelope" style="margin-right: 10px; color: #28a745;"></i>
+            Change Email
+          </a>
+        </li>
+        
+        <li><hr class="dropdown-divider" style="margin: 8px 0;"></li>
+        
+        <!-- Sign Out -->
+        <li>
+          <a class="dropdown-item" href="#" onclick="handleSignOut(); return false;" 
+             style="padding: 10px 15px; border-radius: 6px; color: #dc3545; transition: background 0.2s;">
+            <i class="bi bi-box-arrow-right" style="margin-right: 10px;"></i>
+            Sign Out
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
   
   <!-- Sync indicator -->
   <div id="syncIndicator" class="sync-indicator"><i class="bi bi-arrow-repeat"></i> <span id="syncText">Syncing...</span></div>
@@ -15353,6 +15434,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
