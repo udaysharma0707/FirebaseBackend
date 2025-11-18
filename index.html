@@ -2627,7 +2627,7 @@ async function handleSignUp(event) {
 
 /**
  * ==========================================
- * SYNC FROM FIRESTORE - SAFE VERSION
+ * SYNC FROM FIRESTORE - WITH DUPLICATE PREVENTION
  * ==========================================
  */
 async function syncFromFirestore() {
@@ -2651,18 +2651,72 @@ async function syncFromFirestore() {
     const productsRef = collection(window.db, 'tenants', userId, 'products');
     const productsSnap = await getDocs(productsRef);
     
-    cachedProducts = [];
+    // ✅ STEP 1: Collect all products
+    const allProducts = [];
     productsSnap.forEach((doc) => {
-      cachedProducts.push({
+      allProducts.push({
         id: doc.id,
         ...doc.data()
       });
     });
     
+    console.log(`📦 Fetched ${allProducts.length} products from Firestore`);
+    
+    // ✅ STEP 2: Remove duplicates by ID (keep first occurrence)
+    const uniqueProductsMap = new Map();
+    const duplicates = [];
+    
+    allProducts.forEach(product => {
+      if (!uniqueProductsMap.has(product.id)) {
+        uniqueProductsMap.set(product.id, product);
+      } else {
+        duplicates.push(product);
+        console.warn('⚠️ Duplicate product found:', product.id, product.name);
+      }
+    });
+    
+    // ✅ STEP 3: Convert map back to array
+    cachedProducts = Array.from(uniqueProductsMap.values());
+    
+    if (duplicates.length > 0) {
+      console.warn(`⚠️ Found ${duplicates.length} duplicate products (removed)`);
+    }
+    
+    // ✅ STEP 4: Also check for duplicate names with different IDs
+    const nameMap = {};
+    cachedProducts.forEach(product => {
+      const name = product.name?.toLowerCase().trim();
+      if (name) {
+        if (!nameMap[name]) {
+          nameMap[name] = [];
+        }
+        nameMap[name].push({
+          id: product.id,
+          name: product.name,
+          stock: product.stock
+        });
+      }
+    });
+    
+    // Log products with same name but different IDs
+    Object.keys(nameMap).forEach(name => {
+      if (nameMap[name].length > 1) {
+        console.warn(`⚠️ Multiple products with name "${name}":`, nameMap[name]);
+      }
+    });
+    
     // Sort products by name
     cachedProducts.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     
-    console.log(`✅ Loaded ${cachedProducts.length} products`);
+    console.log(`✅ Loaded ${cachedProducts.length} unique products`);
+    
+    // ✅ Save to cache
+    try {
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+      console.log('💾 Products saved to cache');
+    } catch (cacheError) {
+      console.warn('⚠️ Failed to save products cache:', cacheError);
+    }
     
     // ✅ Fetch sales from Firestore - SAFE VERSION
     try {
@@ -2714,6 +2768,13 @@ async function syncFromFirestore() {
         console.log(`📊 Loaded ${allSales.length} sales (sorted in JS), showing ${cachedSales.length}`);
       }
       
+      // ✅ Save sales to cache
+      try {
+        localStorage.setItem('inventory_sales_cache', JSON.stringify(cachedSales));
+      } catch (e) {
+        console.warn('⚠️ Failed to save sales cache:', e);
+      }
+      
     } catch (salesError) {
       console.error('❌ Failed to load sales:', salesError.message);
       cachedSales = [];
@@ -2761,6 +2822,16 @@ async function syncFromFirestore() {
     try {
       cachedProducts = JSON.parse(localStorage.getItem('inventory_products_cache') || '[]');
       cachedSales = JSON.parse(localStorage.getItem('inventory_sales_cache') || '[]');
+      
+      // ✅ Remove duplicates from cache too
+      const uniqueMap = new Map();
+      cachedProducts.forEach(p => {
+        if (!uniqueMap.has(p.id)) {
+          uniqueMap.set(p.id, p);
+        }
+      });
+      cachedProducts = Array.from(uniqueMap.values());
+      
       renderProducts();
       renderSales();
     } catch (e) {
@@ -15081,6 +15152,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
