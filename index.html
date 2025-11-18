@@ -3754,7 +3754,7 @@ function openEditVariantModalFromProduct(variant) {
 
 
 async function saveProduct() {
-  console.log('💾 saveProduct called');
+  console.log('💾 saveProduct called. Editing ID:', editingProductId);
   
   // ✅ CHECK IF THIS IS A VARIANT EDIT
   const form = document.getElementById('productForm');
@@ -3784,7 +3784,7 @@ async function saveProduct() {
   
   const minStock = parseInt(document.getElementById('minStock').value) || 5;
   
-  console.log('🔍 Form data:', { name, category, brand, price, stockData });
+  console.log('🔍 Form data:', { name, category, brand, price, stockData, editingProductId });
   
   // ✅ VALIDATION
   if (!name || !category || isNaN(price)) {
@@ -3793,9 +3793,23 @@ async function saveProduct() {
     return;
   }
   
+  // ✅ DETERMINE IF EDITING OR CREATING NEW
+  const isEditing = !!editingProductId;
+  let productId;
+  
+  if (isEditing) {
+    // ✅ EDITING: Use existing ID
+    productId = editingProductId;
+    console.log('✏️ Editing existing product:', productId);
+  } else {
+    // ✅ NEW: Generate new ID
+    productId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    console.log('➕ Creating new product:', productId);
+  }
+  
   // ✅ CREATE PRODUCT OBJECT
   const product = {
-    id: editingProductId || (Date.now().toString(36) + Math.random().toString(36).substr(2)),
+    id: productId,
     name: name,
     category: category,
     brand: brand,
@@ -3817,21 +3831,25 @@ async function saveProduct() {
   console.log('📦 Product object:', product);
   
   // ✅ UPDATE LOCAL CACHE
-  const idx = cachedProducts.findIndex(p => p.id === product.id);
+  const idx = cachedProducts.findIndex(p => p.id === productId);
   const previous = idx !== -1 ? Object.assign({}, cachedProducts[idx]) : null;
   
   if (idx !== -1) {
+    // ✅ EDITING: Update existing product
+    console.log('🔄 Updating existing product in cache at index:', idx);
     cachedProducts[idx] = product;
   } else {
+    // ✅ NEW: Add new product
+    console.log('➕ Adding new product to cache');
     cachedProducts.push(product);
   }
   
   renderProducts();
   
-  // ✅ SAVE TO CACHE IMMEDIATELY
+  // ✅ SAVE TO LOCAL STORAGE IMMEDIATELY
   try {
     localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-    console.log('✅ Product cached immediately with stock:', product.stock);
+    console.log('✅ Product cached immediately. Stock:', product.stock);
   } catch (error) {
     console.warn('⚠️ Cache save failed:', error);
   }
@@ -3851,14 +3869,12 @@ async function saveProduct() {
   if (productPhotoBase64) {
     console.log('📷 Uploading product photo...');
     
-    // Note: You'll need to implement Firebase Storage upload
-    // For now, we'll skip photo upload - add this later
     if (typeof uploadProductPhotoToFirebase === 'function') {
-      const photoUrl = await uploadProductPhotoToFirebase(product.id, productPhotoBase64);
+      const photoUrl = await uploadProductPhotoToFirebase(productId, productPhotoBase64);
       
       if (photoUrl) {
         product.imageUrl = photoUrl;
-        const localIdx = cachedProducts.findIndex(p => p.id === product.id);
+        const localIdx = cachedProducts.findIndex(p => p.id === productId);
         if (localIdx !== -1) cachedProducts[localIdx].imageUrl = photoUrl;
         renderProducts();
         
@@ -3873,14 +3889,17 @@ async function saveProduct() {
   
   // ✅ SAVE PRODUCT TO FIRESTORE
   try {
-    const resp = await saveProductToSheet(product, !!editingProductId);
+    console.log('💾 Saving to Firestore. Is editing:', isEditing, 'ID:', productId);
+    const resp = await saveProductToSheet(product, isEditing);
     console.log('📥 saveProductToSheet response:', resp);
     
     if (resp && resp.success) {
       console.log('✅ Product saved successfully. Stock:', product.stock);
       
-      if (resp.id && resp.id !== product.id) {
-        const localIdx = cachedProducts.findIndex(p => p.id === product.id);
+      // ✅ IMPORTANT: Don't change ID if editing
+      if (!isEditing && resp.id && resp.id !== productId) {
+        console.log('🆔 Updating product ID from', productId, 'to', resp.id);
+        const localIdx = cachedProducts.findIndex(p => p.id === productId);
         if (localIdx !== -1) {
           cachedProducts[localIdx].id = resp.id;
           product.id = resp.id;
@@ -3921,9 +3940,13 @@ async function saveProduct() {
     if (previous && idx !== -1) {
       cachedProducts[idx] = previous;
       renderProducts();
-    } else if (idx !== -1) {
-      cachedProducts.splice(idx, 1);
-      renderProducts();
+    } else if (!isEditing) {
+      // Only remove if it was a new product
+      const removeIdx = cachedProducts.findIndex(p => p.id === productId);
+      if (removeIdx !== -1) {
+        cachedProducts.splice(removeIdx, 1);
+        renderProducts();
+      }
     }
     
     try {
@@ -3937,10 +3960,14 @@ async function saveProduct() {
   }
   
   // ✅ CLEAR TEMPORARY VARIABLES
+  editingProductId = null;
   window.editingProductImageUrl = '';
   productPhotoBase64 = null;
   productPhotoFileName = null;
+  
+  console.log('✅ saveProduct completed');
 }
+
 
 
 
@@ -15054,6 +15081,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
