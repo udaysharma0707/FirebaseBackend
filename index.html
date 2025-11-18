@@ -3715,7 +3715,7 @@ function showAddProduct() {
 }
 
 function editProduct(id, isVariant = false) {
-  console.log('✏️ Editing product:', id, 'Is variant:', isVariant);
+  console.log('✏️ Editing product ID:', id, 'Is variant:', isVariant);
   
   const p = (cachedProducts||[]).find(x => x.id === id);
   if (!p) { 
@@ -3723,7 +3723,7 @@ function editProduct(id, isVariant = false) {
     return; 
   }
   
-  console.log('📦 Product data:', p);
+  console.log('📦 Found product:', p);
   
   // ✅ CHECK IF THIS IS A VARIANT
   if (isVariant || p.isGroupVariant) {
@@ -3731,11 +3731,12 @@ function editProduct(id, isVariant = false) {
     return;
   }
   
-  // ✅ REGULAR PRODUCT EDIT
+  // ✅ CRITICAL: Set editingProductId BEFORE opening modal
   editingProductId = id;
+  console.log('✅ Set editingProductId to:', editingProductId);
   
   document.getElementById('modalTitle').textContent = 'Edit Product';
-  document.getElementById('productId').value = p.id;
+  document.getElementById('productId').value = id; // Use actual ID
   document.getElementById('productName').value = p.name;
   document.getElementById('category').value = p.category;
   document.getElementById('brand').value = p.brand || '';
@@ -3748,6 +3749,7 @@ function editProduct(id, isVariant = false) {
   
   window.editingProductImageUrl = p.imageUrl || '';
   
+  // Stock handling (keep your existing code)
   resetStockSelection();
   document.getElementById('productCurrentStock').value = '';
   
@@ -3771,6 +3773,7 @@ function editProduct(id, isVariant = false) {
     }
   }
   
+  // Photo handling (keep your existing code)
   if (p.imageUrl) {
     document.getElementById('productPhotoPreviewImage').src = p.imageUrl;
     document.getElementById('productPhotoPreviewContainer').style.display = 'block';
@@ -3784,8 +3787,9 @@ function editProduct(id, isVariant = false) {
   productPhotoFileName = null;
   
   new bootstrap.Modal(document.getElementById('productModal')).show();
-  console.log('✅ Edit modal opened');
+  console.log('✅ Edit modal opened for product:', editingProductId);
 }
+
 
 // ✅ Open edit modal for variant (KEEP SAME)
 function openEditVariantModalFromProduct(variant) {
@@ -15152,6 +15156,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
