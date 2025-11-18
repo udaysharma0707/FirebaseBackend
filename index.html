@@ -3247,48 +3247,77 @@ function updateSummaryFromCache() {
     });
     if(current) sel.value = current;
   }
-
-// ==========================================
-// SAVE PRODUCT TO FIRESTORE
-// ==========================================
-
-async function saveProductToSheet(product, isEdit = false) {
-  const user = window.auth.currentUser;
-  
-  if (!user) {
-    showAuthError('Please sign in to save product');
-    return null;
-  }
+/**
+ * ==========================================
+ * SAVE PRODUCT TO FIRESTORE - FIXED
+ * ==========================================
+ */
+async function saveProductToSheet(product, isUpdate = false) {
+  console.log('💾 saveProductToSheet called');
+  console.log('   - Is update:', isUpdate);
+  console.log('   - Product ID:', product.id);
+  console.log('   - Product data:', product);
   
   try {
-    const { collection, doc, setDoc, addDoc } = window.firebaseImports;
-    const userId = user.uid;
-    
-    const productsRef = collection(window.db, 'tenants', userId, 'products');
-    
-    if (isEdit && product.id) {
-      // Update existing product
-      const productDoc = doc(productsRef, product.id);
-      await setDoc(productDoc, product, { merge: true });
-      console.log('✅ Product updated:', product.id);
-      return { success: true, id: product.id };
-    } else {
-      // Add new product
-      const docRef = await addDoc(productsRef, {
-        ...product,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      console.log('✅ Product added:', docRef.id);
-      return { success: true, id: docRef.id };
+    const user = window.auth?.currentUser;
+    if (!user) {
+      console.error('❌ No user signed in');
+      return { success: false, error: 'Not authenticated' };
     }
     
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    // ✅ Create product reference with the product ID
+    const productRef = doc(window.db, 'tenants', userId, 'products', product.id);
+    
+    // ✅ Prepare clean product data
+    const productData = {
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      brand: product.brand || '',
+      size: product.size || '',
+      unitType: product.unitType || 'Box',
+      piecesPerBox: product.piecesPerBox || 1,
+      sftPerBox: product.sftPerBox || 0,
+      price: product.price || 0,
+      stock: product.stock,
+      minStock: product.minStock || 5,
+      imageUrl: product.imageUrl || '',
+      stockStatus: product.stockStatus || 'exact',
+      stockValue: product.stockValue || null,
+      updatedAt: new Date().toISOString(),
+      // Add any other fields you need
+      isGroupVariant: product.isGroupVariant || false,
+      groupId: product.groupId || '',
+      variantId: product.variantId || ''
+    };
+    
+    console.log('📤 Saving to Firestore:', productData);
+    
+    // ✅ Use setDoc to create or update (no merge needed)
+    await setDoc(productRef, productData);
+    
+    console.log('✅ Product saved to Firestore successfully');
+    console.log('   - Document ID:', product.id);
+    console.log('   - Updated stock:', productData.stock);
+    
+    return { 
+      success: true, 
+      id: product.id 
+    };
+    
   } catch (error) {
-    console.error('❌ Error saving product:', error);
-    return { success: false, error: error.message };
+    console.error('❌ Error saving product to Firestore:', error);
+    console.error('   - Error code:', error.code);
+    console.error('   - Error message:', error.message);
+    return { 
+      success: false, 
+      error: error.message 
+    };
   }
 }
-
 
 /**
  * ==========================================
@@ -3827,7 +3856,6 @@ function openEditVariantModalFromProduct(variant) {
 }
 
 
-
 async function saveProduct() {
   console.log('💾 saveProduct called. Editing ID:', editingProductId);
   
@@ -3905,7 +3933,7 @@ async function saveProduct() {
   
   console.log('📦 Product object:', product);
   
-  // ✅ UPDATE LOCAL CACHE
+  // ✅ UPDATE LOCAL CACHE FIRST
   const idx = cachedProducts.findIndex(p => p.id === productId);
   const previous = idx !== -1 ? Object.assign({}, cachedProducts[idx]) : null;
   
@@ -3919,19 +3947,12 @@ async function saveProduct() {
     cachedProducts.push(product);
   }
   
-  renderProducts();
-  
-  // ✅ SAVE TO LOCAL STORAGE IMMEDIATELY
-  try {
-    localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-    console.log('✅ Product cached immediately. Stock:', product.stock);
-  } catch (error) {
-    console.warn('⚠️ Cache save failed:', error);
-  }
-  
-  // ✅ CLOSE MODAL
+  // ✅ CLOSE MODAL EARLY
   const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
   if (modal) modal.hide();
+  
+  // ✅ RENDER IMMEDIATELY WITH LOCAL DATA
+  renderProducts();
   
   // ✅ Refresh brand cache (if function exists)
   if (typeof refreshBrandAutocompleteCache === 'function') {
@@ -3950,13 +3971,9 @@ async function saveProduct() {
       if (photoUrl) {
         product.imageUrl = photoUrl;
         const localIdx = cachedProducts.findIndex(p => p.id === productId);
-        if (localIdx !== -1) cachedProducts[localIdx].imageUrl = photoUrl;
-        renderProducts();
-        
-        try {
-          localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-        } catch (error) {
-          console.warn('⚠️ Cache update failed:', error);
+        if (localIdx !== -1) {
+          cachedProducts[localIdx].imageUrl = photoUrl;
+          renderProducts();
         }
       }
     }
@@ -3969,24 +3986,32 @@ async function saveProduct() {
     console.log('📥 saveProductToSheet response:', resp);
     
     if (resp && resp.success) {
-      console.log('✅ Product saved successfully. Stock:', product.stock);
+      console.log('✅ Product saved successfully to Firestore');
+      console.log('   - Product ID:', productId);
+      console.log('   - Stock value:', product.stock);
       
-      // ✅ IMPORTANT: Don't change ID if editing
-      if (!isEditing && resp.id && resp.id !== productId) {
-        console.log('🆔 Updating product ID from', productId, 'to', resp.id);
-        const localIdx = cachedProducts.findIndex(p => p.id === productId);
-        if (localIdx !== -1) {
-          cachedProducts[localIdx].id = resp.id;
-          product.id = resp.id;
-        }
-        renderProducts();
-        
-        try {
-          localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-        } catch (error) {
-          console.warn('⚠️ Cache update failed:', error);
-        }
+      // ✅ CRITICAL: Force update cache with final saved data
+      const cacheIdx = cachedProducts.findIndex(p => p.id === productId);
+      if (cacheIdx !== -1) {
+        // Create a clean copy with all data
+        cachedProducts[cacheIdx] = {
+          ...product,
+          id: productId // Ensure ID is preserved
+        };
+        console.log('✅ Updated product in cache at index:', cacheIdx);
+        console.log('   - Cached stock:', cachedProducts[cacheIdx].stock);
       }
+      
+      // ✅ SAVE TO LOCALSTORAGE IMMEDIATELY
+      try {
+        localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+        console.log('💾 Cache saved to localStorage with', cachedProducts.length, 'products');
+      } catch (cacheError) {
+        console.warn('⚠️ Failed to save cache:', cacheError);
+      }
+      
+      // ✅ Force UI update with cached data
+      renderProducts();
       
       showSyncIndicator('Saved', 900);
       
@@ -3995,34 +4020,45 @@ async function saveProduct() {
       }
       
     } else {
-      console.error('⚠️ Save returned false:', resp);
+      console.error('⚠️ Save failed:', resp);
+      
+      // ✅ REVERT TO PREVIOUS STATE
       if (previous && idx !== -1) {
         cachedProducts[idx] = previous;
-        renderProducts();
-        
-        try {
-          localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-        } catch (error) {
-          console.warn('⚠️ Cache revert failed:', error);
-        }
+      } else if (!previous && idx !== -1) {
+        cachedProducts.splice(idx, 1);
       }
+      
+      renderProducts();
+      
+      try {
+        localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+      } catch (error) {
+        console.warn('⚠️ Cache revert failed:', error);
+      }
+      
       alert('Save failed - reverted locally.');
       showSyncIndicator('Save failed', 2000);
     }
   } catch (err) {
     console.error('❌ Error in saveProduct:', err);
+    console.error('   - Error message:', err.message);
+    console.error('   - Error stack:', err.stack);
     
+    // ✅ REVERT TO PREVIOUS STATE
     if (previous && idx !== -1) {
       cachedProducts[idx] = previous;
-      renderProducts();
+      console.log('↩️ Reverted to previous product state');
     } else if (!isEditing) {
       // Only remove if it was a new product
       const removeIdx = cachedProducts.findIndex(p => p.id === productId);
       if (removeIdx !== -1) {
         cachedProducts.splice(removeIdx, 1);
-        renderProducts();
+        console.log('🗑️ Removed unsaved product from cache');
       }
     }
+    
+    renderProducts();
     
     try {
       localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
@@ -15156,6 +15192,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
