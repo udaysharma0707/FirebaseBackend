@@ -3282,7 +3282,6 @@ async function saveProductToSheet(product, isUpdate = false) {
   console.log('💾 saveProductToSheet called');
   console.log('   - Is update:', isUpdate);
   console.log('   - Product ID:', product.id);
-  console.log('   - Product data:', product);
   
   try {
     const user = window.auth?.currentUser;
@@ -3291,8 +3290,31 @@ async function saveProductToSheet(product, isUpdate = false) {
       return { success: false, error: 'Not authenticated' };
     }
     
-    const { doc, setDoc } = window.firebaseImports;
+    const { doc, setDoc, collection, getDocs, query, where } = window.firebaseImports;
     const userId = user.uid;
+    
+    // ✅ CHECK FOR DUPLICATES BEFORE SAVING
+    if (isUpdate) {
+      console.log('🔍 Checking for duplicate products...');
+      
+      const productsRef = collection(window.db, 'tenants', userId, 'products');
+      const snapshot = await getDocs(productsRef);
+      
+      let duplicateFound = false;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        // Check if another document has same name but different ID
+        if (data.name === product.name && doc.id !== product.id) {
+          console.warn('⚠️ Found duplicate product with different ID:', doc.id);
+          duplicateFound = true;
+        }
+      });
+      
+      if (duplicateFound) {
+        console.error('❌ Duplicate product exists - aborting save');
+        return { success: false, error: 'Duplicate product found' };
+      }
+    }
     
     // ✅ Create product reference with the product ID
     const productRef = doc(window.db, 'tenants', userId, 'products', product.id);
@@ -3314,7 +3336,6 @@ async function saveProductToSheet(product, isUpdate = false) {
       stockStatus: product.stockStatus || 'exact',
       stockValue: product.stockValue || null,
       updatedAt: new Date().toISOString(),
-      // Add any other fields you need
       isGroupVariant: product.isGroupVariant || false,
       groupId: product.groupId || '',
       variantId: product.variantId || ''
@@ -3322,7 +3343,7 @@ async function saveProductToSheet(product, isUpdate = false) {
     
     console.log('📤 Saving to Firestore:', productData);
     
-    // ✅ Use setDoc to create or update (no merge needed)
+    // ✅ Use setDoc to create or update
     await setDoc(productRef, productData);
     
     console.log('✅ Product saved to Firestore successfully');
@@ -3336,14 +3357,82 @@ async function saveProductToSheet(product, isUpdate = false) {
     
   } catch (error) {
     console.error('❌ Error saving product to Firestore:', error);
-    console.error('   - Error code:', error.code);
-    console.error('   - Error message:', error.message);
     return { 
       success: false, 
       error: error.message 
     };
   }
 }
+
+
+    // Comprehensive duplicate cleanup
+async function cleanupAllDuplicates() {
+  const user = window.auth.currentUser;
+  const { collection, getDocs, doc, deleteDoc } = window.firebaseImports;
+  
+  console.log('🧹 Starting comprehensive duplicate cleanup...');
+  
+  const productsRef = collection(window.db, 'tenants', user.uid, 'products');
+  const snapshot = await getDocs(productsRef);
+  
+  const productsByName = {};
+  
+  // Group products by name
+  snapshot.forEach(d => {
+    const data = d.data();
+    const name = data.name?.toLowerCase().trim();
+    
+    if (!name) return;
+    
+    if (!productsByName[name]) {
+      productsByName[name] = [];
+    }
+    
+    productsByName[name].push({
+      id: d.id,
+      data: data,
+      updatedAt: data.updatedAt || '1970-01-01'
+    });
+  });
+  
+  let deleted = 0;
+  
+  // Find and delete duplicates
+  for (const name in productsByName) {
+    const products = productsByName[name];
+    
+    if (products.length > 1) {
+      console.log(`⚠️ Found ${products.length} products named "${name}"`);
+      
+      // Sort by updatedAt (keep newest)
+      products.sort((a, b) => {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+      
+      // Keep first (newest), delete rest
+      const toKeep = products[0];
+      console.log('✅ Keeping:', toKeep.id, '| Updated:', toKeep.updatedAt);
+      
+      for (let i = 1; i < products.length; i++) {
+        const toDelete = products[i];
+        console.log('🗑️ Deleting:', toDelete.id, '| Updated:', toDelete.updatedAt);
+        
+        const productRef = doc(window.db, 'tenants', user.uid, 'products', toDelete.id);
+        await deleteDoc(productRef);
+        deleted++;
+      }
+    }
+  }
+  
+  console.log(`✅ Cleanup complete! Deleted ${deleted} duplicate products.`);
+  
+  // Reload
+  location.reload();
+}
+
+// Run cleanup
+cleanupAllDuplicates();
+
 
 /**
  * ==========================================
@@ -3576,7 +3665,7 @@ function toggleAdvancedOptions() {
 }
 /**
  * ==========================================
- * BACKGROUND QUEUE PROCESSOR - FIXED
+ * BACKGROUND QUEUE PROCESSOR - FIXED (NO AUTO-SYNC)
  * ==========================================
  */
 const backgroundSaveQueue = [];
@@ -3663,23 +3752,9 @@ async function processBackgroundSaveQueue() {
   
   console.log('✅ Background queue processing complete!');
   
-  // ✅ ONLY SYNC IF WE'RE NOT IN THE MIDDLE OF SOMETHING
-  setTimeout(() => {
-    console.log('🔄 Starting background sync from Firestore...');
-    
-    // ✅ TRY/CATCH to prevent errors from breaking the app
-    try {
-      if (typeof syncFromFirestore === 'function') {
-        syncFromFirestore();
-      }
-    } catch (error) {
-      console.error('❌ Background save error:', error);
-      // ✅ DON'T let this error stop the app
-    }
-  }, 2000);
+  // ✅ REMOVED AUTO-SYNC - DON'T SYNC AFTER EVERY QUEUE PROCESS
+  // Only sync when user manually refreshes or on initial load
 }
-
-
 
     
 
@@ -15218,6 +15293,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
