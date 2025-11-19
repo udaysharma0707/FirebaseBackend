@@ -994,49 +994,6 @@ onmouseout="this.style.background='#28a745'">
     </div>
 
 
-<!-- ✅ Groups View Container (Hidden by default) -->
-<div id="groupsViewContainer" style="display: none;">
-  <!-- Header with Create Button -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">Product Groups</h5>
-    <button class="btn btn-success btn-sm" onclick="openCreateGroupModal()">
-      <i class="bi bi-plus-circle"></i> New Group
-    </button>
-  </div>
-  
-  <!-- Search Groups -->
-  <div class="mb-3">
-    <input 
-      type="text" 
-      class="form-control" 
-      id="searchGroups" 
-      placeholder="🔍 Search groups..." 
-      oninput="filterProductGroups(this.value)"
-    >
-  </div>
-  
-  <!-- Loading State -->
-  <div id="groupsLoadingState" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-    <p class="mt-2">Loading groups...</p>
-  </div>
-  
-  <!-- Empty State -->
-  <div id="groupsEmptyState" class="text-center py-5" style="display: none;">
-    <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
-    <h4>No Product Groups Yet</h4>
-    <p class="text-muted">Create groups to organize product variants</p>
-    <button class="btn btn-primary mt-3" onclick="openCreateGroupModal()">
-      <i class="bi bi-plus-circle"></i> Create First Group
-    </button>
-  </div>
-  
-  <!-- Groups List -->
-  <div id="groupsListContainer" style="display: none;"></div>
-</div>
-
 
 
 
@@ -15347,6 +15304,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
