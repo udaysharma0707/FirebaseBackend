@@ -4224,8 +4224,11 @@ async function saveProduct() {
 
 
 
-
-// ✅ Save Variant Data - FIREBASE VERSION
+/**
+ * ==========================================
+ * SAVE VARIANT DATA - FIXED FOR PRODUCTS COLLECTION
+ * ==========================================
+ */
 async function saveVariantData() {
   console.log('💾 Saving variant to Firestore...');
   
@@ -4238,7 +4241,7 @@ async function saveVariantData() {
   }
   
   try {
-    const user = window.auth.currentUser;
+    const user = window.auth?.currentUser;
     
     if (!user) {
       throw new Error('User not authenticated');
@@ -4290,6 +4293,7 @@ async function saveVariantData() {
     // ✅ PREPARE UPDATE DATA FOR FIRESTORE
     const updateData = {
       sellingPrice: sellingPrice,
+      price: sellingPrice, // Also update price field
       stock: stock,
       minStock: minStock,
       unitType: unitType,
@@ -4297,24 +4301,46 @@ async function saveVariantData() {
     };
     
     console.log('📤 Updating variant in Firestore:', updateData);
+    console.log('📍 Path: tenants/' + user.uid + '/products/' + variantId);
     
-    const { collection, doc, updateDoc } = window.firebaseImports;
+    const { doc, updateDoc } = window.firebaseImports;
     const userId = user.uid;
     
-    // Update variant in Firestore
-    const variantRef = doc(window.db, 'tenants', userId, 'variants', variantId);
+    // ✅ CRITICAL FIX: Use 'products' collection instead of 'variants'
+    const variantRef = doc(window.db, 'tenants', userId, 'products', variantId);
     await updateDoc(variantRef, updateData);
     
-    console.log('✅ Variant updated successfully');
+    console.log('✅ Variant updated successfully in products collection');
     
-    // Update local cache
-    if (typeof cachedGroupVariants !== 'undefined') {
-      const variantIndex = cachedGroupVariants.findIndex(v => v.variantId === variantId);
+    // ✅ Update local caches
+    // Update cachedGroupVariants
+    if (typeof window.cachedGroupVariants !== 'undefined' && window.cachedGroupVariants) {
+      const variantIndex = window.cachedGroupVariants.findIndex(v => v.id === variantId || v.variantId === variantId);
       if (variantIndex !== -1) {
-        cachedGroupVariants[variantIndex] = {
-          ...cachedGroupVariants[variantIndex],
+        window.cachedGroupVariants[variantIndex] = {
+          ...window.cachedGroupVariants[variantIndex],
           ...updateData
         };
+        console.log('✅ Updated cachedGroupVariants');
+      }
+    }
+    
+    // Update cachedProducts
+    if (typeof cachedProducts !== 'undefined' && cachedProducts) {
+      const productIndex = cachedProducts.findIndex(p => p.id === variantId);
+      if (productIndex !== -1) {
+        cachedProducts[productIndex] = {
+          ...cachedProducts[productIndex],
+          ...updateData
+        };
+        
+        // Save to localStorage
+        try {
+          localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+          console.log('✅ Updated cachedProducts and localStorage');
+        } catch (e) {
+          console.warn('⚠️ Failed to update localStorage:', e);
+        }
       }
     }
     
@@ -4327,12 +4353,26 @@ async function saveVariantData() {
     
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
-    if (modal) modal.hide();
+    if (modal) {
+      modal.hide();
+    } else {
+      // Alternative close method
+      const modalEl = document.getElementById('productModal');
+      if (modalEl) {
+        modalEl.style.display = 'none';
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+      }
+    }
     
     // Clear flags
-    form.dataset.isVariant = 'false';
-    form.dataset.groupId = '';
-    form.dataset.variantId = '';
+    if (form) {
+      form.dataset.isVariant = 'false';
+      form.dataset.groupId = '';
+      form.dataset.variantId = '';
+    }
     
     // Reset readonly fields
     const resetField = (id) => {
@@ -4348,10 +4388,19 @@ async function saveVariantData() {
     resetField('brand');
     resetField('size');
     
-    // Refresh variants list
+    // Refresh views
     setTimeout(() => {
-      if (typeof loadGroupVariants === 'function') {
-        loadGroupVariants(groupId);
+      // If in variants view, reload variants
+      const variantsContainer = document.getElementById('variantsListContainer');
+      if (variantsContainer && variantsContainer.style.display !== 'none' && groupId) {
+        if (typeof loadGroupVariants === 'function') {
+          loadGroupVariants(groupId);
+        }
+      }
+      
+      // If in main products view, re-render
+      if (typeof renderProducts === 'function') {
+        renderProducts();
       }
     }, 500);
     
@@ -4366,9 +4415,10 @@ async function saveVariantData() {
   }
 }
 
+// Make globally accessible
+window.saveVariantData = saveVariantData;
 
-
-
+console.log('✅ saveVariantData function loaded');
 
     
   
@@ -15354,6 +15404,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
