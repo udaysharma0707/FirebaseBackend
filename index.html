@@ -7502,39 +7502,29 @@ async function uploadPhotoToBackend(productData, photoBase64) {
  * ==========================================
  */
 
-/**
- * Show All Products (Table View)
- */
+
 function showAllProducts() {
   console.log('📋 Switching to All Products view');
   
   // ✅ Update button states
   const btnAll = document.getElementById('btnAllView');
   const btnPhoto = document.getElementById('btnPhotoView');
-  const btnGroups = document.getElementById('btnGroupsView');
   
   if (btnAll) btnAll.classList.add('active');
   if (btnPhoto) btnPhoto.classList.remove('active');
-  if (btnGroups) btnGroups.classList.remove('active');
   
-  // ✅ Hide photo grid
+  // ✅ Hide photo grid - Make sure it's fully hidden
   const photoGrid = document.getElementById('photoProductGrid');
   if (photoGrid) {
     photoGrid.style.display = 'none';
     photoGrid.style.visibility = 'hidden';
-    console.log('✅ Photo grid hidden');
+    photoGrid.innerHTML = ''; // Clear it
+    console.log('✅ Photo grid hidden and cleared');
   }
   
-  // ✅ Hide groups view
-  const groupsView = document.getElementById('groupsViewContainer');
-  if (groupsView) {
-    groupsView.style.display = 'none';
-    groupsView.style.visibility = 'hidden';
-    console.log('✅ Groups view hidden');
-  }
-  
-  // ✅ Show table explorer
+  // ✅ Show table - Try multiple selectors to find it
   let tableExplorer = document.querySelector('.table-explorer');
+  
   if (!tableExplorer) {
     tableExplorer = document.querySelector('[class*="table"]');
   }
@@ -7555,16 +7545,13 @@ function showAllProducts() {
   }
   
   // ✅ Render products
-  if (typeof renderProducts === 'function') {
-    renderProducts();
-  }
-  
+  renderProducts();
   console.log('✅ All Products view activated');
 }
 
 
 /**
- * Show Photo Products (Grid View)
+ * Show photo products (grid view) - VERTICAL SCROLL FIXED
  */
 function showPhotoProducts() {
   console.log('📷 Switching to Photo Products view');
@@ -7572,14 +7559,13 @@ function showPhotoProducts() {
   // ✅ Update button states
   const btnAll = document.getElementById('btnAllView');
   const btnPhoto = document.getElementById('btnPhotoView');
-  const btnGroups = document.getElementById('btnGroupsView');
   
   if (btnAll) btnAll.classList.remove('active');
   if (btnPhoto) btnPhoto.classList.add('active');
-  if (btnGroups) btnGroups.classList.remove('active');
   
-  // ✅ Hide table explorer
+  // ✅ Hide table - Try multiple selectors
   let tableExplorer = document.querySelector('.table-explorer');
+  
   if (!tableExplorer) {
     tableExplorer = document.querySelector('[class*="table"]');
   }
@@ -7597,14 +7583,6 @@ function showPhotoProducts() {
     console.log('✅ Mobile list hidden');
   }
   
-  // ✅ Hide groups view
-  const groupsView = document.getElementById('groupsViewContainer');
-  if (groupsView) {
-    groupsView.style.display = 'none';
-    groupsView.style.visibility = 'hidden';
-    console.log('✅ Groups view hidden');
-  }
-  
   // ✅ Show photo grid
   const photoGrid = document.getElementById('photoProductGrid');
   if (photoGrid) {
@@ -7616,13 +7594,9 @@ function showPhotoProducts() {
   }
   
   // ✅ Render photo products
-  if (typeof renderPhotoProductsGrid === 'function') {
-    renderPhotoProductsGrid();
-  }
-  
+  renderPhotoProductsGrid();
   console.log('✅ Photo Products view activated');
-}
-
+}      
 
 /**
  * Show Groups View
@@ -15609,6 +15583,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
