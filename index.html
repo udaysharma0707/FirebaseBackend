@@ -997,6 +997,131 @@ onmouseout="this.style.background='#28a745'">
   </button>
 </div>
 
+  <!-- ✅ Groups View Container (Hidden by default) -->
+<div id="groupsViewContainer" style="display: none;">
+  <!-- Header with Create Button -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Product Groups</h5>
+    <button class="btn btn-success btn-sm" onclick="openCreateGroupModal()">
+      <i class="bi bi-plus-circle"></i> New Group
+    </button>
+  </div>
+  
+  <!-- Search Groups -->
+  <div class="mb-3">
+    <input 
+      type="text" 
+      class="form-control" 
+      id="searchGroups" 
+      placeholder="🔍 Search groups..." 
+      oninput="filterProductGroups(this.value)"
+    >
+  </div>
+  
+  <!-- Loading State -->
+  <div id="groupsLoadingState" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading groups...</p>
+  </div>
+  
+  <!-- Empty State -->
+  <div id="groupsEmptyState" class="text-center py-5" style="display: none;">
+    <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
+    <h4>No Product Groups Yet</h4>
+    <p class="text-muted">Create groups to organize product variants</p>
+    <button class="btn btn-primary mt-3" onclick="openCreateGroupModal()">
+      <i class="bi bi-plus-circle"></i> Create First Group
+    </button>
+  </div>
+  
+  <!-- Groups List -->
+  <div id="groupsListContainer" style="display: none;"></div>
+</div>
+<!-- ✅ Groups View Container (Hidden by default) -->
+<div id="groupsViewContainer" style="display: none;">
+  
+  <!-- Header with Create Button (Groups List) -->
+  <div id="groupsHeader" class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Product Groups</h5>
+    <button class="btn btn-success btn-sm" onclick="openCreateGroupModal()">
+      <i class="bi bi-plus-circle"></i> New Group
+    </button>
+  </div>
+  
+  <!-- Header with Back Button (Variants View) -->
+  <div id="variantsHeader" class="d-flex justify-content-between align-items-center mb-3" style="display: none !important;">
+    <button class="btn btn-secondary btn-sm" onclick="backToGroupsList()">
+      <i class="bi bi-arrow-left"></i> Back to Groups
+    </button>
+    <h5 class="mb-0" id="currentGroupName"></h5>
+    <div style="width: 120px;"></div>
+  </div>
+  
+  <!-- Search Groups -->
+  <div id="searchGroupsContainer" class="mb-3">
+    <input 
+      type="text" 
+      class="form-control" 
+      id="searchGroups" 
+      placeholder="🔍 Search groups..." 
+      oninput="filterProductGroups(this.value)"
+    >
+  </div>
+  
+  <!-- Search Variants -->
+  <div id="searchVariantsContainer" class="mb-3" style="display: none;">
+    <input 
+      type="text" 
+      class="form-control" 
+      id="searchVariants" 
+      placeholder="🔍 Search variants..." 
+      oninput="filterGroupVariants(this.value)"
+    >
+  </div>
+  
+  <!-- Loading State (Groups) -->
+  <div id="groupsLoadingState" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading groups...</p>
+  </div>
+  
+  <!-- Empty State (Groups) -->
+  <div id="groupsEmptyState" class="text-center py-5" style="display: none;">
+    <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
+    <h4>No Product Groups Yet</h4>
+    <p class="text-muted">Create groups to organize product variants</p>
+    <button class="btn btn-primary mt-3" onclick="openCreateGroupModal()">
+      <i class="bi bi-plus-circle"></i> Create First Group
+    </button>
+  </div>
+  
+  <!-- Groups List -->
+  <div id="groupsListContainer" style="display: none;"></div>
+  
+  <!-- Loading State (Variants) -->
+  <div id="variantsLoadingState" class="text-center py-5" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading variants...</p>
+  </div>
+  
+  <!-- Empty State (Variants) -->
+  <div id="variantsEmptyState" class="text-center py-5" style="display: none;">
+    <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
+    <h4>No Variants in This Group</h4>
+    <p class="text-muted">This group doesn't have any variants yet</p>
+  </div>
+  
+  <!-- Variants List -->
+  <div id="variantsListContainer" style="display: none;"></div>
+  
+</div>
+
 
 
       
@@ -7451,10 +7576,13 @@ async function uploadPhotoToBackend(productData, photoBase64) {
 
 
 /**
- * Show all products (table view) - FIXED
+ * ==========================================
+ * VIEW SWITCHING FUNCTIONS - WITH GROUPS
+ * ==========================================
  */
+
 /**
- * Show all products (table view) - COMPLETE FIX
+ * Show All Products (Table View)
  */
 function showAllProducts() {
   console.log('📋 Switching to All Products view');
@@ -7462,22 +7590,30 @@ function showAllProducts() {
   // ✅ Update button states
   const btnAll = document.getElementById('btnAllView');
   const btnPhoto = document.getElementById('btnPhotoView');
+  const btnGroups = document.getElementById('btnGroupsView');
   
   if (btnAll) btnAll.classList.add('active');
   if (btnPhoto) btnPhoto.classList.remove('active');
+  if (btnGroups) btnGroups.classList.remove('active');
   
-  // ✅ Hide photo grid - Make sure it's fully hidden
+  // ✅ Hide photo grid
   const photoGrid = document.getElementById('photoProductGrid');
   if (photoGrid) {
     photoGrid.style.display = 'none';
     photoGrid.style.visibility = 'hidden';
-    photoGrid.innerHTML = ''; // Clear it
-    console.log('✅ Photo grid hidden and cleared');
+    console.log('✅ Photo grid hidden');
   }
   
-  // ✅ Show table - Try multiple selectors to find it
-  let tableExplorer = document.querySelector('.table-explorer');
+  // ✅ Hide groups view
+  const groupsView = document.getElementById('groupsViewContainer');
+  if (groupsView) {
+    groupsView.style.display = 'none';
+    groupsView.style.visibility = 'hidden';
+    console.log('✅ Groups view hidden');
+  }
   
+  // ✅ Show table explorer
+  let tableExplorer = document.querySelector('.table-explorer');
   if (!tableExplorer) {
     tableExplorer = document.querySelector('[class*="table"]');
   }
@@ -7498,13 +7634,16 @@ function showAllProducts() {
   }
   
   // ✅ Render products
-  renderProducts();
+  if (typeof renderProducts === 'function') {
+    renderProducts();
+  }
+  
   console.log('✅ All Products view activated');
 }
 
 
 /**
- * Show photo products (grid view) - VERTICAL SCROLL FIXED
+ * Show Photo Products (Grid View)
  */
 function showPhotoProducts() {
   console.log('📷 Switching to Photo Products view');
@@ -7512,13 +7651,14 @@ function showPhotoProducts() {
   // ✅ Update button states
   const btnAll = document.getElementById('btnAllView');
   const btnPhoto = document.getElementById('btnPhotoView');
+  const btnGroups = document.getElementById('btnGroupsView');
   
   if (btnAll) btnAll.classList.remove('active');
   if (btnPhoto) btnPhoto.classList.add('active');
+  if (btnGroups) btnGroups.classList.remove('active');
   
-  // ✅ Hide table - Try multiple selectors
+  // ✅ Hide table explorer
   let tableExplorer = document.querySelector('.table-explorer');
-  
   if (!tableExplorer) {
     tableExplorer = document.querySelector('[class*="table"]');
   }
@@ -7536,6 +7676,14 @@ function showPhotoProducts() {
     console.log('✅ Mobile list hidden');
   }
   
+  // ✅ Hide groups view
+  const groupsView = document.getElementById('groupsViewContainer');
+  if (groupsView) {
+    groupsView.style.display = 'none';
+    groupsView.style.visibility = 'hidden';
+    console.log('✅ Groups view hidden');
+  }
+  
   // ✅ Show photo grid
   const photoGrid = document.getElementById('photoProductGrid');
   if (photoGrid) {
@@ -7547,9 +7695,86 @@ function showPhotoProducts() {
   }
   
   // ✅ Render photo products
-  renderPhotoProductsGrid();
+  if (typeof renderPhotoProductsGrid === 'function') {
+    renderPhotoProductsGrid();
+  }
+  
   console.log('✅ Photo Products view activated');
 }
+
+
+/**
+ * Show Groups View
+ */
+function showGroupsView() {
+  console.log('📁 Switching to Groups view');
+  
+  // ✅ Update button states
+  const btnAll = document.getElementById('btnAllView');
+  const btnPhoto = document.getElementById('btnPhotoView');
+  const btnGroups = document.getElementById('btnGroupsView');
+  
+  if (btnAll) btnAll.classList.remove('active');
+  if (btnPhoto) btnPhoto.classList.remove('active');
+  if (btnGroups) btnGroups.classList.add('active');
+  
+  // ✅ Hide table explorer
+  let tableExplorer = document.querySelector('.table-explorer');
+  if (!tableExplorer) {
+    tableExplorer = document.querySelector('[class*="table"]');
+  }
+  
+  if (tableExplorer) {
+    tableExplorer.style.display = 'none';
+    tableExplorer.style.visibility = 'hidden';
+    console.log('✅ Table explorer hidden');
+  }
+  
+  // ✅ Hide mobile list
+  const mobileList = document.getElementById('mobileProductsList');
+  if (mobileList) {
+    mobileList.style.display = 'none';
+    console.log('✅ Mobile list hidden');
+  }
+  
+  // ✅ Hide photo grid
+  const photoGrid = document.getElementById('photoProductGrid');
+  if (photoGrid) {
+    photoGrid.style.display = 'none';
+    photoGrid.style.visibility = 'hidden';
+    console.log('✅ Photo grid hidden');
+  }
+  
+  // ✅ Show groups view
+  const groupsView = document.getElementById('groupsViewContainer');
+  if (groupsView) {
+    groupsView.style.display = 'block';
+    groupsView.style.visibility = 'visible';
+    console.log('✅ Groups view shown');
+  } else {
+    console.error('❌ Groups view container not found!');
+  }
+  
+  // ✅ Load groups (uses existing function)
+  if (typeof loadProductGroups === 'function') {
+    loadProductGroups();
+  } else {
+    console.error('❌ loadProductGroups function not found!');
+  }
+  
+  console.log('✅ Groups view activated');
+}
+
+
+/**
+ * Make functions globally accessible
+ */
+window.showAllProducts = showAllProducts;
+window.showPhotoProducts = showPhotoProducts;
+window.showGroupsView = showGroupsView;
+
+console.log('✅ View switching functions loaded');
+
 function renderPhotoProductsGrid() {
   const photoGrid = document.getElementById('photoProductGrid');
   if (!photoGrid) {
@@ -11464,64 +11689,90 @@ function navigateToProductGroups() {
 
 
 
-// Navigate to Group Variants (Detail Page)
+/**
+ * Navigate to Group Variants - HOMEPAGE VERSION (No Page Navigation)
+ */
 function navigateToGroupVariants(groupId, groupName) {
-  console.log('📦 Opening variants for:', groupName);
+  console.log('📦 Showing variants for group:', groupName);
+  console.log('   - Group ID:', groupId);
   
-  currentGroupId = groupId;
-  currentGroupName = groupName;
+  // Store current group
+  window.currentGroupId = groupId;
+  window.currentGroupName = groupName;
   
-  // Remove existing page if any
-  const existingPage = document.getElementById('groupVariantsPageContainer');
-  if (existingPage) existingPage.remove();
+  // ✅ HIDE: Groups list elements
+  const groupsHeader = document.getElementById('groupsHeader');
+  const searchGroupsContainer = document.getElementById('searchGroupsContainer');
+  const groupsLoadingState = document.getElementById('groupsLoadingState');
+  const groupsEmptyState = document.getElementById('groupsEmptyState');
+  const groupsListContainer = document.getElementById('groupsListContainer');
   
-  // Build variants page
-  document.body.innerHTML += `
-    <div id="groupVariantsPageContainer" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #f8f9fa; z-index: 99999; overflow-y: auto;">
-      
-      <!-- Header -->
-      <div class="modal-header-mobile">
-        <button class="btn-cancel-modal" onclick="closeGroupVariantsPage()">
-          ← Back
-        </button>
-        <h3>${groupName}</h3>
-        <div style="width: 80px;"></div>
-      </div>
-      
-      <!-- Search -->
-      <div style="padding: 16px;">
-        <input 
-          type="text" 
-          id="searchVariantsInput" 
-          placeholder="🔍 Search variants..."
-          style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;"
-          onkeyup="filterGroupVariants(this.value)">
-      </div>
-      
-      <!-- Loading State -->
-      <div id="variantsLoadingState" class="loading-spinner">
-        <div class="spinner"></div>
-        <p>Loading variants...</p>
-      </div>
-      
-      <!-- Variants List -->
-      <div id="variantsListContainer" style="display: none;">
-        <!-- Variants will be rendered here -->
-      </div>
-      
-      <!-- Empty State -->
-      <div id="variantsEmptyState" class="empty-state" style="display: none;">
-        <div class="empty-state-icon">📦</div>
-        <h3>No Variants Yet</h3>
-        <p>This group doesn't have any variants</p>
-      </div>
-      
-    </div>
-  `;
+  if (groupsHeader) groupsHeader.style.display = 'none';
+  if (searchGroupsContainer) searchGroupsContainer.style.display = 'none';
+  if (groupsLoadingState) groupsLoadingState.style.display = 'none';
+  if (groupsEmptyState) groupsEmptyState.style.display = 'none';
+  if (groupsListContainer) groupsListContainer.style.display = 'none';
   
-  // Load variants
-  loadGroupVariants(groupId);
+  // ✅ SHOW: Variants elements
+  const variantsHeader = document.getElementById('variantsHeader');
+  const searchVariantsContainer = document.getElementById('searchVariantsContainer');
+  const variantsLoadingState = document.getElementById('variantsLoadingState');
+  const currentGroupNameEl = document.getElementById('currentGroupName');
+  
+  if (variantsHeader) variantsHeader.style.display = 'flex';
+  if (searchVariantsContainer) searchVariantsContainer.style.display = 'block';
+  if (variantsLoadingState) variantsLoadingState.style.display = 'block';
+  if (currentGroupNameEl) currentGroupNameEl.textContent = groupName;
+  
+  console.log('✅ Switched to variants view');
+  
+  // ✅ Load variants from Firestore
+  if (typeof loadGroupVariants === 'function') {
+    loadGroupVariants(groupId);
+  } else {
+    console.error('❌ loadGroupVariants function not found!');
+  }
 }
+
+window.navigateToGroupVariants = navigateToGroupVariants;
+
+
+    /**
+ * Back to Groups List - Return from Variants View
+ */
+function backToGroupsList() {
+  console.log('⬅️ Returning to groups list');
+  
+  // Clear current group data
+  delete window.currentGroupId;
+  delete window.currentGroupName;
+  
+  // ✅ HIDE: Variants elements
+  const variantsHeader = document.getElementById('variantsHeader');
+  const searchVariantsContainer = document.getElementById('searchVariantsContainer');
+  const variantsLoadingState = document.getElementById('variantsLoadingState');
+  const variantsEmptyState = document.getElementById('variantsEmptyState');
+  const variantsListContainer = document.getElementById('variantsListContainer');
+  
+  if (variantsHeader) variantsHeader.style.display = 'none';
+  if (searchVariantsContainer) searchVariantsContainer.style.display = 'none';
+  if (variantsLoadingState) variantsLoadingState.style.display = 'none';
+  if (variantsEmptyState) variantsEmptyState.style.display = 'none';
+  if (variantsListContainer) variantsListContainer.style.display = 'none';
+  
+  // ✅ SHOW: Groups list elements
+  const groupsHeader = document.getElementById('groupsHeader');
+  const searchGroupsContainer = document.getElementById('searchGroupsContainer');
+  const groupsListContainer = document.getElementById('groupsListContainer');
+  
+  if (groupsHeader) groupsHeader.style.display = 'flex';
+  if (searchGroupsContainer) searchGroupsContainer.style.display = 'block';
+  if (groupsListContainer) groupsListContainer.style.display = 'block';
+  
+  console.log('✅ Returned to groups list');
+}
+
+window.backToGroupsList = backToGroupsList;
 
 
 // Close Group Variants Page
@@ -11721,23 +11972,28 @@ function renderProductGroups(groups) {
   container.style.display = 'block';
 }
 
-
-// Render Group Variants List - FIXED
+/**
+ * Render Group Variants List - HOMEPAGE VERSION
+ */
 function renderGroupVariants(variants) {
+  console.log('🎨 Rendering variants:', variants.length);
+  
   const container = document.getElementById('variantsListContainer');
-  if (!container) return;
-
+  const loadingState = document.getElementById('variantsLoadingState');
+  const emptyState = document.getElementById('variantsEmptyState');
+  
+  // Hide loading
+  if (loadingState) loadingState.style.display = 'none';
+  
   if (!variants || variants.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📦</div>
-        <h3>No Variants Yet</h3>
-        <p>This group doesn't have any variants</p>
-      </div>
-    `;
+    if (container) container.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'block';
     return;
   }
-
+  
+  // Hide empty state
+  if (emptyState) emptyState.style.display = 'none';
+  
   let html = '';
   
   variants.forEach(variant => {
@@ -11747,46 +12003,57 @@ function renderGroupVariants(variants) {
       const attrs = typeof variant.attributes === 'string' 
         ? JSON.parse(variant.attributes) 
         : variant.attributes;
-      const attrArray = Object.entries(attrs).map(([key, value]) => `${key}: ${value}`);
-      attributesText = attrArray.join(' • ');
+      
+      if (attrs && typeof attrs === 'object') {
+        const attrArray = Object.entries(attrs).map(([key, value]) => `${key}: ${value}`);
+        attributesText = attrArray.join(' • ');
+      }
     } catch (e) {
-      attributesText = '';
+      console.warn('Error parsing attributes:', e);
     }
-
+    
     // Stock status
-    const stockClass = variant.stock <= variant.minStock ? 'low' : 'good';
-    const stockIcon = variant.stock <= variant.minStock ? '⚠️' : '✅';
-    const stockText = `${stockIcon} ${variant.stock}`;
-
+    const stockValue = typeof variant.stock === 'number' ? variant.stock : 0;
+    const minStock = variant.minStock || 5;
+    const stockClass = stockValue <= minStock ? 'text-danger' : 'text-success';
+    const stockIcon = stockValue <= minStock ? '⚠️' : '✅';
+    
     // Price
-    const priceText = variant.sellingPrice > 0 ? `₹${variant.sellingPrice.toFixed(2)}` : '₹0.00';
-
+    const price = variant.price || variant.sellingPrice || 0;
+    const priceText = `₹${price.toFixed(2)}`;
+    
     html += `
-      <div class="variant-card">
-        <div class="variant-icon">📦</div>
-        <div class="variant-info">
-          <div class="variant-name">${escapeHtml(variant.variantName)}</div>
-          ${attributesText ? `<div class="variant-attributes">${attributesText}</div>` : ''}
-          <div class="variant-details">
-            <span class="variant-stock ${stockClass}">${stockText}</span>
-            <span class="variant-price">${priceText}</span>
+      <div class="card mb-2">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div class="flex-grow-1">
+            <h6 class="mb-1">${escapeHtml(variant.name || variant.variantName)}</h6>
+            ${attributesText ? `<small class="text-muted">${attributesText}</small><br>` : ''}
+            <small class="${stockClass}">${stockIcon} Stock: ${stockValue}</small>
+            <span class="mx-2">•</span>
+            <small class="text-primary">${priceText}</small>
           </div>
-        </div>
-        <div class="variant-actions">
-          <button class="btn-icon-small btn-edit-small" onclick="openEditVariantModal('${variant.variantId}')">
-            <i class="bi bi-pencil"></i>
-          </button>
-          <button class="btn-icon-small btn-delete-small" onclick="confirmDeleteVariant('${variant.variantId}', '${escapeHtml(variant.variantName)}')">
-            <i class="bi bi-trash"></i>
-          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" onclick="editProduct('${variant.id}', true)">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct('${variant.id}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         </div>
       </div>
     `;
   });
-
-  container.innerHTML = html;
-  container.style.display = 'block';
+  
+  if (container) {
+    container.innerHTML = html;
+    container.style.display = 'block';
+  }
+  
+  console.log('✅ Variants rendered');
 }
+
+window.renderGroupVariants = renderGroupVariants;
 
 
 /**
@@ -15305,6 +15572,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
