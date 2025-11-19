@@ -11698,7 +11698,7 @@ function navigateToGroupVariants(groupId, groupName) {
 window.navigateToGroupVariants = navigateToGroupVariants;
 
 
-    /**
+/**
  * Back to Groups List - Return from Variants View
  */
 function backToGroupsList() {
@@ -11735,22 +11735,6 @@ function backToGroupsList() {
 
 window.backToGroupsList = backToGroupsList;
 
-
-// Close Group Variants Page
-function closeGroupVariantsPage() {
-  const page = document.getElementById('groupVariantsPageContainer');
-  if (page) page.remove();
-  
-  // Refresh groups list
-  loadProductGroups();
-}
-
-
-/**
- * ==========================================
- * DATA LOADING FUNCTIONS
- * ==========================================
- */
 
 /**
  * ==========================================
@@ -11794,7 +11778,7 @@ async function loadProductGroups() {
       });
     });
     
-    cachedProductGroups = groups;
+    window.cachedProductGroups = groups;
     console.log('✅ Loaded', groups.length, 'groups from Firestore');
     
     // Hide loading
@@ -11828,61 +11812,76 @@ async function loadProductGroups() {
   }
 }
 
-// Load Group Variants from Firestore
+// Load Group Variants from Firestore - FIXED
 async function loadGroupVariants(groupId) {
-  const user = window.auth.currentUser;
+  console.log('📡 Loading variants for group:', groupId);
+  
+  const user = window.auth?.currentUser;
   
   if (!user) {
-    console.log('No user authenticated');
+    console.error('❌ No user authenticated');
     return;
   }
   
+  const loadingState = document.getElementById('variantsLoadingState');
+  const emptyState = document.getElementById('variantsEmptyState');
+  const container = document.getElementById('variantsListContainer');
+  
+  // Show loading
+  if (loadingState) loadingState.style.display = 'block';
+  if (emptyState) emptyState.style.display = 'none';
+  if (container) container.style.display = 'none';
+  
   try {
-    console.log('📡 Fetching variants for group:', groupId);
-    
     const { collection, getDocs, query, where } = window.firebaseImports;
+    const userId = user.uid;
     
-    // Get variants that belong to this group
-    const variantsRef = collection(window.db, 'tenants', user.uid, 'products');
-    const q = query(variantsRef, where('groupId', '==', groupId));
+    console.log('🔍 Querying products where groupId =', groupId);
+    
+    // ✅ Query products collection for variants with this groupId
+    const productsRef = collection(window.db, 'tenants', userId, 'products');
+    const q = query(productsRef, where('groupId', '==', groupId));
     const snapshot = await getDocs(q);
     
     const variants = [];
     snapshot.forEach((doc) => {
+      const data = doc.data();
       variants.push({
-        variantId: doc.id,
-        ...doc.data()
+        id: doc.id,
+        variantId: doc.id, // For compatibility
+        ...data
       });
     });
     
-    cachedGroupVariants = variants;
-    console.log('✅ Loaded', variants.length, 'variants from Firestore');
+    // ✅ IMPORTANT: Store variants in global cache
+    window.cachedGroupVariants = variants;
+    
+    console.log(`✅ Loaded ${variants.length} variants from Firestore`);
+    console.log('Variants:', variants);
     
     // Hide loading
-    const loadingState = document.getElementById('variantsLoadingState');
     if (loadingState) loadingState.style.display = 'none';
     
     // Show appropriate view
     if (variants.length === 0) {
-      const emptyState = document.getElementById('variantsEmptyState');
-      if (emptyState) emptyState.style.display = 'flex';
+      if (emptyState) emptyState.style.display = 'block';
     } else {
       renderGroupVariants(variants);
     }
     
   } catch (error) {
-    console.error('❌ Error loading variants from Firestore:', error);
+    console.error('❌ Error loading variants:', error);
     
-    const loadingState = document.getElementById('variantsLoadingState');
     if (loadingState) {
       loadingState.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon">⚠️</div>
-          <h3>Error Loading Variants</h3>
-          <p>${error.message}</p>
-          <button class="btn-primary-bottom" onclick="loadGroupVariants('${groupId}')" style="max-width: 200px; margin: 16px auto 0;">
-            🔄 Retry
-          </button>
+        <div class="text-center py-5">
+          <div class="alert alert-danger">
+            <h5>Error Loading Variants</h5>
+            <p>${error.message}</p>
+            <button class="btn btn-primary mt-2" onclick="loadGroupVariants('${groupId}')">
+              🔄 Retry
+            </button>
+          </div>
         </div>
       `;
     }
@@ -11908,22 +11907,26 @@ function renderProductGroups(groups) {
     const categoryText = group.category || 'Uncategorized';
     
     html += `
-      <div class="group-card" onclick="navigateToGroupVariants('${group.groupId}', '${escapeHtml(group.groupName)}')">
-        <div class="group-icon">📁</div>
-        
-        <div class="group-info">
-          <div class="group-name">${escapeHtml(group.groupName)}</div>
-          <div class="group-description">${escapeHtml(group.description || 'No description')}</div>
-          <div class="group-meta">
-            <span class="group-meta-item">📦 ${variantText}</span>
-            <span class="group-meta-item">🏷️ ${categoryText}</span>
+      <div class="card mb-3" style="cursor: pointer; border-left: 4px solid #667eea;" onclick="navigateToGroupVariants('${group.groupId}', '${escapeHtml(group.groupName)}')">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center mb-2">
+              <span style="font-size: 2rem; margin-right: 12px;">📁</span>
+              <div>
+                <h6 class="mb-0">${escapeHtml(group.groupName)}</h6>
+                <small class="text-muted">${escapeHtml(group.description || 'No description')}</small>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <span class="badge bg-primary">📦 ${variantText}</span>
+              <span class="badge bg-info">🏷️ ${categoryText}</span>
+            </div>
           </div>
-        </div>
-        
-        <div class="group-actions" onclick="event.stopPropagation()">
-          <button class="btn-icon-small btn-delete-small" onclick="confirmDeleteGroup('${group.groupId}', '${escapeHtml(group.groupName)}')">
-            🗑️
-          </button>
+          <div onclick="event.stopPropagation()">
+            <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteGroup('${group.groupId}', '${escapeHtml(group.groupName)}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -11934,16 +11937,15 @@ function renderProductGroups(groups) {
 }
 
 /**
- * Render Group Variants List - HOMEPAGE VERSION
+ * Render Group Variants List - FIXED with Products Collection
  */
 function renderGroupVariants(variants) {
-  console.log('🎨 Rendering variants:', variants.length);
+  console.log('🎨 Rendering', variants.length, 'variants');
   
   const container = document.getElementById('variantsListContainer');
   const loadingState = document.getElementById('variantsLoadingState');
   const emptyState = document.getElementById('variantsEmptyState');
   
-  // Hide loading
   if (loadingState) loadingState.style.display = 'none';
   
   if (!variants || variants.length === 0) {
@@ -11952,54 +11954,63 @@ function renderGroupVariants(variants) {
     return;
   }
   
-  // Hide empty state
   if (emptyState) emptyState.style.display = 'none';
   
   let html = '';
   
   variants.forEach(variant => {
-    // Parse attributes
-    let attributesText = '';
+    // Parse attributes safely
+    let attributesHtml = '';
     try {
       const attrs = typeof variant.attributes === 'string' 
         ? JSON.parse(variant.attributes) 
         : variant.attributes;
       
       if (attrs && typeof attrs === 'object') {
-        const attrArray = Object.entries(attrs).map(([key, value]) => `${key}: ${value}`);
-        attributesText = attrArray.join(' • ');
+        const attrPairs = Object.entries(attrs)
+          .map(([key, value]) => `<span class="badge bg-secondary">${escapeHtml(key)}: ${escapeHtml(value)}</span>`)
+          .join(' ');
+        attributesHtml = `<div class="mt-1">${attrPairs}</div>`;
       }
     } catch (e) {
-      console.warn('Error parsing attributes:', e);
+      console.warn('Error parsing attributes for variant:', variant.id, e);
     }
     
     // Stock status
-    const stockValue = typeof variant.stock === 'number' ? variant.stock : 0;
+    const stock = typeof variant.stock === 'number' ? variant.stock : 0;
     const minStock = variant.minStock || 5;
-    const stockClass = stockValue <= minStock ? 'text-danger' : 'text-success';
-    const stockIcon = stockValue <= minStock ? '⚠️' : '✅';
+    const stockClass = stock <= minStock ? 'danger' : 'success';
+    const stockIcon = stock <= minStock ? '⚠️' : '✅';
     
     // Price
     const price = variant.price || variant.sellingPrice || 0;
     const priceText = `₹${price.toFixed(2)}`;
     
+    // Name
+    const variantName = variant.name || variant.variantName || 'Unnamed Variant';
+    
     html += `
-      <div class="card mb-2">
-        <div class="card-body d-flex align-items-center justify-content-between">
-          <div class="flex-grow-1">
-            <h6 class="mb-1">${escapeHtml(variant.name || variant.variantName)}</h6>
-            ${attributesText ? `<small class="text-muted">${attributesText}</small><br>` : ''}
-            <small class="${stockClass}">${stockIcon} Stock: ${stockValue}</small>
-            <span class="mx-2">•</span>
-            <small class="text-primary">${priceText}</small>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-primary" onclick="editProduct('${variant.id}', true)">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct('${variant.id}')">
-              <i class="bi bi-trash"></i>
-            </button>
+      <div class="card mb-3 border-start border-3 border-${stockClass}">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="flex-grow-1">
+              <h6 class="mb-1">${escapeHtml(variantName)}</h6>
+              ${attributesHtml}
+              <div class="mt-2">
+                <span class="badge bg-${stockClass}">${stockIcon} Stock: ${stock}</span>
+                <span class="badge bg-primary ms-2">${priceText}</span>
+                ${variant.category ? `<span class="badge bg-info ms-2">${escapeHtml(variant.category)}</span>` : ''}
+                ${variant.brand ? `<span class="badge bg-secondary ms-2">${escapeHtml(variant.brand)}</span>` : ''}
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-primary" onclick="editVariantProduct('${variant.id}')" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteVariantProduct('${variant.id}', '${escapeHtml(variantName)}')" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -12011,7 +12022,7 @@ function renderGroupVariants(variants) {
     container.style.display = 'block';
   }
   
-  console.log('✅ Variants rendered');
+  console.log('✅ Variants rendered successfully');
 }
 
 window.renderGroupVariants = renderGroupVariants;
@@ -12026,11 +12037,11 @@ window.renderGroupVariants = renderGroupVariants;
 // Filter Product Groups
 function filterProductGroups(searchText) {
   if (!searchText || searchText.trim() === '') {
-    renderProductGroups(cachedProductGroups);
+    renderProductGroups(window.cachedProductGroups || []);
     return;
   }
   
-  const filtered = cachedProductGroups.filter(group => 
+  const filtered = (window.cachedProductGroups || []).filter(group => 
     group.groupName.toLowerCase().includes(searchText.toLowerCase()) ||
     (group.description && group.description.toLowerCase().includes(searchText.toLowerCase())) ||
     (group.category && group.category.toLowerCase().includes(searchText.toLowerCase()))
@@ -12043,16 +12054,159 @@ function filterProductGroups(searchText) {
 // Filter Group Variants
 function filterGroupVariants(searchText) {
   if (!searchText || searchText.trim() === '') {
-    renderGroupVariants(cachedGroupVariants);
+    renderGroupVariants(window.cachedGroupVariants || []);
     return;
   }
   
-  const filtered = cachedGroupVariants.filter(variant => 
-    variant.variantName.toLowerCase().includes(searchText.toLowerCase())
+  const filtered = (window.cachedGroupVariants || []).filter(variant => 
+    (variant.name || variant.variantName || '').toLowerCase().includes(searchText.toLowerCase())
   );
   
   renderGroupVariants(filtered);
 }
+
+
+/**
+ * ==========================================
+ * EDIT/DELETE VARIANT FUNCTIONS - FIXED FOR PRODUCTS COLLECTION
+ * ==========================================
+ */
+
+/**
+ * Edit Variant Product - FIXED PATH
+ */
+function editVariantProduct(productId) {
+  console.log('✏️ Editing variant product:', productId);
+  
+  // Find product in cached variants or cachedProducts
+  let variant = window.cachedGroupVariants?.find(v => v.id === productId);
+  
+  if (!variant && typeof cachedProducts !== 'undefined') {
+    // Try to find in cachedProducts
+    variant = cachedProducts.find(p => p.id === productId);
+  }
+  
+  if (!variant) {
+    console.error('❌ Variant not found in cache:', productId);
+    alert('Variant not found. Please refresh and try again.');
+    return;
+  }
+  
+  console.log('✅ Found variant:', variant);
+  
+  // ✅ Add to cachedProducts if not already there
+  if (typeof cachedProducts !== 'undefined') {
+    const existingIndex = cachedProducts.findIndex(p => p.id === productId);
+    if (existingIndex === -1) {
+      cachedProducts.push(variant);
+      console.log('✅ Added variant to cachedProducts');
+    }
+  }
+  
+  // Open edit modal using existing editProduct function
+  if (typeof editProduct === 'function') {
+    editProduct(productId, true);
+  } else {
+    console.error('❌ editProduct function not found');
+  }
+}
+
+/**
+ * Delete Variant Product - FIXED PATH
+ */
+async function deleteVariantProduct(productId, productName) {
+  console.log('🗑️ Deleting variant product:', productId);
+  
+  if (!confirm(`Delete "${productName}"?\n\nThis action cannot be undone.`)) {
+    return;
+  }
+  
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) throw new Error('Not authenticated');
+    
+    const { doc, deleteDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    console.log('🗑️ Deleting from Firestore products collection...');
+    
+    // ✅ Delete from products collection
+    const productRef = doc(window.db, 'tenants', userId, 'products', productId);
+    await deleteDoc(productRef);
+    
+    console.log('✅ Deleted from Firestore');
+    
+    // Remove from cached variants
+    if (window.cachedGroupVariants) {
+      window.cachedGroupVariants = window.cachedGroupVariants.filter(v => v.id !== productId);
+    }
+    
+    // Remove from cachedProducts if exists
+    if (typeof cachedProducts !== 'undefined') {
+      const cacheIndex = cachedProducts.findIndex(p => p.id === productId);
+      if (cacheIndex !== -1) {
+        cachedProducts.splice(cacheIndex, 1);
+        try {
+          localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+        } catch (e) {
+          console.warn('Failed to update cache:', e);
+        }
+      }
+    }
+    
+    // Re-render variants
+    renderGroupVariants(window.cachedGroupVariants || []);
+    
+    // Update group's totalVariants count
+    const groupId = window.currentGroupId;
+    if (groupId) {
+      await updateGroupVariantCount(groupId);
+    }
+    
+    alert('✅ Variant deleted successfully!');
+    
+  } catch (error) {
+    console.error('❌ Error deleting variant:', error);
+    alert('Failed to delete variant: ' + error.message);
+  }
+}
+
+/**
+ * Update Group Variant Count
+ */
+async function updateGroupVariantCount(groupId) {
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) return;
+    
+    const { collection, getDocs, query, where, doc, updateDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    // Count variants in this group
+    const productsRef = collection(window.db, 'tenants', userId, 'products');
+    const q = query(productsRef, where('groupId', '==', groupId));
+    const snapshot = await getDocs(q);
+    
+    const totalVariants = snapshot.size;
+    
+    // Update group document
+    const groupRef = doc(window.db, 'tenants', userId, 'productGroups', groupId);
+    await updateDoc(groupRef, {
+      totalVariants: totalVariants,
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log(`✅ Updated group ${groupId} variant count: ${totalVariants}`);
+    
+  } catch (error) {
+    console.error('❌ Error updating variant count:', error);
+  }
+}
+
+// Make functions global
+window.editVariantProduct = editVariantProduct;
+window.deleteVariantProduct = deleteVariantProduct;
+window.updateGroupVariantCount = updateGroupVariantCount;
 
 
 /**
@@ -12081,7 +12235,7 @@ function openCreateGroupModal() {
         <div class="form-section" style="margin-bottom:24px;background:#f8f9fa;padding:16px;border-radius:12px">
           <div class="section-title" style="font-size:16px;font-weight:600;margin-bottom:12px">Basic Information</div>
           <label style="display:block;font-weight:600;margin-bottom:6px">Item Group Name <span style="color:#dc3545">*</span></label>
-          <input id="groupName" required placeholder="e.g., T-Shirts, Tiles" style="width:100%;padding:12px;font-size:16px;border:1px solid #ddd;border-radius:8px">
+          <input id="groupName" required placeholder="e.g., T-Shirts, Tiles" style="width:100%;padding:12px;font-size:16px;border:1px solid #ddd;border-radius:8px" oninput="updateVariantPreview()">
 
           <label style="display:block;font-weight:600;margin:16px 0 6px">Description</label>
           <textarea id="groupDescription" rows="3" placeholder="Optional" style="width:100%;padding:12px;font-size:16px;border:1px solid #ddd;border-radius:8px"></textarea>
@@ -12133,15 +12287,12 @@ function openCreateGroupModal() {
   // Prevent body scroll
   document.body.style.overflow = 'hidden';
 
-  // Reset attributes and add first row (guarded)
-  if (typeof attributeRowCounter === 'undefined') window.attributeRowCounter = 0;
+  // Reset attributes and add first row
   const container = document.getElementById('attributesContainer');
   if (container) {
     container.innerHTML = '';
     if (typeof addAttributeRow === 'function') {
       addAttributeRow();
-    } else {
-      console.warn('addAttributeRow is not defined yet');
     }
   }
 
@@ -12149,54 +12300,25 @@ function openCreateGroupModal() {
 }
 
 
-
-
-
-
-// Close Create Group Modal - FIXED
+// Close Create Group Modal
 function closeCreateGroupModal() {
   console.log('🔒 Closing Create Group Modal');
   
   const modal = document.getElementById('createGroupModal');
   if (modal) {
-    // Remove active class
     modal.classList.remove('active');
-    
-    // Hide with inline styles
     modal.style.display = 'none';
+    modal.remove(); // Remove from DOM
   }
   
   // Restore body scroll
   document.body.style.overflow = '';
   
-  // Reset form
-  const form = document.getElementById('createGroupForm');
-  if (form) {
-    form.reset();
-  }
-  
-  // Clear attributes container
-  const container = document.getElementById('attributesContainer');
-  if (container) {
-    container.innerHTML = '';
-  }
-  
-  // Reset attribute counter
-  attributeRowCounter = 0;
-  
-  // Reset button
-  const submitBtn = document.getElementById('btnSaveGroup');
-  if (submitBtn) {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '💾 Save & Generate';
-  }
-  
-  console.log('✅ Modal closed and reset');
+  console.log('✅ Modal closed and removed');
 }
 
-
     
-// Add Attribute Row - MOBILE OPTIMIZED
+// Add Attribute Row
 function addAttributeRow() {
   const container = document.getElementById('attributesContainer');
   if (!container) return;
@@ -12240,15 +12362,6 @@ function addAttributeRow() {
   `;
   
   container.appendChild(row);
-  
-  // Focus on the attribute name input (mobile-friendly)
-  setTimeout(() => {
-    const nameInput = row.querySelector('.attr-name');
-    if (nameInput) {
-      nameInput.focus();
-    }
-  }, 100);
-  
   updateVariantPreview();
   
   console.log(`✅ Added attribute row: ${rowId}`);
@@ -12256,16 +12369,7 @@ function addAttributeRow() {
 
 // Remove Attribute Row
 function removeAttributeRow(rowId) {
-  const row = document.getElementById(`attributeRow${rowId}`);
-  if (row) {
-    row.remove();
-    updateVariantPreview();
-  }
-}
-
-// Remove Attribute Row
-function removeAttributeRow(rowId) {
-  const row = document.getElementById(`attributeRow${rowId}`);
+  const row = document.getElementById(rowId);
   if (row) {
     row.remove();
     updateVariantPreview();
@@ -12278,7 +12382,8 @@ function removeAttributeRow(rowId) {
  * VARIANT GENERATION & PREVIEW
  * ==========================================
  */
-// Parse Attributes from Form - MOBILE OPTIMIZED
+
+// Parse Attributes from Form
 function parseAttributesFromForm() {
   console.log('🔍 Parsing attributes from form...');
   
@@ -12288,53 +12393,30 @@ function parseAttributesFromForm() {
   console.log(`Found ${rows.length} attribute rows`);
   
   rows.forEach((row, index) => {
-    // Try multiple selector strategies for mobile compatibility
-    const nameInput = row.querySelector('.attr-name') || 
-                     row.querySelector('input[placeholder*="Size"]') ||
-                     row.querySelector('input[type="text"]:first-child');
-    
-    const optionsInput = row.querySelector('.attr-options') || 
-                        row.querySelector('input[placeholder*="Small"]') ||
-                        row.querySelector('input[type="text"]:last-child');
+    const nameInput = row.querySelector('.attr-name');
+    const optionsInput = row.querySelector('.attr-options');
     
     if (nameInput && optionsInput) {
-      // Get values with fallback for mobile
       const attrName = (nameInput.value || '').trim();
       const optionsText = (optionsInput.value || '').trim();
       
-      console.log(`Row ${index + 1}:`, {
-        name: attrName,
-        options: optionsText
-      });
-      
       if (attrName && optionsText) {
-        // Parse options - handle multiple separators
         const attrOptions = optionsText
-          .split(/[,;|]/) // Split by comma, semicolon, or pipe
+          .split(/[,;|]/)
           .map(opt => opt.trim())
           .filter(opt => opt.length > 0);
         
         if (attrOptions.length > 0) {
           attributes[attrName] = attrOptions;
           console.log(`✅ Added attribute: ${attrName} = [${attrOptions.join(', ')}]`);
-        } else {
-          console.warn(`⚠️ No valid options for attribute: ${attrName}`);
         }
-      } else {
-        console.warn(`⚠️ Row ${index + 1} - Empty name or options`);
       }
-    } else {
-      console.error(`❌ Row ${index + 1} - Could not find inputs`);
     }
   });
   
   console.log('📦 Final parsed attributes:', attributes);
-  console.log('📊 Total attributes:', Object.keys(attributes).length);
-  
   return attributes;
 }
-
-
 
 // Generate Variant Combinations
 function generateVariantCombinations(attributes) {
@@ -12344,10 +12426,8 @@ function generateVariantCombinations(attributes) {
     return [];
   }
   
-  // Get all arrays of options
   const optionArrays = keys.map(key => attributes[key]);
   
-  // Generate cartesian product
   function cartesianProduct(arrays) {
     if (arrays.length === 0) return [[]];
     if (arrays.length === 1) return arrays[0].map(item => [item]);
@@ -12366,7 +12446,6 @@ function generateVariantCombinations(attributes) {
   
   const combinations = cartesianProduct(optionArrays);
   
-  // Convert arrays to objects
   return combinations.map(combo => {
     const variant = {};
     keys.forEach((key, index) => {
@@ -12376,7 +12455,6 @@ function generateVariantCombinations(attributes) {
   });
 }
 
-
 // Generate Variant Name
 function generateVariantName(groupName, attributes) {
   const values = Object.values(attributes);
@@ -12384,47 +12462,45 @@ function generateVariantName(groupName, attributes) {
   return `${groupName}-${values.join('-')}`;
 }
 
-
-// Update Variant Preview (Real-time)
+// Update Variant Preview
 function updateVariantPreview() {
-  const groupName = document.getElementById('groupName').value.trim() || 'Product';
+  const groupNameEl = document.getElementById('groupName');
+  const countEl = document.getElementById('variantCount');
+  const container = document.getElementById('variantPreviewContainer');
+  
+  if (!groupNameEl || !countEl || !container) return;
+  
+  const groupName = groupNameEl.value.trim() || 'Product';
   const attributes = parseAttributesFromForm();
   const variants = generateVariantCombinations(attributes);
   
-  // Update count
-  document.getElementById('variantCount').textContent = variants.length;
-  
-  // Update preview list
-  const container = document.getElementById('variantPreviewContainer');
-  if (!container) return;
+  countEl.textContent = variants.length;
   
   if (variants.length === 0) {
     container.innerHTML = `
-      <div class="variant-preview-item">
+      <div style="padding: 10px 12px; background: #e3f2fd; border-radius: 8px; color: #1976d2;">
         Add attributes to see preview...
       </div>
     `;
     return;
   }
   
-  // Show first 10 variants
   const previewLimit = 10;
   let html = '';
   
   variants.slice(0, previewLimit).forEach(attr => {
     const variantName = generateVariantName(groupName, attr);
     html += `
-      <div class="variant-preview-item">
-        <span class="icon">✓</span>
+      <div style="padding: 10px 12px; background: #e3f2fd; border-radius: 8px; margin-bottom: 8px; color: #1976d2; font-size: 14px;">
+        <span style="margin-right: 8px; color: #28a745;">✓</span>
         ${escapeHtml(variantName)}
       </div>
     `;
   });
   
-  // Show "and X more" if needed
   if (variants.length > previewLimit) {
     html += `
-      <div class="variant-preview-more">
+      <div style="padding: 8px; text-align: center; color: #666; font-size: 13px; font-style: italic;">
         ... and ${variants.length - previewLimit} more
       </div>
     `;
@@ -12433,69 +12509,29 @@ function updateVariantPreview() {
   container.innerHTML = html;
 }
 
-    
-
-// Navigate to Group Detail - FIXED
-function navigateToGroupDetail(groupId, groupName) {
-  console.log('📦 Navigating to Group Detail:', groupName);
-  
-  currentPage = 'groupDetail';
-  currentGroupId = groupId;
-  
-  const mainApp = document.getElementById('mainApp');
-  const allProductsPage = document.getElementById('allProductsPage');
-  const productGroupsPage = document.getElementById('productGroupsPage');
-  const groupDetailPage = document.getElementById('groupDetailPage');
-  
-  // HIDE the main dashboard
-  if (mainApp) {
-    mainApp.style.display = 'none';
-  }
-  
-  // ✅ HIDE THE BLUE NAVBAR
-  const navbar = document.querySelector('.navbar');
-  if (navbar) {
-    navbar.style.display = 'none';
-  }
-  
-  // SHOW Group Detail page
-  if (groupDetailPage) {
-    groupDetailPage.classList.add('active');
-  }
-  
-  if (allProductsPage) allProductsPage.classList.remove('active');
-  if (productGroupsPage) productGroupsPage.classList.remove('active');
-  
-  // Set group title
-  const groupTitleEl = document.getElementById('groupDetailTitle');
-  if (groupTitleEl) {
-    groupTitleEl.textContent = groupName;
-  }
-  
-  // Load variants
-  if (typeof syncGroupVariants === 'function') {
-    syncGroupVariants(groupId);
-  }
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+/**
+ * Escape HTML for security
+ */
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 
-
-
-    
 /**
  * ==========================================
- * FORM SUBMISSION HANDLERS - FIREBASE VERSION
+ * FORM SUBMISSION HANDLERS - ENHANCED
  * ==========================================
  */
 
-// Handle Create Group Form Submission
+// Handle Create Group Form Submission - COMPLETE VERSION
 async function handleCreateGroup(event) {
   event.preventDefault();
   console.log('📝 Creating product group...');
   
-  const user = window.auth.currentUser;
+  const user = window.auth?.currentUser;
   if (!user) {
     alert('Please sign in first');
     return;
@@ -12510,7 +12546,7 @@ async function handleCreateGroup(event) {
   }
   
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '⏳ Creating...';
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
   
   try {
     // Collect form data
@@ -12547,73 +12583,140 @@ async function handleCreateGroup(event) {
     console.log('✅ Validation passed!');
     
     // Generate variants
-    const variants = generateVariantCombinations(attributes);
-    console.log(`📊 Will create ${variants.length} variants`);
+    const variantCombinations = generateVariantCombinations(attributes);
+    console.log(`📊 Will create ${variantCombinations.length} variants`);
     
-    const { collection, addDoc } = window.firebaseImports;
+    if (variantCombinations.length === 0) {
+      throw new Error('❌ No variants to create');
+    }
     
-    // Save product group
-    const groupsRef = collection(window.db, 'tenants', user.uid, 'productGroups');
-    const groupDocRef = await addDoc(groupsRef, {
+    const { collection, doc, setDoc, addDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    // ✅ STEP 1: Create group document with generated ID
+    const groupRef = doc(collection(window.db, 'tenants', userId, 'productGroups'));
+    const groupId = groupRef.id;
+    
+    const groupData = {
+      groupId: groupId,
       groupName: groupName,
-      description: description,
-      manufacturer: manufacturer,
-      brand: manufacturer,
-      category: category,
+      description: description || '',
+      manufacturer: manufacturer || '',
+      brand: manufacturer || '',
+      category: category || '',
       attributes: attributes,
-      totalVariants: variants.length,
-      createdBy: user.email,
+      totalVariants: variantCombinations.length,
+      createdBy: user.email || user.uid,
       createdAt: new Date().toISOString(),
-      userId: user.uid
-    });
+      updatedAt: new Date().toISOString(),
+      userId: userId
+    };
     
-    console.log('✅ Group created:', groupDocRef.id);
+    await setDoc(groupRef, groupData);
+    console.log('✅ Group created with ID:', groupId);
     
-    // Save all variants
-    const productsRef = collection(window.db, 'tenants', user.uid, 'products');
-    const variantPromises = variants.map(attrs => {
-      const variantName = generateVariantName(groupName, attrs);
-      
-      return addDoc(productsRef, {
-        name: variantName,
-        variantName: variantName,
-        groupId: groupDocRef.id,
-        groupName: groupName,
-        category: category,
-        brand: manufacturer,
-        manufacturer: manufacturer,
-        attributes: attrs,
-        unitType: 'Piece',
-        price: 0,
-        sellingPrice: 0,
-        costPrice: 0,
-        stock: 0,
-        minStock: 0,
-        size: attrs.Size || '',
-        createdAt: new Date().toISOString(),
-        userId: user.uid
+    // ✅ STEP 2: Create all variant documents in products collection
+    const productsRef = collection(window.db, 'tenants', userId, 'products');
+    let successCount = 0;
+    const createdVariants = [];
+    
+    for (const variantAttrs of variantCombinations) {
+      try {
+        const variantName = generateVariantName(groupName, variantAttrs);
+        
+        const variantData = {
+          name: variantName,
+          variantName: variantName,
+          groupId: groupId, // ✅ Link to parent group
+          groupName: groupName,
+          category: category || '',
+          brand: manufacturer || '',
+          manufacturer: manufacturer || '',
+          attributes: variantAttrs, // Object format
+          attributesString: JSON.stringify(variantAttrs), // String format for search
+          unitType: 'Piece',
+          price: 0,
+          sellingPrice: 0,
+          costPrice: 0,
+          stock: 0,
+          minStock: 5,
+          size: variantAttrs.Size || variantAttrs.size || '',
+          imageUrl: '',
+          isGroupVariant: true, // ✅ Mark as variant
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdBy: user.email || user.uid,
+          userId: userId
+        };
+        
+        const variantRef = await addDoc(productsRef, variantData);
+        
+        console.log(`✅ Created variant ${successCount + 1}/${variantCombinations.length}:`, variantName);
+        
+        createdVariants.push({
+          id: variantRef.id,
+          ...variantData
+        });
+        
+        successCount++;
+        
+      } catch (variantError) {
+        console.error('❌ Error creating variant:', variantError);
+      }
+    }
+    
+    console.log(`✅ Successfully created ${successCount}/${variantCombinations.length} variants`);
+    
+    if (successCount === 0) {
+      throw new Error('Failed to create any variants');
+    }
+    
+    // ✅ STEP 3: Update local cache with new variants
+    if (typeof cachedProducts !== 'undefined') {
+      createdVariants.forEach(variant => {
+        cachedProducts.push(variant);
       });
-    });
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+        console.log('💾 Cache updated with new variants');
+      } catch (e) {
+        console.warn('⚠️ Failed to update cache:', e);
+      }
+    }
     
-    await Promise.all(variantPromises);
-    
-    console.log(`✅ Created ${variants.length} variants`);
-    
-    // Show success message
-    showSuccessToast(`✅ Created "${groupName}" with ${variants.length} variants!`);
-    
-    // Close modal
+    // ✅ STEP 4: Close modal
     closeCreateGroupModal();
     
-    // Reload groups list
-    setTimeout(() => {
-      loadProductGroups();
+    // ✅ STEP 5: Show success message
+    const message = `✅ Created "${groupName}" with ${successCount} variant${successCount !== 1 ? 's' : ''}!`;
+    
+    if (typeof showSuccessToast === 'function') {
+      showSuccessToast(message);
+    } else {
+      alert(message);
+    }
+    
+    console.log('🎉 Group creation complete!');
+    
+    // ✅ STEP 6: Sync from Firestore to reload everything
+    setTimeout(async () => {
+      if (typeof syncFromFirestore === 'function') {
+        await syncFromFirestore();
+      }
+      
+      // If in Groups view, reload groups list
+      const groupsView = document.getElementById('groupsViewContainer');
+      if (groupsView && groupsView.style.display !== 'none') {
+        loadProductGroups();
+      }
     }, 500);
     
   } catch (error) {
     console.error('❌ Error creating product group:', error);
     alert(`Error: ${error.message}`);
-    
+  } finally {
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;
   }
@@ -12622,385 +12725,103 @@ async function handleCreateGroup(event) {
 
 /**
  * ==========================================
- * EDIT VARIANT MODAL FUNCTIONS
+ * DELETE FUNCTIONS
  * ==========================================
  */
-
-// Open Edit Variant Modal - AGGRESSIVE FORCE SHOW VERSION
-function openEditVariantModal(variantId) {
-  console.log('🔍 Opening edit modal for variant:', variantId);
-  
-  // Find variant in cache
-  const variant = cachedGroupVariants.find(v => v.variantId === variantId);
-  
-  if (!variant) {
-    alert('Variant not found');
-    return;
-  }
-
-  // Use the existing Bootstrap product modal
-  const modal = document.getElementById('productModal');
-  
-  if (!modal) {
-    console.error('❌ productModal not found in DOM!');
-    alert('Error: Edit modal not found. Please refresh the page.');
-    return;
-  }
-
-  // Set modal title
-  const modalTitle = document.getElementById('productModalLabel');
-  if (modalTitle) {
-    modalTitle.textContent = 'Edit Variant';
-  }
-
-  // ✅ SAFE FIELD POPULATION
-  const setFieldValue = (id, value) => {
-    const field = document.getElementById(id);
-    if (field) {
-      field.value = value;
-      return true;
-    } else {
-      console.warn(`⚠️ Field not found: ${id}`);
-      return false;
-    }
-  };
-
-  // Populate form fields
-  setFieldValue('productId', variant.variantId);
-  setFieldValue('productName', variant.variantName);
-  setFieldValue('brand', variant.manufacturer || variant.brand || '');
-  setFieldValue('size', extractAttributeValue(variant.attributes, 'Size') || '');
-  setFieldValue('category', variant.category || 'Tiles');
-  setFieldValue('unitType', variant.unitType || 'Piece');
-  setFieldValue('piecesPerBox', 0);
-  setFieldValue('sftPerBox', 0);
-  setFieldValue('price', variant.sellingPrice || 0);
-  setFieldValue('stock', variant.stock || 0);
-  setFieldValue('minStock', variant.minStock || 0);
-
-  // Store that this is a variant edit
-  const form = document.getElementById('productForm');
-  if (form) {
-    form.dataset.isVariant = 'true';
-    form.dataset.groupId = variant.groupId;
-  }
-
-  // Make fields readonly
-  const makeReadonly = (id) => {
-    const field = document.getElementById(id);
-    if (field) {
-      field.readOnly = true;
-      field.style.background = '#f8f9fa';
-      field.style.color = '#6c757d';
-    }
-  };
-
-  makeReadonly('productName');
-  makeReadonly('brand');
-  makeReadonly('size');
-
-  // ✅ FORCE SHOW MODAL - Multiple methods
-  console.log('Attempting to show modal...');
-  
-  // Method 1: Try Bootstrap 5 Modal API
-  try {
-    let bootstrapModal = bootstrap.Modal.getInstance(modal);
-    if (!bootstrapModal) {
-      bootstrapModal = new bootstrap.Modal(modal);
-    }
-    bootstrapModal.show();
-    console.log('✅ Bootstrap modal.show() called');
-  } catch (e) {
-    console.error('❌ Bootstrap Modal failed:', e);
-    
-    // Method 2: Manual show with jQuery (fallback)
-    if (typeof $ !== 'undefined' && $.fn.modal) {
-      $(modal).modal('show');
-      console.log('✅ jQuery modal.show() called');
-    } else {
-      // Method 3: Direct CSS manipulation (last resort)
-      modal.classList.add('show');
-      modal.style.display = 'block';
-      modal.setAttribute('aria-modal', 'true');
-      modal.removeAttribute('aria-hidden');
-      document.body.classList.add('modal-open');
-      
-      // Add backdrop manually
-      const backdrop = document.createElement('div');
-      backdrop.className = 'modal-backdrop fade show';
-      backdrop.id = 'variantModalBackdrop';
-      document.body.appendChild(backdrop);
-      
-      console.log('✅ Manual modal display applied');
-    }
-  }
-
-  // ✅ AGGRESSIVE FORCE TO FOREGROUND (Works regardless of Bootstrap method)
-  setTimeout(() => {
-    // Force modal container
-    modal.style.cssText = `
-      display: block !important;
-      z-index: 999999 !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      overflow-y: auto !important;
-      background: rgba(0, 0, 0, 0.5) !important;
-    `;
-    
-    // Force modal dialog
-    const modalDialog = modal.querySelector('.modal-dialog');
-    if (modalDialog) {
-      modalDialog.style.cssText = `
-        z-index: 1000000 !important;
-        position: relative !important;
-        margin: 1.75rem auto !important;
-        max-width: 500px !important;
-        pointer-events: auto !important;
-      `;
-    }
-    
-    // Force modal content
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-      modalContent.style.cssText = `
-        background: white !important;
-        border-radius: 8px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
-        position: relative !important;
-        display: flex !important;
-        flex-direction: column !important;
-      `;
-    }
-    
-    // Force backdrop if exists
-    const backdrop = document.querySelector('.modal-backdrop');
-    if (backdrop) {
-      backdrop.style.cssText = `
-        z-index: 999998 !important;
-        opacity: 0.5 !important;
-      `;
-    }
-    
-    // Lower z-index of page views
-    const pageViews = document.querySelectorAll('.page-view');
-    pageViews.forEach(view => {
-      view.style.zIndex = '1';
-    });
-    
-    console.log('✅ Modal FORCED to foreground with inline styles');
-  }, 100);
-
-  console.log('✅ Edit variant modal opened for:', variant.variantName);
-}
-
-// Helper function to extract attribute value from JSON
-function extractAttributeValue(attributes, key) {
-  try {
-    const attrs = typeof attributes === 'string' 
-      ? JSON.parse(attributes) 
-      : attributes;
-    return attrs[key] || '';
-  } catch (e) {
-    return '';
-  }
-}
-
-// Close Edit Variant Modal - COMPLETE FIX
-function closeEditVariantModal() {
-  console.log('Closing edit variant modal');
-  
-  const modal = document.getElementById('editVariantModal');
-  if (modal) {
-    modal.classList.remove('active');
-    modal.style.display = 'none'; // Hide it
-    
-    // Restore body scroll
-    document.body.style.overflow = '';
-  }
-
-  // Reset form
-  const form = document.getElementById('editVariantForm');
-  if (form) {
-    form.reset();
-  }
-  
-  console.log('Modal closed');
-}
-// Handle Update Variant - FIREBASE VERSION
-async function handleUpdateVariant(event) {
-  event.preventDefault();
-  
-  console.log('💾 Updating variant...');
-  
-  const user = window.auth.currentUser;
-  if (!user) {
-    alert('Please sign in first');
-    return;
-  }
-  
-  const submitBtn = event.target.querySelector('button[type="submit"]');
-  const originalText = submitBtn.innerHTML;
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '⏳ Saving...';
-  
-  try {
-    // Collect form data (using product form fields)
-    const variantId = document.getElementById('productId').value;
-    const price = parseFloat(document.getElementById('price').value) || 0;
-    const stock = parseInt(document.getElementById('stock').value) || 0;
-    const minStock = parseInt(document.getElementById('minStock').value) || 0;
-    
-    // Validate
-    if (price < 0 || stock < 0 || minStock < 0) {
-      throw new Error('Values cannot be negative');
-    }
-    
-    console.log('📤 Updating variant:', variantId);
-    
-    // Update in Firestore
-    const { doc, updateDoc } = window.firebaseImports;
-    const variantRef = doc(window.db, 'tenants', user.uid, 'products', variantId);
-    
-    await updateDoc(variantRef, {
-      price: price,
-      sellingPrice: price,
-      stock: stock,
-      minStock: minStock,
-      updatedAt: new Date().toISOString()
-    });
-    
-    console.log('✅ Variant updated in Firestore');
-    
-    // Update local cache
-    const cachedVariant = cachedProducts.find(p => p.id === variantId);
-    if (cachedVariant) {
-      cachedVariant.price = price;
-      cachedVariant.stock = stock;
-      cachedVariant.minStock = minStock;
-    }
-    
-    // Show success message
-    showSuccessToast('Variant updated successfully!');
-    
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
-    if (modal) modal.hide();
-    
-    // Refresh variants list
-    setTimeout(() => {
-      if (currentGroupId) {
-        loadGroupVariants(currentGroupId);
-      }
-    }, 500);
-    
-  } catch (error) {
-    console.error('❌ Error updating variant:', error);
-    alert('Error: ' + error.message);
-    
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = originalText;
-  }
-}
-
-
-/**
- * ==========================================
- * DELETE FUNCTIONS - FIREBASE VERSION
- * ==========================================
- */
-
-// ✅ NO CHANGES NEEDED
-function confirmDeleteGroup(groupId, groupName) { /* Keep as is */ }
 
 // Delete Product Group - FIREBASE VERSION
 async function deleteProductGroup(groupId, groupName) {
   console.log('🗑️ Deleting group:', groupId);
   
-  const user = window.auth.currentUser;
+  const user = window.auth?.currentUser;
   if (!user) {
     alert('Please sign in first');
     return;
   }
   
+  if (!confirm(`Delete group "${groupName}" and all its variants?\n\nThis action cannot be undone.`)) {
+    return;
+  }
+  
   try {
-    showLoadingOverlay('Deleting group...');
+    if (typeof showLoadingOverlay === 'function') {
+      showLoadingOverlay('Deleting group...');
+    }
     
     const { doc, deleteDoc, collection, query, where, getDocs } = window.firebaseImports;
+    const userId = user.uid;
     
-    // Delete the group document
-    const groupRef = doc(window.db, 'tenants', user.uid, 'productGroups', groupId);
-    await deleteDoc(groupRef);
-    
-    // Delete all variants in this group
-    const productsRef = collection(window.db, 'tenants', user.uid, 'products');
+    // Delete all variants in this group first
+    const productsRef = collection(window.db, 'tenants', userId, 'products');
     const q = query(productsRef, where('groupId', '==', groupId));
     const snapshot = await getDocs(q);
     
     const deletePromises = [];
     snapshot.forEach((docSnapshot) => {
-      const variantRef = doc(window.db, 'tenants', user.uid, 'products', docSnapshot.id);
+      const variantRef = doc(window.db, 'tenants', userId, 'products', docSnapshot.id);
       deletePromises.push(deleteDoc(variantRef));
     });
     
     await Promise.all(deletePromises);
+    console.log(`✅ Deleted ${deletePromises.length} variants`);
     
-    hideLoadingOverlay();
+    // Delete the group document
+    const groupRef = doc(window.db, 'tenants', userId, 'productGroups', groupId);
+    await deleteDoc(groupRef);
+    console.log('✅ Deleted group');
     
-    console.log(`✅ Group deleted along with ${deletePromises.length} variants`);
+    if (typeof hideLoadingOverlay === 'function') {
+      hideLoadingOverlay();
+    }
     
-    showSuccessToast(`Deleted "${groupName}" and all its variants`);
+    if (typeof showSuccessToast === 'function') {
+      showSuccessToast(`Deleted "${groupName}" and all its variants`);
+    } else {
+      alert(`✅ Deleted "${groupName}" and all its variants`);
+    }
     
+    // Reload groups
     setTimeout(() => {
       loadProductGroups();
+      if (typeof syncFromFirestore === 'function') {
+        syncFromFirestore();
+      }
     }, 500);
     
   } catch (error) {
-    hideLoadingOverlay();
+    if (typeof hideLoadingOverlay === 'function') {
+      hideLoadingOverlay();
+    }
     console.error('❌ Error deleting group:', error);
     alert('Error: ' + error.message);
   }
 }
 
-// ✅ NO CHANGES NEEDED
-function confirmDeleteVariant(variantId, variantName) { /* Keep as is */ }
-
-// Delete Variant - FIREBASE VERSION
-async function deleteVariant(variantId, variantName) {
-  console.log('🗑️ Deleting variant:', variantId);
-  
-  const user = window.auth.currentUser;
-  if (!user) {
-    alert('Please sign in first');
-    return;
-  }
-  
-  try {
-    showLoadingOverlay('Deleting variant...');
-    
-    const { doc, deleteDoc } = window.firebaseImports;
-    
-    const variantRef = doc(window.db, 'tenants', user.uid, 'products', variantId);
-    await deleteDoc(variantRef);
-    
-    hideLoadingOverlay();
-    
-    console.log('✅ Variant deleted from Firestore');
-    
-    showSuccessToast(`Deleted "${variantName}"`);
-    
-    setTimeout(() => {
-      loadGroupVariants(currentGroupId);
-    }, 500);
-    
-  } catch (error) {
-    hideLoadingOverlay();
-    console.error('❌ Error deleting variant:', error);
-    alert('Error: ' + error.message);
-  }
+function confirmDeleteGroup(groupId, groupName) {
+  deleteProductGroup(groupId, groupName);
 }
+
+// Make all functions globally accessible
+window.loadProductGroups = loadProductGroups;
+window.loadGroupVariants = loadGroupVariants;
+window.renderProductGroups = renderProductGroups;
+window.renderGroupVariants = renderGroupVariants;
+window.filterProductGroups = filterProductGroups;
+window.filterGroupVariants = filterGroupVariants;
+window.openCreateGroupModal = openCreateGroupModal;
+window.closeCreateGroupModal = closeCreateGroupModal;
+window.addAttributeRow = addAttributeRow;
+window.removeAttributeRow = removeAttributeRow;
+window.parseAttributesFromForm = parseAttributesFromForm;
+window.generateVariantCombinations = generateVariantCombinations;
+window.generateVariantName = generateVariantName;
+window.updateVariantPreview = updateVariantPreview;
+window.handleCreateGroup = handleCreateGroup;
+window.escapeHtml = escapeHtml;
+window.deleteProductGroup = deleteProductGroup;
+window.confirmDeleteGroup = confirmDeleteGroup;
+
+console.log('✅ Product Groups module loaded');
 
 
   // Open Add Product modal (from All Products page) - FIXED
@@ -15533,6 +15354,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
