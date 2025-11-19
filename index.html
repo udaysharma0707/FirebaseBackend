@@ -4226,7 +4226,7 @@ async function saveProduct() {
 
 /**
  * ==========================================
- * SAVE VARIANT DATA - FIXED FOR PRODUCTS COLLECTION
+ * SAVE VARIANT DATA - EITHER STOCK OR STATUS
  * ==========================================
  */
 async function saveVariantData() {
@@ -4278,27 +4278,57 @@ async function saveVariantData() {
     };
     
     const sellingPrice = parseFloat(getFieldValue('price', 0));
-    const stock = parseInt(getFieldValue('productCurrentStock', 0));
+    const stockInput = getFieldValue('productCurrentStock', '');
     const minStock = parseInt(getFieldValue('minStock', 0));
     const unitType = getFieldValue('unitType', 'Piece');
+    
+    // ✅ CHECK: Stock Status OR Exact Stock (Either/Or logic)
+    let stockStatus = null;
+    let stock = null;
+    
+    // First, check if a stock status is selected
+    const stockStatusRadios = document.querySelectorAll('input[name="stockStatus"]');
+    stockStatusRadios.forEach(radio => {
+      if (radio.checked) {
+        stockStatus = radio.value;
+      }
+    });
+    
+    // If stock status is selected, use that
+    if (stockStatus && stockStatus !== '') {
+      console.log('📊 Using Stock Status:', stockStatus);
+      // Stock status is selected, don't use exact stock
+      stock = null; // Or you can set it to 0
+    } else {
+      // No status selected, use exact stock quantity
+      stock = parseInt(stockInput) || 0;
+      console.log('🔢 Using Exact Stock:', stock);
+      stockStatus = null; // Clear status if using exact stock
+    }
     
     if (isNaN(sellingPrice) || sellingPrice < 0) {
       throw new Error('Invalid selling price');
     }
     
-    if (isNaN(stock) || stock < 0) {
-      throw new Error('Invalid stock value');
-    }
-    
-    // ✅ PREPARE UPDATE DATA FOR FIRESTORE
+    // ✅ PREPARE UPDATE DATA - Conditional based on what's provided
     const updateData = {
       sellingPrice: sellingPrice,
-      price: sellingPrice, // Also update price field
-      stock: stock,
+      price: sellingPrice,
       minStock: minStock,
       unitType: unitType,
       updatedAt: new Date().toISOString()
     };
+    
+    // ✅ Add EITHER stock OR stockStatus
+    if (stockStatus && stockStatus !== '') {
+      updateData.stockStatus = stockStatus;
+      updateData.stock = null; // Clear exact stock
+      console.log('✅ Saving with Stock Status:', stockStatus);
+    } else {
+      updateData.stock = stock;
+      updateData.stockStatus = null; // Clear status
+      console.log('✅ Saving with Exact Stock:', stock);
+    }
     
     console.log('📤 Updating variant in Firestore:', updateData);
     console.log('📍 Path: tenants/' + user.uid + '/products/' + variantId);
@@ -4306,7 +4336,7 @@ async function saveVariantData() {
     const { doc, updateDoc } = window.firebaseImports;
     const userId = user.uid;
     
-    // ✅ CRITICAL FIX: Use 'products' collection instead of 'variants'
+    // ✅ Use 'products' collection
     const variantRef = doc(window.db, 'tenants', userId, 'products', variantId);
     await updateDoc(variantRef, updateData);
     
@@ -4418,10 +4448,8 @@ async function saveVariantData() {
 // Make globally accessible
 window.saveVariantData = saveVariantData;
 
-console.log('✅ saveVariantData function loaded');
+console.log('✅ saveVariantData function loaded with Either/Or stock logic');
 
-    
-  
 
 /**
  * ==========================================
@@ -15404,6 +15432,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
