@@ -2629,11 +2629,6 @@ async function handleSignUp(event) {
  * SYNC FROM FIRESTORE - KEEP LATEST VERSION
  * ==========================================
  */
-/**
- * ==========================================
- * SYNC FROM FIRESTORE - WITH DUPLICATE PREVENTION
- * ==========================================
- */
 async function syncFromFirestore() {
   const user = window.auth.currentUser;
   
@@ -2666,27 +2661,37 @@ async function syncFromFirestore() {
     
     console.log(`📦 Fetched ${allProducts.length} products from Firestore`);
     
-    // ✅ STEP 2: Remove duplicates by ID (keep first occurrence)
+    // ✅ STEP 2: Remove duplicates - KEEP LATEST BY updatedAt
     const uniqueProductsMap = new Map();
-    const duplicates = [];
     
     allProducts.forEach(product => {
-      if (!uniqueProductsMap.has(product.id)) {
+      const existingProduct = uniqueProductsMap.get(product.id);
+      
+      if (!existingProduct) {
+        // First time seeing this ID - add it
         uniqueProductsMap.set(product.id, product);
       } else {
-        duplicates.push(product);
-        console.warn('⚠️ Duplicate product found:', product.id, product.name);
+        // Duplicate ID found - keep the one with latest updatedAt
+        const existingTime = existingProduct.updatedAt ? new Date(existingProduct.updatedAt).getTime() : 0;
+        const newTime = product.updatedAt ? new Date(product.updatedAt).getTime() : 0;
+        
+        if (newTime > existingTime) {
+          console.log('🔄 Replacing old product with newer version:', product.name);
+          console.log('   - Old time:', existingProduct.updatedAt);
+          console.log('   - New time:', product.updatedAt);
+          uniqueProductsMap.set(product.id, product);
+        } else {
+          console.log('⏭️ Keeping existing (newer) product:', existingProduct.name);
+        }
       }
     });
     
     // ✅ STEP 3: Convert map back to array
     cachedProducts = Array.from(uniqueProductsMap.values());
     
-    if (duplicates.length > 0) {
-      console.warn(`⚠️ Found ${duplicates.length} duplicate products (removed)`);
-    }
+    console.log(`✅ Loaded ${cachedProducts.length} unique products (kept latest versions)`);
     
-    // ✅ STEP 4: Also check for duplicate names with different IDs
+    // ✅ STEP 4: Check for duplicate names with different IDs
     const nameMap = {};
     cachedProducts.forEach(product => {
       const name = product.name?.toLowerCase().trim();
@@ -2697,22 +2702,47 @@ async function syncFromFirestore() {
         nameMap[name].push({
           id: product.id,
           name: product.name,
-          stock: product.stock
+          stock: product.stock,
+          updatedAt: product.updatedAt
         });
       }
     });
     
-    // Log products with same name but different IDs
+    // ✅ STEP 5: For duplicate names, keep only the latest one
+    const idsToRemove = [];
+    
     Object.keys(nameMap).forEach(name => {
       if (nameMap[name].length > 1) {
-        console.warn(`⚠️ Multiple products with name "${name}":`, nameMap[name]);
+        console.warn(`⚠️ Found ${nameMap[name].length} products with name "${name}"`);
+        
+        // Sort by updatedAt (newest first)
+        const sorted = nameMap[name].sort((a, b) => {
+          const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+          const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+          return timeB - timeA;
+        });
+        
+        // Keep the first (newest), mark others for removal
+        const toKeep = sorted[0];
+        console.log(`✅ Keeping latest:`, toKeep.id, '| Updated:', toKeep.updatedAt);
+        
+        for (let i = 1; i < sorted.length; i++) {
+          console.log(`🗑️ Marking for removal:`, sorted[i].id, '| Updated:', sorted[i].updatedAt);
+          idsToRemove.push(sorted[i].id);
+        }
       }
     });
+    
+    // ✅ STEP 6: Remove old duplicates from cache
+    if (idsToRemove.length > 0) {
+      console.log(`🗑️ Removing ${idsToRemove.length} old duplicate products from cache`);
+      cachedProducts = cachedProducts.filter(p => !idsToRemove.includes(p.id));
+    }
     
     // Sort products by name
     cachedProducts.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     
-    console.log(`✅ Loaded ${cachedProducts.length} unique products`);
+    console.log(`✅ Final: ${cachedProducts.length} unique products loaded`);
     
     // ✅ Save to cache
     try {
@@ -2722,11 +2752,10 @@ async function syncFromFirestore() {
       console.warn('⚠️ Failed to save products cache:', cacheError);
     }
     
-    // ✅ Fetch sales from Firestore - SAFE VERSION
+    // ✅ Fetch sales from Firestore
     try {
       const salesRef = collection(window.db, 'tenants', userId, 'sales');
       
-      // ✅ TRY with orderBy first
       try {
         const salesQuery = query(salesRef, orderBy('date', 'desc'));
         const salesSnap = await getDocs(salesQuery);
@@ -2739,14 +2768,12 @@ async function syncFromFirestore() {
           });
         });
         
-        // Filter out deleted sales
         let deletedSaleIds = JSON.parse(localStorage.getItem('deletedSaleIds') || '[]');
         cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
         
         console.log(`📊 Loaded ${allSales.length} sales, showing ${cachedSales.length}`);
         
       } catch (orderError) {
-        // ✅ If orderBy fails (invalid dates), get all sales and sort in JS
         console.warn('⚠️ OrderBy failed, fetching all sales:', orderError.message);
         
         const salesSnap = await getDocs(salesRef);
@@ -2759,11 +2786,10 @@ async function syncFromFirestore() {
           });
         });
         
-        // Sort by date in JavaScript
         allSales.sort((a, b) => {
           const dateA = a.date ? new Date(a.date).getTime() : 0;
           const dateB = b.date ? new Date(b.date).getTime() : 0;
-          return dateB - dateA; // Newest first
+          return dateB - dateA;
         });
         
         let deletedSaleIds = JSON.parse(localStorage.getItem('deletedSaleIds') || '[]');
@@ -2772,7 +2798,6 @@ async function syncFromFirestore() {
         console.log(`📊 Loaded ${allSales.length} sales (sorted in JS), showing ${cachedSales.length}`);
       }
       
-      // ✅ Save sales to cache
       try {
         localStorage.setItem('inventory_sales_cache', JSON.stringify(cachedSales));
       } catch (e) {
@@ -2784,10 +2809,9 @@ async function syncFromFirestore() {
       cachedSales = [];
     }
     
-    // Mark initial load complete
     hasInitialLoaded = true;
     
-    // ✅ Render both products and sales
+    // ✅ Render
     try {
       renderProducts();
     } catch (e) {
@@ -2800,14 +2824,12 @@ async function syncFromFirestore() {
       console.error('❌ Failed to render sales:', e.message);
     }
     
-    // ✅ Update dashboard metrics
     try {
       updateSummaryFromCache();
     } catch (e) {
       console.error('❌ Failed to update summary:', e.message);
     }
     
-    // ✅ Also call loadRecentSales for homepage
     try {
       if (typeof loadRecentSales === 'function') {
         loadRecentSales();
@@ -2822,12 +2844,10 @@ async function syncFromFirestore() {
     console.error('❌ Sync error:', err.message);
     showSyncIndicator('Sync failed', 1500);
     
-    // ✅ Try to load from cache
     try {
       cachedProducts = JSON.parse(localStorage.getItem('inventory_products_cache') || '[]');
       cachedSales = JSON.parse(localStorage.getItem('inventory_sales_cache') || '[]');
       
-      // ✅ Remove duplicates from cache too
       const uniqueMap = new Map();
       cachedProducts.forEach(p => {
         if (!uniqueMap.has(p.id)) {
@@ -2843,6 +2863,7 @@ async function syncFromFirestore() {
     }
   }
 }
+
 
     
 // Manual refresh function
@@ -15197,6 +15218,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
