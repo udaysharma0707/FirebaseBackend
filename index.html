@@ -7596,10 +7596,10 @@ function showPhotoProducts() {
   // ✅ Render photo products
   renderPhotoProductsGrid();
   console.log('✅ Photo Products view activated');
-}      
-
+} 
+    
 /**
- * Show Groups View
+ * Show Groups View - FIXED LAYOUT
  */
 function showGroupsView() {
   console.log('📁 Switching to Groups view');
@@ -7640,6 +7640,41 @@ function showGroupsView() {
     console.log('✅ Photo grid hidden');
   }
   
+  // ✅ CRITICAL: Hide Recent Sales section
+  const recentSalesSection = document.querySelector('.recent-sales-section');
+  const recentSalesContainer = document.getElementById('recentSalesContainer');
+  const recentSalesHeading = document.querySelector('h5:has-text("Recent Sales"), h4:has-text("Recent Sales"), h3:has-text("Recent Sales")');
+  
+  // Try multiple selectors
+  const salesElements = [
+    document.getElementById('recentSales'),
+    document.querySelector('[id*="recent"][id*="sales"]'),
+    document.querySelector('.recent-sales'),
+    recentSalesSection,
+    recentSalesContainer
+  ];
+  
+  salesElements.forEach(el => {
+    if (el) {
+      el.style.display = 'none';
+      console.log('✅ Hidden element:', el.id || el.className);
+    }
+  });
+  
+  // ✅ CRITICAL: Hide Recent Purchases section (if exists)
+  const purchasesElements = [
+    document.getElementById('recentPurchases'),
+    document.querySelector('[id*="recent"][id*="purchases"]'),
+    document.querySelector('.recent-purchases')
+  ];
+  
+  purchasesElements.forEach(el => {
+    if (el) {
+      el.style.display = 'none';
+      console.log('✅ Hidden element:', el.id || el.className);
+    }
+  });
+  
   // ✅ Show groups view
   const groupsView = document.getElementById('groupsViewContainer');
   if (groupsView) {
@@ -7650,7 +7685,7 @@ function showGroupsView() {
     console.error('❌ Groups view container not found!');
   }
   
-  // ✅ Load groups (uses existing function)
+  // ✅ Load groups
   if (typeof loadProductGroups === 'function') {
     loadProductGroups();
   } else {
@@ -7659,16 +7694,6 @@ function showGroupsView() {
   
   console.log('✅ Groups view activated');
 }
-
-
-/**
- * Make functions globally accessible
- */
-window.showAllProducts = showAllProducts;
-window.showPhotoProducts = showPhotoProducts;
-window.showGroupsView = showGroupsView;
-
-console.log('✅ View switching functions loaded');
 
 function renderPhotoProductsGrid() {
   const photoGrid = document.getElementById('photoProductGrid');
@@ -15583,6 +15608,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
