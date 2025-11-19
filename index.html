@@ -4229,6 +4229,11 @@ async function saveProduct() {
  * SAVE VARIANT DATA - EITHER STOCK OR STATUS
  * ==========================================
  */
+/**
+ * ==========================================
+ * SAVE VARIANT DATA - EITHER STOCK OR STATUS (MIRROR REGULAR PRODUCT LOGIC)
+ * ==========================================
+ */
 async function saveVariantData() {
   console.log('💾 Saving variant to Firestore...');
   
@@ -4242,36 +4247,22 @@ async function saveVariantData() {
   
   try {
     const user = window.auth?.currentUser;
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    if (!user) throw new Error('User not authenticated');
     
     const form = document.getElementById('productForm');
     
     // Get variant ID
     let variantId = document.getElementById('productId')?.value;
-    if (!variantId || variantId === '') {
-      variantId = form.dataset.variantId;
-    }
+    if (!variantId || variantId === '') variantId = form.dataset.variantId;
     
     const groupId = form.dataset.groupId;
-    
-    console.log('🔍 Debug info:', {
-      variantId: variantId,
-      groupId: groupId
-    });
+    console.log('🔍 Debug info:', { variantId, groupId });
     
     // Validation
-    if (!variantId || variantId === '' || variantId === 'undefined') {
-      throw new Error('Variant ID is missing. Please close and reopen the edit form.');
-    }
+    if (!variantId || variantId === '' || variantId === 'undefined') throw new Error('Variant ID is missing. Please close and reopen the edit form.');
+    if (!groupId || groupId === '' || groupId === 'undefined') throw new Error('Group ID is missing. Please close and reopen the edit form.');
     
-    if (!groupId || groupId === '' || groupId === 'undefined') {
-      throw new Error('Group ID is missing. Please close and reopen the edit form.');
-    }
-    
-    // Get field values
+    // Get form field values
     const getFieldValue = (id, defaultValue = 0) => {
       const field = document.getElementById(id);
       return field ? (field.value || defaultValue) : defaultValue;
@@ -4282,35 +4273,13 @@ async function saveVariantData() {
     const minStock = parseInt(getFieldValue('minStock', 0));
     const unitType = getFieldValue('unitType', 'Piece');
     
-    // ✅ CHECK: Stock Status OR Exact Stock (Either/Or logic)
-    let stockStatus = null;
-    let stock = null;
-    
-    // First, check if a stock status is selected
+    let stockStatus = null, stock = null;
     const stockStatusRadios = document.querySelectorAll('input[name="stockStatus"]');
     stockStatusRadios.forEach(radio => {
-      if (radio.checked) {
-        stockStatus = radio.value;
-      }
+      if (radio.checked) stockStatus = radio.value;
     });
-    
-    // If stock status is selected, use that
-    if (stockStatus && stockStatus !== '') {
-      console.log('📊 Using Stock Status:', stockStatus);
-      // Stock status is selected, don't use exact stock
-      stock = null; // Or you can set it to 0
-    } else {
-      // No status selected, use exact stock quantity
-      stock = parseInt(stockInput) || 0;
-      console.log('🔢 Using Exact Stock:', stock);
-      stockStatus = null; // Clear status if using exact stock
-    }
-    
-    if (isNaN(sellingPrice) || sellingPrice < 0) {
-      throw new Error('Invalid selling price');
-    }
-    
-    // ✅ PREPARE UPDATE DATA - Conditional based on what's provided
+
+    // MIRROR regular product logic: set both fields when status is selected
     const updateData = {
       sellingPrice: sellingPrice,
       price: sellingPrice,
@@ -4319,31 +4288,36 @@ async function saveVariantData() {
       updatedAt: new Date().toISOString()
     };
     
-    // ✅ Add EITHER stock OR stockStatus
     if (stockStatus && stockStatus !== '') {
-      updateData.stockStatus = stockStatus;
-      updateData.stock = null; // Clear exact stock
+      // Status is selected: save both stock (UPPERCASE) and stockStatus (lowercase)
+      updateData.stockStatus = stockStatus.toLowerCase();
+      updateData.stock = stockStatus.toUpperCase();
       console.log('✅ Saving with Stock Status:', stockStatus);
-    } else {
+    } else if (stockInput && stockInput.trim() !== '') {
+      // User entered exact quantity
+      stock = parseInt(stockInput) || 0;
       updateData.stock = stock;
-      updateData.stockStatus = null; // Clear status
+      updateData.stockStatus = null;
       console.log('✅ Saving with Exact Stock:', stock);
+    } else {
+      // Default/fallback
+      updateData.stock = 0;
+      updateData.stockStatus = null;
+      console.log('✅ Saving with default zero stock');
     }
+
+    if (isNaN(sellingPrice) || sellingPrice < 0) throw new Error('Invalid selling price');
     
-    console.log('📤 Updating variant in Firestore:', updateData);
-    console.log('📍 Path: tenants/' + user.uid + '/products/' + variantId);
-    
+    // === Firestore ===
     const { doc, updateDoc } = window.firebaseImports;
     const userId = user.uid;
-    
-    // ✅ Use 'products' collection
     const variantRef = doc(window.db, 'tenants', userId, 'products', variantId);
     await updateDoc(variantRef, updateData);
     
     console.log('✅ Variant updated successfully in products collection');
     
-    // ✅ Update local caches
-    // Update cachedGroupVariants
+    // ==== Update caches ====
+    // cachedGroupVariants
     if (typeof window.cachedGroupVariants !== 'undefined' && window.cachedGroupVariants) {
       const variantIndex = window.cachedGroupVariants.findIndex(v => v.id === variantId || v.variantId === variantId);
       if (variantIndex !== -1) {
@@ -4354,8 +4328,7 @@ async function saveVariantData() {
         console.log('✅ Updated cachedGroupVariants');
       }
     }
-    
-    // Update cachedProducts
+    // cachedProducts
     if (typeof cachedProducts !== 'undefined' && cachedProducts) {
       const productIndex = cachedProducts.findIndex(p => p.id === variantId);
       if (productIndex !== -1) {
@@ -4363,8 +4336,6 @@ async function saveVariantData() {
           ...cachedProducts[productIndex],
           ...updateData
         };
-        
-        // Save to localStorage
         try {
           localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
           console.log('✅ Updated cachedProducts and localStorage');
@@ -4386,7 +4357,6 @@ async function saveVariantData() {
     if (modal) {
       modal.hide();
     } else {
-      // Alternative close method
       const modalEl = document.getElementById('productModal');
       if (modalEl) {
         modalEl.style.display = 'none';
@@ -4396,14 +4366,12 @@ async function saveVariantData() {
         document.body.style.overflow = '';
       }
     }
-    
     // Clear flags
     if (form) {
       form.dataset.isVariant = 'false';
       form.dataset.groupId = '';
       form.dataset.variantId = '';
     }
-    
     // Reset readonly fields
     const resetField = (id) => {
       const field = document.getElementById(id);
@@ -4413,25 +4381,16 @@ async function saveVariantData() {
         field.style.color = '';
       }
     };
-    
     resetField('productName');
     resetField('brand');
     resetField('size');
-    
     // Refresh views
     setTimeout(() => {
-      // If in variants view, reload variants
       const variantsContainer = document.getElementById('variantsListContainer');
       if (variantsContainer && variantsContainer.style.display !== 'none' && groupId) {
-        if (typeof loadGroupVariants === 'function') {
-          loadGroupVariants(groupId);
-        }
+        if (typeof loadGroupVariants === 'function') loadGroupVariants(groupId);
       }
-      
-      // If in main products view, re-render
-      if (typeof renderProducts === 'function') {
-        renderProducts();
-      }
+      if (typeof renderProducts === 'function') renderProducts();
     }, 500);
     
   } catch (error) {
@@ -4444,12 +4403,9 @@ async function saveVariantData() {
     }
   }
 }
-
-// Make globally accessible
 window.saveVariantData = saveVariantData;
 
-console.log('✅ saveVariantData function loaded with Either/Or stock logic');
-
+console.log('✅ saveVariantData function loaded with mirrored status/stock logic');
 
 /**
  * ==========================================
@@ -15410,6 +15366,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
