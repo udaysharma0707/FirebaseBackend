@@ -43,6 +43,39 @@ function showCategoryBulkEdit() {
   console.log('✅ Category selection UI shown');
 }
 
+
+/**
+ * Select Bulk Category - FIXED: No toast message
+ */
+function selectBulkCategory(category) {
+  console.log('📦 Selected category:', category);
+  
+  // ✅ Close category dropdown
+  document.getElementById('categoryDropdownBtn').click();
+  
+  setTimeout(() => {
+    // ✅ Set bulk edit mode
+    bulkEditMode = {
+      active: true,
+      field: 'category',
+      value: category,
+      selectedProducts: []
+    };
+    
+    // ✅ Update UI
+    document.getElementById('selectedCategoryText').textContent = category;
+    document.getElementById('updateCategoryBtn').style.display = 'inline-block';
+    // Cancel button already shown by showCategoryBulkEdit()
+    document.getElementById('selectedCount').textContent = '0';
+    
+    // ✅ Enable product selection
+    enableProductSelection();
+    
+    // ❌ REMOVED: showToast() - No longer showing toast message
+  }, 100);
+}
+
+
 /**
  * Apply Bulk Category Update - FIRESTORE VERSION
  */
@@ -1576,6 +1609,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
 
 
