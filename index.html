@@ -941,30 +941,35 @@ onmouseout="this.style.background='#28a745'">
   </div>
 </div>
 
-<!-- ✅ View Mode Toggle Buttons -->
-<div class="btn-group ms-3" role="group">
-  <button type="button" class="btn btn-outline-secondary btn-sm active" id="btnAllView" onclick="showAllProducts()">
-    <i class="bi bi-list"></i> All
-  </button>
-  <button type="button" class="btn btn-outline-primary btn-sm" id="btnPhotoView" onclick="showPhotoProducts()">
-    <i class="bi bi-images"></i> Photos
-  </button>
-  <button type="button" class="btn btn-outline-success btn-sm" id="btnGroupsView" onclick="showGroupsView()">
-    <i class="bi bi-folder"></i> Groups
-  </button>
+ <!-- View Toggle Buttons -->
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-outline-secondary btn-sm active" id="btnAllView" onclick="showAllProducts()">
+            <i class="bi bi-list"></i> All
+          </button>
+          <button type="button" class="btn btn-outline-primary btn-sm" id="btnPhotoView" onclick="showPhotoProducts()">
+            <i class="bi bi-images"></i> Photos
+          </button>
+          <button type="button" class="btn btn-outline-success btn-sm" id="btnGroupsView" onclick="showGroupsView()">
+            <i class="bi bi-folder"></i> Groups
+          </button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Photo Product Grid (Grid Layout - Responsive) -->
+<!-- Photo Product Grid (Hidden by default) -->
 <div id="photoProductGrid" style="display:none; width:100%;">
-  <!-- Photo grid content inserted here by renderPhotoProductsGrid() -->
+  <!-- Photo grid content inserted here -->
 </div>
 
-<!-- ✅ Groups View Container (Hidden by default) -->
+<!-- Groups View Container (Hidden by default) -->
 <div id="groupsViewContainer" style="display: none;">
   
   <!-- ===== GROUPS LIST VIEW ===== -->
   
-  <!-- Header with Create Button (Groups List) -->
+  <!-- Header with Create Button -->
   <div id="groupsHeader" class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="mb-0">Product Groups</h5>
     <button class="btn btn-success btn-sm" onclick="openCreateGroupModal()">
@@ -983,7 +988,7 @@ onmouseout="this.style.background='#28a745'">
     >
   </div>
   
-  <!-- Loading State (Groups) -->
+  <!-- Loading State -->
   <div id="groupsLoadingState" class="text-center py-5">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
@@ -991,7 +996,7 @@ onmouseout="this.style.background='#28a745'">
     <p class="mt-2">Loading groups...</p>
   </div>
   
-  <!-- Empty State (Groups) -->
+  <!-- Empty State -->
   <div id="groupsEmptyState" class="text-center py-5" style="display: none;">
     <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
     <h4>No Product Groups Yet</h4>
@@ -1002,13 +1007,11 @@ onmouseout="this.style.background='#28a745'">
   </div>
   
   <!-- Groups List -->
-  <div id="groupsListContainer" style="display: none;">
-    <!-- Groups rendered here by renderProductGroups() -->
-  </div>
+  <div id="groupsListContainer" style="display: none;"></div>
   
-  <!-- ===== VARIANTS VIEW (Shown when clicking a group) ===== -->
+  <!-- ===== VARIANTS VIEW ===== -->
   
-  <!-- Header with Back Button (Variants View) -->
+  <!-- Header with Back Button -->
   <div id="variantsHeader" class="d-flex justify-content-between align-items-center mb-3" style="display: none !important;">
     <button class="btn btn-secondary btn-sm" onclick="backToGroupsList()">
       <i class="bi bi-arrow-left"></i> Back to Groups
@@ -1044,13 +1047,10 @@ onmouseout="this.style.background='#28a745'">
   </div>
   
   <!-- Variants List -->
-  <div id="variantsListContainer" style="display: none;">
-    <!-- Variants rendered here by renderGroupVariants() -->
-  </div>
+  <div id="variantsListContainer" style="display: none;"></div>
   
 </div>
 <!-- End Groups View Container -->
-
 
   
   
@@ -15533,6 +15533,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
