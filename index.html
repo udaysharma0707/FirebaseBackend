@@ -941,121 +941,30 @@ onmouseout="this.style.background='#28a745'">
   </div>
 </div>
 
- <!-- View Toggle Buttons -->
-        <div class="btn-group" role="group">
-          <button type="button" class="btn btn-outline-secondary btn-sm active" id="btnAllView" onclick="showAllProducts()">
-            <i class="bi bi-list"></i> All
-          </button>
-          <button type="button" class="btn btn-outline-primary btn-sm" id="btnPhotoView" onclick="showPhotoProducts()">
-            <i class="bi bi-images"></i> Photos
-          </button>
-          <button type="button" class="btn btn-outline-success btn-sm" id="btnGroupsView" onclick="showGroupsView()">
-            <i class="bi bi-folder"></i> Groups
-          </button>
-        </div>
-        
+
+
+  
+  
+  <!-- âœ… NEW: View Mode Toggle -->
+  <div class="btn-group ms-3" role="group">
+    <button type="button" class="btn btn-outline-secondary btn-sm active" id="btnAllView" onclick="showAllProducts()">
+      <i class="bi bi-list"></i> All
+    </button>
+    <button type="button" class="btn btn-outline-primary btn-sm" id="btnPhotoView" onclick="showPhotoProducts()">
+      <i class="bi bi-images"></i> Photos
+    </button>
+  </div>
+</div>
+
+<!-- Photo Product Grid (Grid Layout - Responsive) -->
+<div id="photoProductGrid" style="display:none; width:100%;">
+  <!-- Grid content inserted here -->
+</div>
+
+
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Photo Product Grid (Hidden by default) -->
-<div id="photoProductGrid" style="display:none; width:100%;">
-  <!-- Photo grid content inserted here -->
-</div>
-
-<!-- Groups View Container (Hidden by default) -->
-<div id="groupsViewContainer" style="display: none;">
-  
-  <!-- ===== GROUPS LIST VIEW ===== -->
-  
-  <!-- Header with Create Button -->
-  <div id="groupsHeader" class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">Product Groups</h5>
-    <button class="btn btn-success btn-sm" onclick="openCreateGroupModal()">
-      <i class="bi bi-plus-circle"></i> New Group
-    </button>
-  </div>
-  
-  <!-- Search Groups -->
-  <div id="searchGroupsContainer" class="mb-3">
-    <input 
-      type="text" 
-      class="form-control" 
-      id="searchGroups" 
-      placeholder="🔍 Search groups..." 
-      oninput="filterProductGroups(this.value)"
-    >
-  </div>
-  
-  <!-- Loading State -->
-  <div id="groupsLoadingState" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-    <p class="mt-2">Loading groups...</p>
-  </div>
-  
-  <!-- Empty State -->
-  <div id="groupsEmptyState" class="text-center py-5" style="display: none;">
-    <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
-    <h4>No Product Groups Yet</h4>
-    <p class="text-muted">Create groups to organize product variants</p>
-    <button class="btn btn-primary mt-3" onclick="openCreateGroupModal()">
-      <i class="bi bi-plus-circle"></i> Create First Group
-    </button>
-  </div>
-  
-  <!-- Groups List -->
-  <div id="groupsListContainer" style="display: none;"></div>
-  
-  <!-- ===== VARIANTS VIEW ===== -->
-  
-  <!-- Header with Back Button -->
-  <div id="variantsHeader" class="d-flex justify-content-between align-items-center mb-3" style="display: none !important;">
-    <button class="btn btn-secondary btn-sm" onclick="backToGroupsList()">
-      <i class="bi bi-arrow-left"></i> Back to Groups
-    </button>
-    <h5 class="mb-0" id="currentGroupName"></h5>
-    <div style="width: 120px;"></div>
-  </div>
-  
-  <!-- Search Variants -->
-  <div id="searchVariantsContainer" class="mb-3" style="display: none;">
-    <input 
-      type="text" 
-      class="form-control" 
-      id="searchVariants" 
-      placeholder="🔍 Search variants..." 
-      oninput="filterGroupVariants(this.value)"
-    >
-  </div>
-  
-  <!-- Loading State (Variants) -->
-  <div id="variantsLoadingState" class="text-center py-5" style="display: none;">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-    <p class="mt-2">Loading variants...</p>
-  </div>
-  
-  <!-- Empty State (Variants) -->
-  <div id="variantsEmptyState" class="text-center py-5" style="display: none;">
-    <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
-    <h4>No Variants in This Group</h4>
-    <p class="text-muted">This group doesn't have any variants yet</p>
-  </div>
-  
-  <!-- Variants List -->
-  <div id="variantsListContainer" style="display: none;"></div>
-  
-</div>
-<!-- End Groups View Container -->
-
-  
-  
-
-  
   <!-- Products table (desktop) & mobile list -->
 <div class="row mb-4">
   <div class="col-12 desktop-table">
@@ -1082,10 +991,6 @@ onmouseout="this.style.background='#28a745'">
       <div class="col-12 mobile-list" id="mobileProductsList" style="margin-top:6px;"></div>
     </div>
 
-
-
-  
-      
   <!-- Recent Sales -->
 <div class="row">
     <div class="col-12">
@@ -2724,7 +2629,6 @@ async function handleSignUp(event) {
  * SYNC FROM FIRESTORE - KEEP LATEST VERSION
  * ==========================================
  */
-
 async function syncFromFirestore() {
   const user = window.auth.currentUser;
   
@@ -3138,6 +3042,9 @@ function stockBadgeHtml(stock, minStock){
 }
 
 /**
+ * ✅ UPDATED: Render Products with Bulk Edit Support
+ */
+/**
  * ==========================================
  * RENDER PRODUCTS - UPDATED WITH VARIANT INDICATORS
  * ==========================================
@@ -3262,7 +3169,6 @@ function renderProducts(){
   updateSummaryFromCache();
   loadProductsForSaleFromCache();
 }
-
 
 
 
@@ -3459,6 +3365,75 @@ async function saveProductToSheet(product, isUpdate = false) {
 }
 
 
+    // Comprehensive duplicate cleanup
+async function cleanupAllDuplicates() {
+  const user = window.auth.currentUser;
+  const { collection, getDocs, doc, deleteDoc } = window.firebaseImports;
+  
+  console.log('🧹 Starting comprehensive duplicate cleanup...');
+  
+  const productsRef = collection(window.db, 'tenants', user.uid, 'products');
+  const snapshot = await getDocs(productsRef);
+  
+  const productsByName = {};
+  
+  // Group products by name
+  snapshot.forEach(d => {
+    const data = d.data();
+    const name = data.name?.toLowerCase().trim();
+    
+    if (!name) return;
+    
+    if (!productsByName[name]) {
+      productsByName[name] = [];
+    }
+    
+    productsByName[name].push({
+      id: d.id,
+      data: data,
+      updatedAt: data.updatedAt || '1970-01-01'
+    });
+  });
+  
+  let deleted = 0;
+  
+  // Find and delete duplicates
+  for (const name in productsByName) {
+    const products = productsByName[name];
+    
+    if (products.length > 1) {
+      console.log(`⚠️ Found ${products.length} products named "${name}"`);
+      
+      // Sort by updatedAt (keep newest)
+      products.sort((a, b) => {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+      
+      // Keep first (newest), delete rest
+      const toKeep = products[0];
+      console.log('✅ Keeping:', toKeep.id, '| Updated:', toKeep.updatedAt);
+      
+      for (let i = 1; i < products.length; i++) {
+        const toDelete = products[i];
+        console.log('🗑️ Deleting:', toDelete.id, '| Updated:', toDelete.updatedAt);
+        
+        const productRef = doc(window.db, 'tenants', user.uid, 'products', toDelete.id);
+        await deleteDoc(productRef);
+        deleted++;
+      }
+    }
+  }
+  
+  console.log(`✅ Cleanup complete! Deleted ${deleted} duplicate products.`);
+  
+  // Reload
+  location.reload();
+}
+
+// Run cleanup
+cleanupAllDuplicates();
+
+
 /**
  * ==========================================
  * SAVE SALE TO FIRESTORE - FINAL VERSION
@@ -3641,49 +3616,33 @@ function updateSyncIndicator(active) {
 
 
 
-/**
- * ==========================================
- * DELETE PRODUCT FROM FIRESTORE - IMPROVED
- * ==========================================
- */
+// ==========================================
+// DELETE PRODUCT FROM FIRESTORE
+// ==========================================
+
 async function deleteProductFromSheet(id) {
-  console.log('🗑️ deleteProductFromSheet called. ID:', id);
-  
-  const user = window.auth?.currentUser;
+  const user = window.auth.currentUser;
   
   if (!user) {
-    console.error('❌ No user authenticated');
-    alert('Please sign in to delete product');
+    showAuthError('Please sign in to delete product');
     return false;
   }
   
   try {
-    const { doc, deleteDoc } = window.firebaseImports;
+    const { collection, doc, deleteDoc } = window.firebaseImports;
     const userId = user.uid;
     
-    console.log('🗑️ Deleting from Firestore...');
-    console.log('   - User ID:', userId);
-    console.log('   - Product ID:', id);
+    const productDoc = doc(window.db, 'tenants', userId, 'products', id);
+    await deleteDoc(productDoc);
     
-    // ✅ Create reference to product document
-    const productRef = doc(window.db, 'tenants', userId, 'products', id);
-    
-    // ✅ Delete from Firestore
-    await deleteDoc(productRef);
-    
-    console.log('✅ Product deleted from Firestore:', id);
+    console.log('✅ Product deleted:', id);
     return true;
     
   } catch (error) {
-    console.error('❌ Error deleting product from Firestore:', error);
-    console.error('   - Error code:', error.code);
-    console.error('   - Error message:', error.message);
+    console.error('❌ Error deleting product:', error);
     return false;
   }
 }
-
-// Make globally available
-window.deleteProductFromSheet = deleteProductFromSheet;
 
 /**
  * Toggle Advanced Options in Product Modal
@@ -4372,43 +4331,13 @@ async function saveVariantData() {
     
   
 
-/**
- * ==========================================
- * DELETE PRODUCT - ENHANCED WITH BETTER LOGGING
- * ==========================================
- */
-async function deleteProduct(id) {
-  console.log('🗑️ deleteProduct called. ID:', id);
-  
-  if (!id) {
-    console.error('❌ No product ID provided');
-    alert('Error: Invalid product ID');
+ function deleteProduct(id) {
+  if (!confirm('Are you sure you want to delete this product?')) {
     return;
   }
   
-  // Find product in cache
-  const product = cachedProducts.find(p => p.id === id);
-  if (!product) {
-    console.error('❌ Product not found in cache:', id);
-    alert('Product not found');
-    return;
-  }
-  
-  // Confirm deletion with product name
-  if (!confirm(`Delete "${product.name}"?\n\nThis action cannot be undone.`)) {
-    console.log('⏭️ Delete cancelled by user');
-    return;
-  }
-  
-  console.log('🗑️ Deleting product:', product.name, '| ID:', id);
-  
-  // Backup current state
   const prev = cachedProducts.slice();
-  
-  // Remove from cache (optimistic update)
   cachedProducts = cachedProducts.filter(p => p.id !== id);
-  console.log('✅ Removed from local cache. Remaining:', cachedProducts.length);
-  
   renderProducts();
   
   // Also update photo grid if currently viewing it
@@ -4420,32 +4349,19 @@ async function deleteProduct(id) {
   
   showSyncIndicator('Deleting...');
   
-  // ✅ DELETE FROM FIRESTORE
-  try {
-    console.log('💾 Calling deleteProductFromSheet...');
-    const success = await deleteProductFromSheet(id);
-    
+  deleteProductFromSheet(id).then(success => {
     if (success) {
-      console.log('✅ Product deleted successfully from Firestore');
+      console.log('✅ Product deleted successfully');
       showSyncIndicator('Deleted', 900);
       
       // Update cache
       try {
         localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-        console.log('💾 Cache updated after delete');
       } catch (e) {
-        console.warn('⚠️ Cache update failed:', e);
+        console.warn('Cache update failed:', e);
       }
-      
-      // Update stats
-      if (typeof updateSummaryFromCache === 'function') {
-        updateSummaryFromCache();
-      }
-      
     } else {
-      console.error('❌ deleteProductFromSheet returned false');
-      
-      // Revert
+      console.error('❌ Delete failed, reverting...');
       cachedProducts = prev;
       renderProducts();
       
@@ -4455,32 +4371,19 @@ async function deleteProduct(id) {
         }
       }
       
-      alert('Delete failed - product restored.');
+      alert('Delete failed - reverted locally.');
       showSyncIndicator('Delete failed', 2000);
     }
-    
-  } catch (err) {
+  }).catch(err => {
     console.error('❌ Delete error:', err);
-    console.error('   - Error message:', err.message);
-    console.error('   - Error stack:', err.stack);
-    
-    // Revert
     cachedProducts = prev;
     renderProducts();
-    
-    if (document.getElementById('btnPhotoView')?.classList.contains('active')) {
-      if (typeof showPhotoProducts === 'function') {
-        showPhotoProducts();
-      }
-    }
-    
-    alert('Delete failed - product restored. Check console for details.');
+    alert('Delete failed - reverted locally.');
     showSyncIndicator('Delete failed', 2000);
-  }
+  });
 }
 
-// Make globally available
-window.deleteProduct = deleteProduct;
+
 
 
     
@@ -7536,13 +7439,10 @@ async function uploadPhotoToBackend(productData, photoBase64) {
 
 
 /**
- * ==========================================
- * VIEW SWITCHING FUNCTIONS - WITH GROUPS
- * ==========================================
+ * Show all products (table view) - FIXED
  */
-
 /**
- * Show All Products (Table View)
+ * Show all products (table view) - COMPLETE FIX
  */
 function showAllProducts() {
   console.log('📋 Switching to All Products view');
@@ -7550,30 +7450,22 @@ function showAllProducts() {
   // ✅ Update button states
   const btnAll = document.getElementById('btnAllView');
   const btnPhoto = document.getElementById('btnPhotoView');
-  const btnGroups = document.getElementById('btnGroupsView');
   
   if (btnAll) btnAll.classList.add('active');
   if (btnPhoto) btnPhoto.classList.remove('active');
-  if (btnGroups) btnGroups.classList.remove('active');
   
-  // ✅ Hide photo grid
+  // ✅ Hide photo grid - Make sure it's fully hidden
   const photoGrid = document.getElementById('photoProductGrid');
   if (photoGrid) {
     photoGrid.style.display = 'none';
     photoGrid.style.visibility = 'hidden';
-    console.log('✅ Photo grid hidden');
+    photoGrid.innerHTML = ''; // Clear it
+    console.log('✅ Photo grid hidden and cleared');
   }
   
-  // ✅ Hide groups view
-  const groupsView = document.getElementById('groupsViewContainer');
-  if (groupsView) {
-    groupsView.style.display = 'none';
-    groupsView.style.visibility = 'hidden';
-    console.log('✅ Groups view hidden');
-  }
-  
-  // ✅ Show table explorer
+  // ✅ Show table - Try multiple selectors to find it
   let tableExplorer = document.querySelector('.table-explorer');
+  
   if (!tableExplorer) {
     tableExplorer = document.querySelector('[class*="table"]');
   }
@@ -7594,16 +7486,13 @@ function showAllProducts() {
   }
   
   // ✅ Render products
-  if (typeof renderProducts === 'function') {
-    renderProducts();
-  }
-  
+  renderProducts();
   console.log('✅ All Products view activated');
 }
 
 
 /**
- * Show Photo Products (Grid View)
+ * Show photo products (grid view) - VERTICAL SCROLL FIXED
  */
 function showPhotoProducts() {
   console.log('📷 Switching to Photo Products view');
@@ -7611,14 +7500,13 @@ function showPhotoProducts() {
   // ✅ Update button states
   const btnAll = document.getElementById('btnAllView');
   const btnPhoto = document.getElementById('btnPhotoView');
-  const btnGroups = document.getElementById('btnGroupsView');
   
   if (btnAll) btnAll.classList.remove('active');
   if (btnPhoto) btnPhoto.classList.add('active');
-  if (btnGroups) btnGroups.classList.remove('active');
   
-  // ✅ Hide table explorer
+  // ✅ Hide table - Try multiple selectors
   let tableExplorer = document.querySelector('.table-explorer');
+  
   if (!tableExplorer) {
     tableExplorer = document.querySelector('[class*="table"]');
   }
@@ -7634,14 +7522,6 @@ function showPhotoProducts() {
   if (mobileList) {
     mobileList.style.display = 'none';
     console.log('✅ Mobile list hidden');
-  }
-  
-  // ✅ Hide groups view
-  const groupsView = document.getElementById('groupsViewContainer');
-  if (groupsView) {
-    groupsView.style.display = 'none';
-    groupsView.style.visibility = 'hidden';
-    console.log('✅ Groups view hidden');
   }
   
   // ✅ Show photo grid
@@ -7655,86 +7535,9 @@ function showPhotoProducts() {
   }
   
   // ✅ Render photo products
-  if (typeof renderPhotoProductsGrid === 'function') {
-    renderPhotoProductsGrid();
-  }
-  
+  renderPhotoProductsGrid();
   console.log('✅ Photo Products view activated');
 }
-
-
-/**
- * Show Groups View
- */
-function showGroupsView() {
-  console.log('📁 Switching to Groups view');
-  
-  // ✅ Update button states
-  const btnAll = document.getElementById('btnAllView');
-  const btnPhoto = document.getElementById('btnPhotoView');
-  const btnGroups = document.getElementById('btnGroupsView');
-  
-  if (btnAll) btnAll.classList.remove('active');
-  if (btnPhoto) btnPhoto.classList.remove('active');
-  if (btnGroups) btnGroups.classList.add('active');
-  
-  // ✅ Hide table explorer
-  let tableExplorer = document.querySelector('.table-explorer');
-  if (!tableExplorer) {
-    tableExplorer = document.querySelector('[class*="table"]');
-  }
-  
-  if (tableExplorer) {
-    tableExplorer.style.display = 'none';
-    tableExplorer.style.visibility = 'hidden';
-    console.log('✅ Table explorer hidden');
-  }
-  
-  // ✅ Hide mobile list
-  const mobileList = document.getElementById('mobileProductsList');
-  if (mobileList) {
-    mobileList.style.display = 'none';
-    console.log('✅ Mobile list hidden');
-  }
-  
-  // ✅ Hide photo grid
-  const photoGrid = document.getElementById('photoProductGrid');
-  if (photoGrid) {
-    photoGrid.style.display = 'none';
-    photoGrid.style.visibility = 'hidden';
-    console.log('✅ Photo grid hidden');
-  }
-  
-  // ✅ Show groups view
-  const groupsView = document.getElementById('groupsViewContainer');
-  if (groupsView) {
-    groupsView.style.display = 'block';
-    groupsView.style.visibility = 'visible';
-    console.log('✅ Groups view shown');
-  } else {
-    console.error('❌ Groups view container not found!');
-  }
-  
-  // ✅ Load groups (uses existing function)
-  if (typeof loadProductGroups === 'function') {
-    loadProductGroups();
-  } else {
-    console.error('❌ loadProductGroups function not found!');
-  }
-  
-  console.log('✅ Groups view activated');
-}
-
-
-/**
- * Make functions globally accessible
- */
-window.showAllProducts = showAllProducts;
-window.showPhotoProducts = showPhotoProducts;
-window.showGroupsView = showGroupsView;
-
-console.log('✅ View switching functions loaded');
-
 function renderPhotoProductsGrid() {
   const photoGrid = document.getElementById('photoProductGrid');
   if (!photoGrid) {
@@ -11649,90 +11452,64 @@ function navigateToProductGroups() {
 
 
 
-/**
- * Navigate to Group Variants - HOMEPAGE VERSION (No Page Navigation)
- */
+// Navigate to Group Variants (Detail Page)
 function navigateToGroupVariants(groupId, groupName) {
-  console.log('📦 Showing variants for group:', groupName);
-  console.log('   - Group ID:', groupId);
+  console.log('📦 Opening variants for:', groupName);
   
-  // Store current group
-  window.currentGroupId = groupId;
-  window.currentGroupName = groupName;
+  currentGroupId = groupId;
+  currentGroupName = groupName;
   
-  // ✅ HIDE: Groups list elements
-  const groupsHeader = document.getElementById('groupsHeader');
-  const searchGroupsContainer = document.getElementById('searchGroupsContainer');
-  const groupsLoadingState = document.getElementById('groupsLoadingState');
-  const groupsEmptyState = document.getElementById('groupsEmptyState');
-  const groupsListContainer = document.getElementById('groupsListContainer');
+  // Remove existing page if any
+  const existingPage = document.getElementById('groupVariantsPageContainer');
+  if (existingPage) existingPage.remove();
   
-  if (groupsHeader) groupsHeader.style.display = 'none';
-  if (searchGroupsContainer) searchGroupsContainer.style.display = 'none';
-  if (groupsLoadingState) groupsLoadingState.style.display = 'none';
-  if (groupsEmptyState) groupsEmptyState.style.display = 'none';
-  if (groupsListContainer) groupsListContainer.style.display = 'none';
+  // Build variants page
+  document.body.innerHTML += `
+    <div id="groupVariantsPageContainer" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #f8f9fa; z-index: 99999; overflow-y: auto;">
+      
+      <!-- Header -->
+      <div class="modal-header-mobile">
+        <button class="btn-cancel-modal" onclick="closeGroupVariantsPage()">
+          ← Back
+        </button>
+        <h3>${groupName}</h3>
+        <div style="width: 80px;"></div>
+      </div>
+      
+      <!-- Search -->
+      <div style="padding: 16px;">
+        <input 
+          type="text" 
+          id="searchVariantsInput" 
+          placeholder="🔍 Search variants..."
+          style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;"
+          onkeyup="filterGroupVariants(this.value)">
+      </div>
+      
+      <!-- Loading State -->
+      <div id="variantsLoadingState" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading variants...</p>
+      </div>
+      
+      <!-- Variants List -->
+      <div id="variantsListContainer" style="display: none;">
+        <!-- Variants will be rendered here -->
+      </div>
+      
+      <!-- Empty State -->
+      <div id="variantsEmptyState" class="empty-state" style="display: none;">
+        <div class="empty-state-icon">📦</div>
+        <h3>No Variants Yet</h3>
+        <p>This group doesn't have any variants</p>
+      </div>
+      
+    </div>
+  `;
   
-  // ✅ SHOW: Variants elements
-  const variantsHeader = document.getElementById('variantsHeader');
-  const searchVariantsContainer = document.getElementById('searchVariantsContainer');
-  const variantsLoadingState = document.getElementById('variantsLoadingState');
-  const currentGroupNameEl = document.getElementById('currentGroupName');
-  
-  if (variantsHeader) variantsHeader.style.display = 'flex';
-  if (searchVariantsContainer) searchVariantsContainer.style.display = 'block';
-  if (variantsLoadingState) variantsLoadingState.style.display = 'block';
-  if (currentGroupNameEl) currentGroupNameEl.textContent = groupName;
-  
-  console.log('✅ Switched to variants view');
-  
-  // ✅ Load variants from Firestore
-  if (typeof loadGroupVariants === 'function') {
-    loadGroupVariants(groupId);
-  } else {
-    console.error('❌ loadGroupVariants function not found!');
-  }
+  // Load variants
+  loadGroupVariants(groupId);
 }
-
-window.navigateToGroupVariants = navigateToGroupVariants;
-
-
-    /**
- * Back to Groups List - Return from Variants View
- */
-function backToGroupsList() {
-  console.log('⬅️ Returning to groups list');
-  
-  // Clear current group data
-  delete window.currentGroupId;
-  delete window.currentGroupName;
-  
-  // ✅ HIDE: Variants elements
-  const variantsHeader = document.getElementById('variantsHeader');
-  const searchVariantsContainer = document.getElementById('searchVariantsContainer');
-  const variantsLoadingState = document.getElementById('variantsLoadingState');
-  const variantsEmptyState = document.getElementById('variantsEmptyState');
-  const variantsListContainer = document.getElementById('variantsListContainer');
-  
-  if (variantsHeader) variantsHeader.style.display = 'none';
-  if (searchVariantsContainer) searchVariantsContainer.style.display = 'none';
-  if (variantsLoadingState) variantsLoadingState.style.display = 'none';
-  if (variantsEmptyState) variantsEmptyState.style.display = 'none';
-  if (variantsListContainer) variantsListContainer.style.display = 'none';
-  
-  // ✅ SHOW: Groups list elements
-  const groupsHeader = document.getElementById('groupsHeader');
-  const searchGroupsContainer = document.getElementById('searchGroupsContainer');
-  const groupsListContainer = document.getElementById('groupsListContainer');
-  
-  if (groupsHeader) groupsHeader.style.display = 'flex';
-  if (searchGroupsContainer) searchGroupsContainer.style.display = 'block';
-  if (groupsListContainer) groupsListContainer.style.display = 'block';
-  
-  console.log('✅ Returned to groups list');
-}
-
-window.backToGroupsList = backToGroupsList;
 
 
 // Close Group Variants Page
@@ -11932,6 +11709,7 @@ function renderProductGroups(groups) {
   container.style.display = 'block';
 }
 
+
 // Render Group Variants List - FIXED
 function renderGroupVariants(variants) {
   const container = document.getElementById('variantsListContainer');
@@ -11997,9 +11775,6 @@ function renderGroupVariants(variants) {
   container.innerHTML = html;
   container.style.display = 'block';
 }
-
-
-
 
 
 /**
@@ -15518,18 +15293,6 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
