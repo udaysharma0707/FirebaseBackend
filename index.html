@@ -28,7 +28,11 @@
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     onAuthStateChanged, 
-    signOut 
+    signOut,
+    // ✅ NEW: Add these for password change
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updatePassword
   } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
   import { 
     getFirestore, 
@@ -80,12 +84,16 @@
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     onAuthStateChanged,
-    signOut
+    signOut,
+    // ✅ NEW: Make password functions available globally
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updatePassword
   };
   
   console.log("✅ Firebase SDK loaded successfully!");
   
-  // ✅ Authentication state handler (using already imported onAuthStateChanged)
+  // Auth state handler (existing code)
   onAuthStateChanged(auth, (user) => {
     if (user) {
       console.log('✅ User signed in:', user.email);
@@ -14717,6 +14725,169 @@ function hideLoading() {
 }
 
 
+/**
+ * ==========================================
+ * CHANGE PASSWORD MODULE (Firebase Auth)
+ * ==========================================
+ */
+
+/**
+ * Open Change Password Modal
+ */
+function openChangePasswordModal() {
+  console.log('🔑 Opening Change Password modal');
+  
+  // Reset form
+  document.getElementById('currentPasswordInput').value = '';
+  document.getElementById('newPasswordInput').value = '';
+  document.getElementById('confirmPasswordInput').value = '';
+  
+  // Show step 1, hide step 2
+  document.getElementById('verifyPasswordStep').style.display = 'block';
+  document.getElementById('newPasswordStep').style.display = 'none';
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+  modal.show();
+  
+  // Focus on current password input
+  setTimeout(() => {
+    document.getElementById('currentPasswordInput').focus();
+  }, 300);
+}
+
+/**
+ * Step 1: Verify Current Password
+ */
+async function verifyCurrentPassword() {
+  const currentPassword = document.getElementById('currentPasswordInput').value;
+  
+  if (!currentPassword) {
+    alert('⚠️ Please enter your current password');
+    return;
+  }
+  
+  // Show loading
+  showLoading('Verifying password...');
+  
+  try {
+    const user = window.auth.currentUser;
+    
+    if (!user || !user.email) {
+      hideLoading();
+      alert('❌ Error: No user signed in');
+      return;
+    }
+    
+    // Get Firebase Auth functions
+    const { EmailAuthProvider, reauthenticateWithCredential } = window.firebaseImports;
+    
+    // Create credential with current email and password
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    
+    // Reauthenticate (this verifies the password)
+    await reauthenticateWithCredential(user, credential);
+    
+    console.log('✅ Current password verified');
+    hideLoading();
+    
+    // Show step 2
+    document.getElementById('verifyPasswordStep').style.display = 'none';
+    document.getElementById('newPasswordStep').style.display = 'block';
+    
+    // Focus on new password input
+    setTimeout(() => {
+      document.getElementById('newPasswordInput').focus();
+    }, 100);
+    
+  } catch (error) {
+    console.error('❌ Password verification failed:', error);
+    hideLoading();
+    
+    let errorMessage = 'Incorrect password. Please try again.';
+    
+    if (error.code === 'auth/wrong-password') {
+      errorMessage = '❌ Incorrect password. Please try again.';
+    } else if (error.code === 'auth/too-many-requests') {
+      errorMessage = '❌ Too many failed attempts. Please try again later.';
+    } else if (error.code === 'auth/invalid-credential') {
+      errorMessage = '❌ Incorrect password. Please try again.';
+    }
+    
+    alert(errorMessage);
+  }
+}
+
+/**
+ * Step 2: Submit New Password
+ */
+async function submitNewPassword() {
+  const newPassword = document.getElementById('newPasswordInput').value;
+  const confirmPassword = document.getElementById('confirmPasswordInput').value;
+  
+  // Validation
+  if (!newPassword || !confirmPassword) {
+    alert('⚠️ Please fill in both password fields');
+    return;
+  }
+  
+  if (newPassword.length < 6) {
+    alert('⚠️ Password must be at least 6 characters long');
+    return;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    alert('⚠️ Passwords do not match. Please try again.');
+    return;
+  }
+  
+  // Show loading
+  showLoading('Updating password...');
+  
+  try {
+    const user = window.auth.currentUser;
+    
+    if (!user) {
+      hideLoading();
+      alert('❌ Error: No user signed in');
+      return;
+    }
+    
+    // Get Firebase Auth function
+    const { updatePassword } = window.firebaseImports;
+    
+    // Update password
+    await updatePassword(user, newPassword);
+    
+    console.log('✅ Password updated successfully');
+    hideLoading();
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+    if (modal) {
+      modal.hide();
+    }
+    
+    // Show success message
+    alert('✅ Password changed successfully!\n\nYour password has been updated.');
+    
+  } catch (error) {
+    console.error('❌ Password update failed:', error);
+    hideLoading();
+    
+    let errorMessage = 'Failed to update password. Please try again.';
+    
+    if (error.code === 'auth/weak-password') {
+      errorMessage = '❌ Password is too weak. Please use a stronger password.';
+    } else if (error.code === 'auth/requires-recent-login') {
+      errorMessage = '❌ For security, please sign out and sign in again before changing your password.';
+    }
+    
+    alert(errorMessage);
+  }
+}
+
+console.log('✅ Change Password Module Loaded');
 
 
 
@@ -14831,72 +15002,76 @@ console.log('✅ Sales functions made globally available');
     
   </script>
 
- <!-- Ã¢Å“â€¦ NEW: Change Password Modal -->
-  <div id="changePasswordModal" class="modal fade" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            <i class="bi bi-key me-2"></i>Change Password
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <!-- Step 1: Verify Current Password -->
-          <div id="verifyPasswordStep">
-            <p class="text-muted">Enter your current password to continue</p>
-            <div class="mb-3">
-              <label class="form-label">Current Password</label>
-              <input 
-                type="password" 
-                id="currentPasswordInput" 
-                class="form-control" 
-                placeholder="Enter current password"
-                required
-              >
-            </div>
-            <div class="d-grid">
-              <button class="btn btn-primary" onclick="verifyCurrentPassword()">
-                Continue
-              </button>
-            </div>
+ <!-- ✅ Change Password Modal -->
+<div id="changePasswordModal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white;">
+        <h5 class="modal-title">
+          <i class="bi bi-key me-2"></i>Change Password
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Step 1: Verify Current Password -->
+        <div id="verifyPasswordStep">
+          <p class="text-muted">Enter your current password to continue</p>
+          <div class="mb-3">
+            <label class="form-label">Current Password</label>
+            <input 
+              type="password" 
+              id="currentPasswordInput" 
+              class="form-control" 
+              placeholder="Enter current password"
+              style="padding: 12px; font-size: 15px;"
+              required
+            >
           </div>
-          
-          <!-- Step 2: Enter New Password -->
-          <div id="newPasswordStep" style="display: none;">
-            <p class="text-muted">Choose a new password (minimum 6 characters)</p>
-            <div class="mb-3">
-              <label class="form-label">New Password</label>
-              <input 
-                type="password" 
-                id="newPasswordInput" 
-                class="form-control" 
-                placeholder="Enter new password"
-                minlength="6"
-                required
-              >
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Confirm New Password</label>
-              <input 
-                type="password" 
-                id="confirmPasswordInput" 
-                class="form-control" 
-                placeholder="Re-enter new password"
-                minlength="6"
-                required
-              >
-            </div>
-            <div class="d-grid">
-              <button class="btn btn-success" onclick="submitNewPassword()">
-                <i class="bi bi-check-circle me-2"></i>Change Password
-              </button>
-            </div>
+          <div class="d-grid">
+            <button class="btn btn-primary" onclick="verifyCurrentPassword()" style="padding: 12px; font-weight: 600;">
+              Continue
+            </button>
+          </div>
+        </div>
+        
+        <!-- Step 2: Enter New Password -->
+        <div id="newPasswordStep" style="display: none;">
+          <p class="text-muted">Choose a new password (minimum 6 characters)</p>
+          <div class="mb-3">
+            <label class="form-label">New Password</label>
+            <input 
+              type="password" 
+              id="newPasswordInput" 
+              class="form-control" 
+              placeholder="Enter new password"
+              style="padding: 12px; font-size: 15px;"
+              minlength="6"
+              required
+            >
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Confirm New Password</label>
+            <input 
+              type="password" 
+              id="confirmPasswordInput" 
+              class="form-control" 
+              placeholder="Re-enter new password"
+              style="padding: 12px; font-size: 15px;"
+              minlength="6"
+              required
+            >
+          </div>
+          <div class="d-grid">
+            <button class="btn btn-success" onclick="submitNewPassword()" style="padding: 12px; font-weight: 600;">
+              <i class="bi bi-check-circle me-2"></i>Change Password
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
+</div>
+
 
 <!-- âœ… NEW: WhatsApp Number Input Modal -->
 <div class="modal fade" id="whatsappNumberModal" tabindex="-1">
@@ -15680,6 +15855,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
