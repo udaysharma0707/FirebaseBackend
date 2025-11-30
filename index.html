@@ -397,6 +397,16 @@
       <button class="btn btn-light btn-sm" onclick="importData()">
         <i class="bi bi-upload"></i> Restore
       </button>
+
+<!-- ✅ NEW: Instant Products Button -->
+      <button 
+        class="btn btn-sm" 
+        style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); transition: all 0.3s ease;"
+        onclick="openInstantProductsModal()">
+        <i class="bi bi-lightning-charge me-1"></i>Instant Products
+      </button>
+
+
       
       <!-- ✅ UPDATED: Options Dropdown (GREEN THEME) -->
       <div id="optionsButtonContainer" style="position: relative; display: inline-block;">
@@ -14445,6 +14455,257 @@ window.toggleOptionsDropdown = toggleOptionsDropdown;
 window.closeOptionsDropdown = closeOptionsDropdown;
 
 
+/**
+ * ==========================================
+ * INSTANT PRODUCTS MODULE (Firebase Version)
+ * ==========================================
+ */
+
+// Temporary array to hold products before saving
+let pendingInstantProducts = [];
+
+/**
+ * Open Instant Products Modal
+ */
+function openInstantProductsModal() {
+  console.log('⚡ Opening Instant Products modal');
+  
+  // Reset pending products
+  pendingInstantProducts = [];
+  
+  // Reset form
+  document.getElementById('instantProductInput').value = '';
+  updateInstantProductPreview();
+  
+  // Show modal using Bootstrap
+  const modal = new bootstrap.Modal(document.getElementById('instantProductsModal'));
+  modal.show();
+  
+  // Focus input
+  setTimeout(() => {
+    document.getElementById('instantProductInput').focus();
+  }, 200);
+}
+
+/**
+ * Handle product input (Enter or Comma)
+ */
+function handleInstantProductInputKeydown(event) {
+  const input = document.getElementById('instantProductInput');
+  const value = input.value.trim();
+  
+  // Enter or Comma key
+  if (event.key === 'Enter' || event.key === ',') {
+    event.preventDefault();
+    
+    if (value && value.length > 0) {
+      // Remove comma if typed
+      const productName = value.replace(/,\s*$/, '').trim();
+      
+      // Add only if not duplicate
+      if (productName && !pendingInstantProducts.includes(productName)) {
+        pendingInstantProducts.push(productName);
+        console.log('✅ Product added to preview:', productName);
+      } else if (pendingInstantProducts.includes(productName)) {
+        alert('⚠️ This product is already in the list!');
+      }
+      
+      // Clear input
+      input.value = '';
+      updateInstantProductPreview();
+    }
+  }
+}
+
+/**
+ * Update product preview list
+ */
+function updateInstantProductPreview() {
+  const previewList = document.getElementById('instantProductPreviewList');
+  const previewCount = document.getElementById('instantProductPreviewCount');
+  
+  if (!previewList) return;
+  
+  // Update count
+  if (previewCount) {
+    previewCount.textContent = `📝 Products to Save (${pendingInstantProducts.length}):`;
+  }
+  
+  if (pendingInstantProducts.length === 0) {
+    previewList.innerHTML = `
+      <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
+        No products added yet
+      </div>
+    `;
+    return;
+  }
+  
+  let html = '';
+  pendingInstantProducts.forEach((product, index) => {
+    html += `
+      <div style="
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 12px; border-bottom: 1px solid #e0e0e0;
+        background: white; transition: background 0.2s;
+      " onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='white'">
+        
+        <span style="font-size: 14px; color: #333; flex: 1;">
+          <strong style="color: #25D366;">${index + 1}.</strong> 
+          <span style="margin-left: 8px;">${escapeHtml(product)}</span>
+        </span>
+        
+        <button onclick="removePendingInstantProduct('${escapeHtml(product)}')" style="
+          background: #dc3545; color: white; border: none; 
+          padding: 5px 10px; border-radius: 5px; cursor: pointer;
+          font-size: 12px; font-weight: 600; transition: background 0.2s;
+        " onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    `;
+  });
+  
+  previewList.innerHTML = html;
+}
+
+/**
+ * Remove product from pending list
+ */
+function removePendingInstantProduct(product) {
+  pendingInstantProducts = pendingInstantProducts.filter(p => p !== product);
+  updateInstantProductPreview();
+  console.log('🗑️ Removed from preview:', product);
+}
+
+/**
+ * Save all instant products to Firebase
+ */
+async function saveAllInstantProducts() {
+  if (pendingInstantProducts.length === 0) {
+    alert('⚠️ Please add at least one product');
+    return;
+  }
+  
+  console.log('💾 Saving', pendingInstantProducts.length, 'instant products...');
+  
+  // Close modal immediately
+  const modal = bootstrap.Modal.getInstance(document.getElementById('instantProductsModal'));
+  if (modal) {
+    modal.hide();
+  }
+  
+  // Show loading indicator
+  showLoading('Saving products...');
+  
+  const productsToSave = [...pendingInstantProducts];
+  const savedProducts = [];
+  const failedProducts = [];
+  
+  // Save each product to Firebase
+  for (let i = 0; i < productsToSave.length; i++) {
+    const productName = productsToSave[i];
+    
+    try {
+      // Generate unique ID
+      const productId = db.collection('products').doc().id;
+      
+      // Create product object
+      const productData = {
+        id: productId,
+        name: productName,
+        category: 'Uncategorized',
+        brand: 'N/A',
+        size: 'N/A',
+        price: 0,
+        stock: 0,
+        minStock: 5,
+        stockStatus: 'exact',
+        imageUrl: '',
+        piecesPerBox: 1,
+        sftPerBox: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        tenantId: currentUser.tenantId
+      };
+      
+      // Save to Firestore
+      await db.collection('products').doc(productId).set(productData);
+      
+      savedProducts.push(productName);
+      console.log(`✅ Saved (${i + 1}/${productsToSave.length}):`, productName);
+      
+    } catch (error) {
+      console.error(`❌ Failed to save (${i + 1}/${productsToSave.length}):`, productName, error);
+      failedProducts.push(productName);
+    }
+  }
+  
+  // Hide loading
+  hideLoading();
+  
+  // Clear pending products
+  pendingInstantProducts = [];
+  
+  // Show results
+  if (failedProducts.length === 0) {
+    alert(`✅ Success!\n\n${savedProducts.length} product(s) added!`);
+  } else {
+    alert(`⚠️ Partial Success\n\n✅ Saved: ${savedProducts.length}\n❌ Failed: ${failedProducts.length}\n\nFailed products:\n${failedProducts.join(', ')}`);
+  }
+  
+  // Refresh product list
+  if (typeof loadProducts === 'function') {
+    loadProducts();
+  }
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+console.log('✅ Instant Products Module Loaded');
+
+    /**
+ * Show loading indicator
+ */
+function showLoading(message = 'Loading...') {
+  const loadingDiv = document.createElement('div');
+  loadingDiv.id = 'loadingOverlay';
+  loadingDiv.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+  `;
+  loadingDiv.innerHTML = `
+    <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+      <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p style="margin-top: 15px; font-weight: 600; color: #333;">${message}</p>
+    </div>
+  `;
+  document.body.appendChild(loadingDiv);
+}
+
+/**
+ * Hide loading indicator
+ */
+function hideLoading() {
+  const loadingDiv = document.getElementById('loadingOverlay');
+  if (loadingDiv) {
+    loadingDiv.remove();
+  }
+}
 
 
 
@@ -14940,6 +15201,58 @@ console.log('✅ Sales functions made globally available');
 
 
 
+<!-- ✅ INSTANT PRODUCTS MODAL -->
+<div class="modal fade" id="instantProductsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-lightning-charge"></i> Instant Products
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Instructions -->
+        <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+          Enter product names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each product:
+        </p>
+        
+        <!-- Input Field -->
+        <input 
+          id="instantProductInput" 
+          type="text" 
+          class="form-control" 
+          placeholder="e.g., Tilecleaner"
+          onkeydown="handleInstantProductInputKeydown(event)"
+          style="padding: 12px; font-size: 15px;">
+        
+        <!-- Preview Section -->
+        <div style="margin-top: 20px;">
+          <p style="font-weight: 600; margin-bottom: 10px; font-size: 14px; color: #333;" id="instantProductPreviewCount">
+            📝 Products to Save (0):
+          </p>
+          <div 
+            id="instantProductPreviewList" 
+            style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; max-height: 250px; overflow-y: auto; min-height: 80px; padding: 10px;">
+            <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
+              No products added yet
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i>Cancel
+        </button>
+        <button type="button" class="btn btn-success" onclick="saveAllInstantProducts()">
+          <i class="bi bi-check-circle me-1"></i>Save All
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 
@@ -15358,6 +15671,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
