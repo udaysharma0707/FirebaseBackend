@@ -421,7 +421,7 @@
 </nav>
 
 <!-- ✅ UPDATED: Options Dropdown (Stays Fixed on Scroll) -->
-<div id="optionsButtonContainer" style="position: fixed !important; top: 70px !important; right: 20px !important; z-index: 9999 !important;">
+<div id="optionsButtonContainer">
   <button 
     id="optionsToggleBtn" 
     class="btn" 
@@ -455,6 +455,7 @@
     </button>
   </div>
 </div>
+
 
 
 <div class="container-fluid py-4">
@@ -14410,6 +14411,17 @@ function toggleOptionsDropdown() {
   }
 }
 
+    
+document.addEventListener("DOMContentLoaded", function() {
+  const optionsContainer = document.getElementById("optionsButtonContainer");
+  if (optionsContainer && optionsContainer.parentElement !== document.body) {
+    document.body.appendChild(optionsContainer);
+  }
+});
+
+
+
+  
 /**
  * Close Options Dropdown
  */
@@ -14441,13 +14453,7 @@ window.toggleOptionsDropdown = toggleOptionsDropdown;
 window.closeOptionsDropdown = closeOptionsDropdown;
 
 
-document.addEventListener("DOMContentLoaded", function() {
-    const optionsContainer = document.getElementById("optionsButtonContainer");
-    if (optionsContainer) {
-        document.body.appendChild(optionsContainer);
-        console.log("✅ Options button moved to body for correct fixed positioning.");
-    }
-});
+
 
 
 
@@ -15359,6 +15365,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
