@@ -3333,6 +3333,27 @@ button.dropdown-item::-moz-focus-inner {
 }
 
 
+/* ============================================
+   VIEW INVOICES BUTTON - Always Green
+   ============================================ */
+
+/* ✅ Target the specific "View Invoices" button */
+.dropdown-option-btn[onclick*="viewSavedInvoices"] {
+  background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.dropdown-option-btn[onclick*="viewSavedInvoices"]:hover {
+  background: linear-gradient(135deg, #1FAD5D 0%, #128C7E 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 14px rgba(18, 140, 126, 0.3) !important;
+}
+
+.dropdown-option-btn[onclick*="viewSavedInvoices"] i {
+  color: white !important;
+}
+
 
 
 
