@@ -3250,7 +3250,24 @@ button.dropdown-item::-moz-focus-inner {
   font-style: italic;
 }
 
-/* Options Dropdown Styles */
+/* ========================================
+   OPTIONS DROPDOWN STYLES - FIXED VERSION
+   ======================================== */
+
+/* Fixed Options Button Container */
+#optionsButtonContainer {
+  position: fixed !important;
+  top: 70px !important;
+  right: 20px !important;
+  z-index: 9999 !important;
+}
+
+/* Dropdown Menu */
+#optionsDropdown {
+  animation: slideDown 0.3s ease;
+}
+
+/* Dropdown Option Buttons */
 .dropdown-option-btn {
   width: 100%;
   text-align: left;
@@ -3262,6 +3279,8 @@ button.dropdown-item::-moz-focus-inner {
   transition: all 0.2s ease;
   cursor: pointer;
   border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
 }
 
 .dropdown-option-btn:hover {
@@ -3277,7 +3296,7 @@ button.dropdown-item::-moz-focus-inner {
   font-size: 1.1rem;
 }
 
-/* Slide down animation */
+/* Slide Down Animation */
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -3288,10 +3307,15 @@ button.dropdown-item::-moz-focus-inner {
     transform: translateY(0);
   }
 }
+
+/* Mobile Responsive */
 @media (max-width: 768px) {
-  #optionsToggleBtn {
+  #optionsButtonContainer {
     top: 65px !important;
     right: 10px !important;
+  }
+  
+  #optionsToggleBtn {
     padding: 10px 16px !important;
     font-size: 0.9rem !important;
   }
@@ -3300,6 +3324,8 @@ button.dropdown-item::-moz-focus-inner {
     min-width: 200px !important;
   }
 }
+
+
 
 
 
