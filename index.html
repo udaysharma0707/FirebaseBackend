@@ -14944,6 +14944,46 @@ console.log('✅ Sign Out Module Loaded');
 
 /**
  * ==========================================
+ * PASSWORD VISIBILITY TOGGLE
+ * ==========================================
+ */
+
+/**
+ * Toggle password visibility (show/hide password)
+ */
+function togglePasswordVisibility() {
+  console.log('👁️ Toggling password visibility');
+  
+  const passwordInput = document.getElementById('userPasswordInput');
+  const toggleIcon = document.getElementById('passwordToggleIcon');
+  
+  if (!passwordInput || !toggleIcon) {
+    console.error('❌ Password input or toggle icon not found');
+    return;
+  }
+  
+  // Toggle input type
+  if (passwordInput.type === 'password') {
+    // Show password
+    passwordInput.type = 'text';
+    toggleIcon.classList.remove('bi-eye');
+    toggleIcon.classList.add('bi-eye-slash');
+    console.log('✅ Password visible');
+  } else {
+    // Hide password
+    passwordInput.type = 'password';
+    toggleIcon.classList.remove('bi-eye-slash');
+    toggleIcon.classList.add('bi-eye');
+    console.log('✅ Password hidden');
+  }
+}
+
+console.log('✅ Password Toggle Module Loaded');
+
+
+  
+/**
+ * ==========================================
  * MAKE ALL FUNCTIONS GLOBAL FOR BUTTONS
  * ==========================================
  */
@@ -15904,6 +15944,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
