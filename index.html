@@ -14892,7 +14892,7 @@ console.log('✅ Change Password Module Loaded');
 
 /**
  * ==========================================
- * SIGN OUT FUNCTION (Firebase Auth)
+ * SIGN OUT FUNCTION (Firebase Auth - UPDATED)
  * ==========================================
  */
 
@@ -14924,8 +14924,14 @@ async function signOut() {
     // Clear current user
     window.currentUser = null;
     
+    // ✅ NEW: Clear password field (keep email)
+    const passwordInput = document.getElementById('userPasswordInput');
+    if (passwordInput) {
+      passwordInput.value = '';
+      console.log('✅ Password field cleared');
+    }
+    
     // The onAuthStateChanged listener will automatically show the login page
-    // No need to manually redirect
     
   } catch (error) {
     console.error('❌ Sign out error:', error);
@@ -14935,7 +14941,6 @@ async function signOut() {
 
 console.log('✅ Sign Out Module Loaded');
 
-  
 
 /**
  * ==========================================
@@ -15899,6 +15904,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
