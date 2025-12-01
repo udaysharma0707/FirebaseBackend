@@ -607,51 +607,52 @@
 
       
 
-<!-- Summary - 2 Columns Mobile (UPDATED WITH GREEN BORDER) -->
-<div class="row mb-4" style="gap: 0.5rem;">
+<!-- Summary - 2 Cards Only (Side by Side) -->
+<div class="row g-2 mb-4">
   
-  <!-- 1. Total Products -->
-  <div style="width: calc(50% - 0.25rem); margin-bottom: 0.5rem;">
-    <div class="card summary-card text-center shadow-sm h-100">
-      <div class="card-body p-2">
-        <i class="bi bi-box-seam text-primary" style="font-size:2rem"></i>
-        <h3 id="totalProducts" class="mt-2 mb-1" style="font-size:1.5rem; color: var(--primary-green); font-weight: 700;">0</h3>
-        <p class="text-muted mb-0" style="font-size:0.75rem;">Total Products</p>
+  <!-- 1. Total Products Card -->
+  <div class="col-6">
+    <div class="card summary-card shadow-sm h-100">
+      <div class="card-body p-3">
+        <!-- Products Header -->
+        <div class="text-center mb-2">
+          <i class="bi bi-box-seam" style="font-size:2.5rem; color: var(--primary-green);"></i>
+        </div>
+        
+        <!-- Total Count -->
+        <div class="text-center mb-2">
+          <h2 id="totalProducts" style="font-size:2.2rem; color: var(--primary-green); font-weight: 700; margin: 0;">0</h2>
+          <p class="text-muted mb-0" style="font-size:0.75rem;">Total Products</p>
+        </div>
+        
+        <!-- Divider -->
+        <hr style="margin: 10px 0; border-top: 2px solid rgba(25, 135, 84, 0.15);">
+        
+        <!-- Quantity in Hand -->
+        <div class="d-flex justify-content-between align-items-center px-2">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-layers me-2" style="color: var(--primary-green); font-size: 1.2rem;"></i>
+            <span class="text-muted" style="font-size:0.8rem;">Qty in Hand</span>
+          </div>
+          <span class="fw-bold" id="quantityInHand" style="font-size:1.2rem; color: var(--primary-green);">0</span>
+        </div>
       </div>
     </div>
   </div>
   
- 
-  
-  <!-- 3. Low Stock Items -->
-  <div style="width: calc(50% - 0.25rem); margin-bottom: 0.5rem;">
-    <div class="card summary-card text-center shadow-sm h-100">
-      <div class="card-body p-2">
-        <i class="bi bi-exclamation-triangle text-danger" style="font-size:2rem; color: #DC2626;"></i>
-        <h3 id="lowStock" class="mt-2 mb-1" style="font-size:1.5rem; color: #DC2626; font-weight: 700;">0</h3>
+  <!-- 2. Low Stock Items Card -->
+  <div class="col-6">
+    <div class="card summary-card shadow-sm h-100">
+      <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
+        <i class="bi bi-exclamation-triangle" style="font-size:2.5rem; color: #DC2626;"></i>
+        <h2 id="lowStock" class="mt-2 mb-1" style="font-size:2.2rem; color: #DC2626; font-weight: 700;">0</h2>
         <p class="text-muted mb-0" style="font-size:0.75rem;">Low Stock Items</p>
       </div>
     </div>
   </div>
   
-  <!-- 4. Inventory Summary -->
-  <div style="width: calc(50% - 0.25rem); margin-bottom: 0.5rem;">
-    <div class="card summary-card shadow-sm h-100">
-      <div class="card-body p-2">
-        <div class="text-center mb-2">
-          <i class="bi bi-layers text-success" style="font-size:2rem; color: var(--primary-green);"></i>
-          <p class="text-muted mb-0 mt-1" style="font-size:0.75rem;"><strong>Inventory</strong></p>
-        </div>
-        <div class="d-flex justify-content-between align-items-center mb-2 pb-2" style="border-bottom: 1px solid rgba(18, 140, 126, 0.1);">
-          <span class="text-muted" style="font-size:0.7rem;">Qty in Hand</span>
-          <span class="fw-bold" id="quantityInHand" style="font-size:0.9rem; color: var(--primary-green);">0</span>
-        </div>
-       
-      </div>
-    </div>
-  </div>
-  
 </div>
+
 
 
     <!-- Search -->
@@ -16772,6 +16773,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
