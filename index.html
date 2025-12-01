@@ -6967,15 +6967,15 @@ function resetStockSelection() {
 
 /**
  * ==========================================
- * MANUAL BACKUP BUTTON (FIXED FOR YOUR SETUP)
+ * COMPLETE BACKUP - ALL COLLECTIONS
  * ==========================================
  */
 
 /**
- * Send backup email to current user
+ * Send backup email to current user (ALL DATA)
  */
 async function sendBackupEmail() {
-  console.log('📧 Creating backup email...');
+  console.log('📧 Creating complete backup...');
   
   const button = document.getElementById('backupButton');
   if (!button) return;
@@ -6985,7 +6985,7 @@ async function sendBackupEmail() {
     button.disabled = true;
     button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating backup...';
     
-    // ✅ Get current user (same as your saveProductToSheet)
+    // Get current user
     const user = window.auth?.currentUser;
     if (!user) {
       alert('Please sign in first');
@@ -6999,40 +6999,70 @@ async function sendBackupEmail() {
     
     console.log('Fetching data for:', userEmail);
     
-    // ✅ Get Firebase functions (same as your saveProductToSheet)
+    // Get Firebase functions
     const { collection, getDocs } = window.firebaseImports;
     
-    // ✅ Fetch all collections
+    // ✅ Fetch ALL collections
+    console.log('📥 Fetching brands...');
+    const brandsRef = collection(window.db, 'tenants', userId, 'brands');
+    const brandsSnapshot = await getDocs(brandsRef);
+    
+    console.log('📥 Fetching invoices...');
+    const invoicesRef = collection(window.db, 'tenants', userId, 'invoices');
+    const invoicesSnapshot = await getDocs(invoicesRef);
+    
+    console.log('📥 Fetching productGroups...');
+    const productGroupsRef = collection(window.db, 'tenants', userId, 'productGroups');
+    const productGroupsSnapshot = await getDocs(productGroupsRef);
+    
     console.log('📥 Fetching products...');
     const productsRef = collection(window.db, 'tenants', userId, 'products');
     const productsSnapshot = await getDocs(productsRef);
     
-    console.log('📥 Fetching customers...');
-    const customersRef = collection(window.db, 'tenants', userId, 'customers');
-    const customersSnapshot = await getDocs(customersRef);
+    console.log('📥 Fetching purchases...');
+    const purchasesRef = collection(window.db, 'tenants', userId, 'purchases');
+    const purchasesSnapshot = await getDocs(purchasesRef);
     
     console.log('📥 Fetching sales...');
     const salesRef = collection(window.db, 'tenants', userId, 'sales');
     const salesSnapshot = await getDocs(salesRef);
     
-    // Build backup data
+    // Build complete backup data
     const backupData = {
       generatedAt: new Date().toISOString(),
       generatedBy: userEmail,
       tenantId: userId,
+      brands: [],
+      invoices: [],
+      productGroups: [],
       products: [],
-      customers: [],
+      purchases: [],
       sales: []
     };
+    
+    // Extract brands
+    brandsSnapshot.forEach(doc => {
+      backupData.brands.push({ id: doc.id, ...doc.data() });
+    });
+    
+    // Extract invoices
+    invoicesSnapshot.forEach(doc => {
+      backupData.invoices.push({ id: doc.id, ...doc.data() });
+    });
+    
+    // Extract productGroups
+    productGroupsSnapshot.forEach(doc => {
+      backupData.productGroups.push({ id: doc.id, ...doc.data() });
+    });
     
     // Extract products
     productsSnapshot.forEach(doc => {
       backupData.products.push({ id: doc.id, ...doc.data() });
     });
     
-    // Extract customers
-    customersSnapshot.forEach(doc => {
-      backupData.customers.push({ id: doc.id, ...doc.data() });
+    // Extract purchases
+    purchasesSnapshot.forEach(doc => {
+      backupData.purchases.push({ id: doc.id, ...doc.data() });
     });
     
     // Extract sales
@@ -7040,9 +7070,12 @@ async function sendBackupEmail() {
       backupData.sales.push({ id: doc.id, ...doc.data() });
     });
     
-    console.log('✅ Data collected:', {
+    console.log('✅ Complete data collected:', {
+      brands: backupData.brands.length,
+      invoices: backupData.invoices.length,
+      productGroups: backupData.productGroups.length,
       products: backupData.products.length,
-      customers: backupData.customers.length,
+      purchases: backupData.purchases.length,
       sales: backupData.sales.length
     });
     
@@ -7050,7 +7083,7 @@ async function sendBackupEmail() {
     const backupJSON = JSON.stringify(backupData, null, 2);
     const blob = new Blob([backupJSON], { type: 'application/json' });
     const today = new Date().toISOString().split('T')[0];
-    const filename = `TileInventory_Backup_${userEmail.replace('@', '_at_')}_${today}.json`;
+    const filename = `TileInventory_COMPLETE_Backup_${userEmail.replace('@', '_at_')}_${today}.json`;
     
     // Download file
     const url = URL.createObjectURL(blob);
@@ -7064,20 +7097,34 @@ async function sendBackupEmail() {
     
     console.log('✅ Backup file downloaded:', filename);
     
+    // Calculate total items
+    const totalItems = 
+      backupData.brands.length + 
+      backupData.invoices.length + 
+      backupData.productGroups.length + 
+      backupData.products.length + 
+      backupData.purchases.length + 
+      backupData.sales.length;
+    
     // Open Gmail compose with backup details
-    const subject = encodeURIComponent(`📦 Tile Inventory Backup - ${new Date().toLocaleDateString()}`);
+    const subject = encodeURIComponent(`📦 Tile Inventory Complete Backup - ${new Date().toLocaleDateString()}`);
     const body = encodeURIComponent(
-      `Backup Summary for ${userEmail}\n\n` +
+      `Complete Backup Summary for ${userEmail}\n\n` +
+      `🏷️ Brands: ${backupData.brands.length}\n` +
+      `🧾 Invoices: ${backupData.invoices.length}\n` +
+      `📁 Product Groups: ${backupData.productGroups.length}\n` +
       `📦 Products: ${backupData.products.length}\n` +
-      `🏢 Customers: ${backupData.customers.length}\n` +
+      `🛒 Purchases: ${backupData.purchases.length}\n` +
       `💰 Sales: ${backupData.sales.length}\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `📊 Total Items: ${totalItems}\n\n` +
       `📅 Generated: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\n\n` +
       `File downloaded: ${filename}\n\n` +
       `To restore this backup:\n` +
       `1. Open your inventory app\n` +
-      `2. Go to Settings\n` +
-      `3. Click "Restore Backup"\n` +
-      `4. Upload the JSON file\n\n` +
+      `2. Click "Restore Backup" button\n` +
+      `3. Select this JSON file\n` +
+      `4. Confirm restoration\n\n` +
       `⚠️ Please attach the downloaded file to this email before sending.`
     );
     
@@ -7086,13 +7133,17 @@ async function sendBackupEmail() {
     
     // Success message
     alert(
-      '✅ Backup Created Successfully!\n\n' +
-      `📁 File: ${filename}\n` +
+      '✅ Complete Backup Created!\n\n' +
+      `📁 File: ${filename}\n\n` +
+      `🏷️ Brands: ${backupData.brands.length}\n` +
+      `🧾 Invoices: ${backupData.invoices.length}\n` +
+      `📁 Product Groups: ${backupData.productGroups.length}\n` +
       `📦 Products: ${backupData.products.length}\n` +
-      `🏢 Customers: ${backupData.customers.length}\n` +
+      `🛒 Purchases: ${backupData.purchases.length}\n` +
       `💰 Sales: ${backupData.sales.length}\n\n` +
+      `📊 Total: ${totalItems} items\n\n` +
       '📧 Email draft opened in new tab.\n' +
-      'Please attach the downloaded file and send!'
+      'Please attach the file and send!'
     );
     
     // Reset button
@@ -7110,8 +7161,6 @@ async function sendBackupEmail() {
     }
   }
 }
-
-console.log('✅ Backup Email Module Loaded');
 
 
 
@@ -7170,10 +7219,10 @@ function handleRestoreFile(event) {
 }
 
 /**
- * Validate backup data structure
+ * Validate backup data structure (ALL COLLECTIONS)
  */
 function validateBackupData(data) {
-  console.log('🔍 Validating backup data...');
+  console.log('🔍 Validating complete backup data...');
   
   if (!data || typeof data !== 'object') {
     console.error('❌ Data is not an object');
@@ -7185,38 +7234,56 @@ function validateBackupData(data) {
     return false;
   }
   
-  if (!Array.isArray(data.products)) {
-    console.error('❌ Products is not an array');
-    return false;
+  // Check all collections exist and are arrays
+  const collections = ['brands', 'invoices', 'productGroups', 'products', 'purchases', 'sales'];
+  
+  for (const collectionName of collections) {
+    if (!Array.isArray(data[collectionName])) {
+      console.error(`❌ ${collectionName} is not an array`);
+      return false;
+    }
   }
   
-  if (!Array.isArray(data.customers)) {
-    console.error('❌ Customers is not an array');
-    return false;
-  }
+  console.log('✅ Complete backup data is valid');
+  console.log('   Collections:', {
+    brands: data.brands.length,
+    invoices: data.invoices.length,
+    productGroups: data.productGroups.length,
+    products: data.products.length,
+    purchases: data.purchases.length,
+    sales: data.sales.length
+  });
   
-  if (!Array.isArray(data.sales)) {
-    console.error('❌ Sales is not an array');
-    return false;
-  }
-  
-  console.log('✅ Backup data is valid');
   return true;
 }
 
+
 /**
- * Show restore confirmation dialog
+ * Show restore confirmation dialog (ALL COLLECTIONS)
  */
 function showRestoreConfirmation(backupData) {
+  const totalItems = 
+    (backupData.brands?.length || 0) +
+    (backupData.invoices?.length || 0) +
+    (backupData.productGroups?.length || 0) +
+    (backupData.products?.length || 0) +
+    (backupData.purchases?.length || 0) +
+    (backupData.sales?.length || 0);
+  
   const message = 
-    `📦 Restore Backup?\n\n` +
+    `📦 Restore Complete Backup?\n\n` +
     `Backup Information:\n` +
     `• Generated: ${new Date(backupData.generatedAt).toLocaleString('en-IN')}\n` +
     `• From: ${backupData.generatedBy}\n\n` +
     `Data to Restore:\n` +
-    `• Products: ${backupData.products.length}\n` +
-    `• Customers: ${backupData.customers.length}\n` +
-    `• Sales: ${backupData.sales.length}\n\n` +
+    `• 🏷️ Brands: ${backupData.brands?.length || 0}\n` +
+    `• 🧾 Invoices: ${backupData.invoices?.length || 0}\n` +
+    `• 📁 Product Groups: ${backupData.productGroups?.length || 0}\n` +
+    `• 📦 Products: ${backupData.products?.length || 0}\n` +
+    `• 🛒 Purchases: ${backupData.purchases?.length || 0}\n` +
+    `• 💰 Sales: ${backupData.sales?.length || 0}\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `📊 Total: ${totalItems} items\n\n` +
     `⚠️ WARNING: This will ADD new items and UPDATE existing ones.\n` +
     `Existing data will NOT be deleted.\n\n` +
     `Do you want to continue?`;
@@ -7228,11 +7295,18 @@ function showRestoreConfirmation(backupData) {
   }
 }
 
+
 /**
- * Restore backup data to Firestore
+ * ==========================================
+ * COMPLETE RESTORE - ALL COLLECTIONS
+ * ==========================================
+ */
+
+/**
+ * Restore complete backup data to Firestore
  */
 async function restoreBackupData(backupData) {
-  console.log('🔄 Starting restore process...');
+  console.log('🔄 Starting complete restore process...');
   
   const restoreButton = document.getElementById('restoreButton');
   
@@ -7253,7 +7327,7 @@ async function restoreBackupData(backupData) {
     const userId = user.uid;
     const userEmail = user.email;
     
-    // Security check: Warn if restoring someone else's backup
+    // Security check
     if (backupData.generatedBy !== userEmail) {
       const confirmRestore = confirm(
         `⚠️ WARNING:\n\n` +
@@ -7273,66 +7347,132 @@ async function restoreBackupData(backupData) {
     }
     
     // Get Firebase functions
-    const { doc, setDoc, collection } = window.firebaseImports;
+    const { doc, setDoc } = window.firebaseImports;
     
     let successCount = 0;
     let errorCount = 0;
     
-    // Restore Products
+    // ✅ Restore Brands
+    console.log('🏷️ Restoring brands...');
+    if (backupData.brands && Array.isArray(backupData.brands)) {
+      for (const brand of backupData.brands) {
+        try {
+          const brandRef = doc(window.db, 'tenants', userId, 'brands', brand.id);
+          await setDoc(brandRef, brand);
+          successCount++;
+          console.log(`✅ Restored brand: ${brand.name || brand.id}`);
+        } catch (error) {
+          console.error(`❌ Failed to restore brand:`, error);
+          errorCount++;
+        }
+      }
+    }
+    
+    // ✅ Restore Invoices
+    console.log('🧾 Restoring invoices...');
+    if (backupData.invoices && Array.isArray(backupData.invoices)) {
+      for (const invoice of backupData.invoices) {
+        try {
+          const invoiceRef = doc(window.db, 'tenants', userId, 'invoices', invoice.id);
+          await setDoc(invoiceRef, invoice);
+          successCount++;
+          console.log(`✅ Restored invoice: ${invoice.id}`);
+        } catch (error) {
+          console.error(`❌ Failed to restore invoice:`, error);
+          errorCount++;
+        }
+      }
+    }
+    
+    // ✅ Restore Product Groups
+    console.log('📁 Restoring product groups...');
+    if (backupData.productGroups && Array.isArray(backupData.productGroups)) {
+      for (const group of backupData.productGroups) {
+        try {
+          const groupRef = doc(window.db, 'tenants', userId, 'productGroups', group.id);
+          await setDoc(groupRef, group);
+          successCount++;
+          console.log(`✅ Restored product group: ${group.name || group.id}`);
+        } catch (error) {
+          console.error(`❌ Failed to restore product group:`, error);
+          errorCount++;
+        }
+      }
+    }
+    
+    // ✅ Restore Products
     console.log('📦 Restoring products...');
-    for (const product of backupData.products) {
-      try {
-        const productRef = doc(window.db, 'tenants', userId, 'products', product.id);
-        await setDoc(productRef, product);
-        successCount++;
-        console.log(`✅ Restored product: ${product.name}`);
-      } catch (error) {
-        console.error(`❌ Failed to restore product: ${product.name}`, error);
-        errorCount++;
+    if (backupData.products && Array.isArray(backupData.products)) {
+      for (const product of backupData.products) {
+        try {
+          const productRef = doc(window.db, 'tenants', userId, 'products', product.id);
+          await setDoc(productRef, product);
+          successCount++;
+          console.log(`✅ Restored product: ${product.name || product.id}`);
+        } catch (error) {
+          console.error(`❌ Failed to restore product:`, error);
+          errorCount++;
+        }
       }
     }
     
-    // Restore Customers
-    console.log('🏢 Restoring customers...');
-    for (const customer of backupData.customers) {
-      try {
-        const customerRef = doc(window.db, 'tenants', userId, 'customers', customer.id);
-        await setDoc(customerRef, customer);
-        successCount++;
-        console.log(`✅ Restored customer: ${customer.name || customer.id}`);
-      } catch (error) {
-        console.error(`❌ Failed to restore customer:`, error);
-        errorCount++;
+    // ✅ Restore Purchases
+    console.log('🛒 Restoring purchases...');
+    if (backupData.purchases && Array.isArray(backupData.purchases)) {
+      for (const purchase of backupData.purchases) {
+        try {
+          const purchaseRef = doc(window.db, 'tenants', userId, 'purchases', purchase.id);
+          await setDoc(purchaseRef, purchase);
+          successCount++;
+          console.log(`✅ Restored purchase: ${purchase.id}`);
+        } catch (error) {
+          console.error(`❌ Failed to restore purchase:`, error);
+          errorCount++;
+        }
       }
     }
     
-    // Restore Sales
+    // ✅ Restore Sales
     console.log('💰 Restoring sales...');
-    for (const sale of backupData.sales) {
-      try {
-        const saleRef = doc(window.db, 'tenants', userId, 'sales', sale.id);
-        await setDoc(saleRef, sale);
-        successCount++;
-        console.log(`✅ Restored sale: ${sale.id}`);
-      } catch (error) {
-        console.error(`❌ Failed to restore sale:`, error);
-        errorCount++;
+    if (backupData.sales && Array.isArray(backupData.sales)) {
+      for (const sale of backupData.sales) {
+        try {
+          const saleRef = doc(window.db, 'tenants', userId, 'sales', sale.id);
+          await setDoc(saleRef, sale);
+          successCount++;
+          console.log(`✅ Restored sale: ${sale.id}`);
+        } catch (error) {
+          console.error(`❌ Failed to restore sale:`, error);
+          errorCount++;
+        }
       }
     }
     
-    console.log('✅ Restore complete!');
+    console.log('✅ Complete restore finished!');
     console.log(`   - Success: ${successCount}`);
     console.log(`   - Errors: ${errorCount}`);
     
     // Show success message
+    const totalExpected = 
+      (backupData.brands?.length || 0) +
+      (backupData.invoices?.length || 0) +
+      (backupData.productGroups?.length || 0) +
+      (backupData.products?.length || 0) +
+      (backupData.purchases?.length || 0) +
+      (backupData.sales?.length || 0);
+    
     alert(
-      `✅ Restore Complete!\n\n` +
+      `✅ Complete Restore Finished!\n\n` +
       `Successfully restored:\n` +
-      `• Products: ${backupData.products.length}\n` +
-      `• Customers: ${backupData.customers.length}\n` +
-      `• Sales: ${backupData.sales.length}\n\n` +
-      `${errorCount > 0 ? `⚠️ ${errorCount} items failed to restore.\n` : ''}` +
-      `\nRefreshing page...`
+      `🏷️ Brands: ${backupData.brands?.length || 0}\n` +
+      `🧾 Invoices: ${backupData.invoices?.length || 0}\n` +
+      `📁 Product Groups: ${backupData.productGroups?.length || 0}\n` +
+      `📦 Products: ${backupData.products?.length || 0}\n` +
+      `🛒 Purchases: ${backupData.purchases?.length || 0}\n` +
+      `💰 Sales: ${backupData.sales?.length || 0}\n\n` +
+      `📊 Total: ${successCount} of ${totalExpected} items\n` +
+      `${errorCount > 0 ? `⚠️ ${errorCount} items failed\n` : ''}` +
+      `\nRefreshing page in 2 seconds...`
     );
     
     // Reload page to show restored data
@@ -7351,7 +7491,6 @@ async function restoreBackupData(backupData) {
   }
 }
 
-console.log('✅ Restore Backup Module Loaded');
 
 
 
@@ -16332,6 +16471,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
