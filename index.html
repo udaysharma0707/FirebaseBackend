@@ -382,126 +382,199 @@
 
 
 
-
-<!-- Sync indicator -->
-<div id="syncIndicator" class="sync-indicator">
-  <i class="bi bi-arrow-repeat"></i> 
-  <span id="syncText">Syncing...</span>
-</div>
-
-<!-- Navbar with Options Dropdown -->
-<nav class="navbar navbar-dark bg-primary sticky-top">
+<!-- ✅ UPDATED NAVBAR - Clean & Organized -->
+<nav class="navbar navbar-dark sticky-top" style="background: linear-gradient(135deg, #198754 0%, #157347 100%);">
   <div class="container-fluid">
+    <!-- Brand/Logo -->
     <span class="navbar-brand mb-0 h1">
       <i class="bi bi-boxes"></i> Tile & Sanitaryware Inventory
     </span>
+    
+    <!-- Right Side Buttons -->
     <div class="d-flex align-items-center gap-2 flex-wrap">
+      
+      <!-- Refresh Button -->
       <button id="refreshBtn" class="btn btn-light btn-sm" onclick="manualRefresh()">
         <i id="refreshIcon" class="bi bi-arrow-clockwise"></i> Refresh
       </button>
 
+      <!-- Backup Button -->
+      <button id="backupButton" class="btn btn-sm" 
+              style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);"
+              onclick="sendBackupEmail()">
+        <i class="bi bi-cloud-download"></i> Backup
+      </button>
       
- <div class="d-flex gap-2 mb-3">
-  <button id="backupButton" class="btn btn-success" onclick="sendBackupEmail()">
-    <i class="bi bi-cloud-download"></i> Backup
-  </button>
-  
-  <button id="restoreButton" class="btn btn-primary" onclick="document.getElementById('restoreFileInput').click()">
-    <i class="bi bi-cloud-upload"></i> Restore
-  </button>
-  
-  <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
-</div>
+      <!-- Restore Button -->
+      <button id="restoreButton" class="btn btn-sm" 
+              style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);"
+              onclick="document.getElementById('restoreFileInput').click()">
+        <i class="bi bi-cloud-upload"></i> Restore
+      </button>
+      
+      <!-- Hidden File Input for Restore -->
+      <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
 
-
-
-<!-- ✅ NEW: Instant Products Button -->
-      <button 
-        class="btn btn-sm" 
-        style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); transition: all 0.3s ease;"
-        onclick="openInstantProductsModal()">
+      <!-- Instant Products Button -->
+      <button class="btn btn-sm" 
+              style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);"
+              onclick="openInstantProductsModal()">
         <i class="bi bi-lightning-charge me-1"></i>Instant Products
       </button>
 
-
-      
-      <!-- ✅ UPDATED: Options Dropdown (GREEN THEME) -->
+      <!-- Options Dropdown -->
       <div id="optionsButtonContainer" style="position: relative; display: inline-block;">
-        <button 
-          id="optionsToggleBtn" 
-          style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); transition: all 0.3s ease; cursor: pointer;"
-          onclick="toggleOptionsDropdown()">
+        <button id="optionsToggleBtn" 
+                style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); transition: all 0.3s ease; cursor: pointer;"
+                onclick="toggleOptionsDropdown()">
           <i class="bi bi-three-dots-vertical me-1"></i>Options
           <i id="optionsArrow" class="bi bi-chevron-down ms-1"></i>
         </button>
         
         <!-- Dropdown Menu -->
-        <div 
-          id="optionsDropdown" 
-          style="display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 200px; overflow: hidden; margin-top: 8px; z-index: 2000;">
+        <div id="optionsDropdown" 
+             style="display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 200px; overflow: hidden; margin-top: 8px; z-index: 2000;">
           
-          <button 
-            class="dropdown-option-btn" 
-            onclick="openSalesModal(); closeOptionsDropdown()">
+          <button class="dropdown-option-btn" onclick="openSalesModal(); closeOptionsDropdown()">
             <i class="bi bi-cart me-2"></i>Record Sale
           </button>
           
-          <button 
-            class="dropdown-option-btn" 
-            onclick="generateInvoice(); closeOptionsDropdown()">
+          <button class="dropdown-option-btn" onclick="generateInvoice(); closeOptionsDropdown()">
             <i class="bi bi-receipt me-2"></i>Generate Invoice
           </button>
           
-          <button 
-            class="dropdown-option-btn" 
-            onclick="viewSavedInvoices(); closeOptionsDropdown()">
+          <button class="dropdown-option-btn" onclick="viewSavedInvoices(); closeOptionsDropdown()">
             <i class="bi bi-receipt-cutoff me-2"></i>View Invoices
           </button>
         </div>
       </div>
-      <!-- END Options Dropdown -->
-<div class="d-flex align-items-center ms-2">
-  <!-- Background sync indicator -->
-  <div id="backgroundSyncStatus" class="me-3">
-    <i class="bi bi-cloud-upload-fill"></i>
-    <span>Syncing</span>
-  </div>
 
-  <!-- User Dropdown Menu -->
-  <div class="dropdown">
-    <button class="btn btn-link text-white text-decoration-none d-flex align-items-center" 
-            type="button" 
-            id="userDropdown" 
-            data-bs-toggle="dropdown" 
-            aria-expanded="false"
-            style="border: none; background: none; padding: 0;">
-      <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
-      <span id="userName" class="me-2">Loading...</span>
-      <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
-    </button>
-    
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-      <li>
-        <h6 class="dropdown-header">
-          <i class="bi bi-person-circle me-2"></i>
-          <span id="userEmailDropdown">user@example.com</span>
-        </h6>
-      </li>
-      <li><hr class="dropdown-divider"></li>
-      <li>
-        <a class="dropdown-item" href="#" onclick="openChangePasswordModal(); return false;">
-          <i class="bi bi-key me-2"></i>Change Password
-        </a>
-      </li>
-      <li>
-        <a class="dropdown-item text-danger" href="#" onclick="signOut(); return false;">
-          <i class="bi bi-box-arrow-right me-2"></i>Sign Out
-        </a>
-      </li>
-    </ul>
-  </div>
-</div>
+      <!-- Background Sync Indicator -->
+      <div id="backgroundSyncStatus" class="text-white d-flex align-items-center" style="font-size: 0.85rem;">
+        <i class="bi bi-cloud-upload-fill me-1"></i>
+        <span>Syncing</span>
+      </div>
 
+      <!-- User Dropdown Menu -->
+      <div class="dropdown">
+        <button class="btn btn-link text-white text-decoration-none d-flex align-items-center p-2" 
+                type="button" 
+                id="userDropdown" 
+                data-bs-toggle="dropdown" 
+                aria-expanded="false"
+                style="border: 2px solid rgba(255,255,255,0.2); border-radius: 10px; transition: all 0.3s ease;"
+                onmouseover="this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                onmouseout="this.style.backgroundColor='transparent'">
+          <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+          <span id="userName" class="me-2">Loading...</span>
+          <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
+        </button>
+        
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown" style="border-radius: 10px; min-width: 250px;">
+          <li>
+            <div class="dropdown-header bg-light" style="border-radius: 10px 10px 0 0;">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-person-circle me-2" style="font-size: 2rem; color: #198754;"></i>
+                <div>
+                  <strong id="userEmailDropdown" style="font-size: 0.9rem;">user@example.com</strong>
+                  <div class="text-muted" style="font-size: 0.75rem;">Signed In</div>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <a class="dropdown-item" href="#" onclick="openChangePasswordModal(); return false;">
+              <i class="bi bi-key me-2" style="color: #198754;"></i>Change Password
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item text-danger" href="#" onclick="signOut(); return false;">
+              <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+    </div>
+  </div>
+</nav>
+
+<!-- ✅ CSS for dropdown buttons (add to your stylesheet or <style> tag) -->
+<style>
+/* Dropdown option buttons styling */
+.dropdown-option-btn {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.dropdown-option-btn:hover {
+  background: #f8f9fa;
+}
+
+.dropdown-option-btn i {
+  color: #198754;
+}
+
+/* User dropdown styling */
+.dropdown-menu {
+  border: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item.text-danger:hover {
+  background-color: #fff5f5;
+}
+
+/* Background sync indicator animation */
+#backgroundSyncStatus i {
+  animation: syncPulse 2s infinite;
+}
+
+@keyframes syncPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Button hover effects */
+.btn:hover {
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar-brand {
+    font-size: 0.9rem;
+  }
+  
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  
+  #userName {
+    display: none;
+  }
+  
+  #backgroundSyncStatus span {
+    display: none;
+  }
+}
+</style>
 
 
 <div class="container-fluid py-4">
@@ -16709,6 +16782,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
