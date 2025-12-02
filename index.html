@@ -456,34 +456,35 @@
             <i class="bi bi-cloud-upload"></i> Restore
           </button>
           
+          <!-- Hidden File Input -->
           <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
           
-       <!-- Options Dropdown -->
-<div id="optionsButtonContainer" style="position: relative; display: inline-block;">
-<button id="optionsToggleBtn"
-style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); cursor: pointer; font-size: 0.85rem;"
-onclick="toggleOptionsDropdown()">
-<i class="bi bi-three-dots-vertical me-1"></i>Options
-<i id="optionsArrow" class="bi bi-chevron-down ms-1"></i>
-</button>
+          <!-- Options Dropdown -->
+          <div id="optionsButtonContainer" style="position: relative; display: inline-block;">
+            <button id="optionsToggleBtn"
+                    style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); cursor: pointer;"
+                    onclick="toggleOptionsDropdown()">
+              <i class="bi bi-three-dots-vertical me-1"></i>Options
+              <i id="optionsArrow" class="bi bi-chevron-down ms-1"></i>
+            </button>
 
-<!-- Dropdown Menu -->
-<div id="optionsDropdown"
-style="display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 200px; overflow: hidden; margin-top: 8px; z-index: 2000;">
-
-<button class="dropdown-option-btn" onclick="openSalesModal(); closeOptionsDropdown()">
-<i class="bi bi-cart me-2"></i>Record Sale
-</button>
-
-<button class="dropdown-option-btn" onclick="generateInvoice(); closeOptionsDropdown()">
-<i class="bi bi-receipt me-2"></i>Generate Invoice
-</button>
-
-<button class="dropdown-option-btn" onclick="viewSavedInvoices(); closeOptionsDropdown()">
-<i class="bi bi-receipt-cutoff me-2"></i>View Invoices
-</button>
-</div>
-</div>
+            <!-- Dropdown Menu -->
+            <div id="optionsDropdown"
+                 style="display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 200px; overflow: hidden; margin-top: 8px; z-index: 2000;">
+              <button class="dropdown-option-btn" onclick="openSalesModal(); closeOptionsDropdown()">
+                <i class="bi bi-cart me-2"></i>Record Sale
+              </button>
+              <button class="dropdown-option-btn" onclick="generateInvoice(); closeOptionsDropdown()">
+                <i class="bi bi-receipt me-2"></i>Generate Invoice
+              </button>
+              <button class="dropdown-option-btn" onclick="viewSavedInvoices(); closeOptionsDropdown()">
+                <i class="bi bi-receipt-cutoff me-2"></i>View Invoices
+              </button>
+            </div>
+          </div>
+          
+        </div>
+      </div>
       
       <!-- Mobile Only: Row 2 - User Dropdown -->
       <div class="d-md-none mb-2">
@@ -565,11 +566,11 @@ style="display: none; position: absolute; top: 100%; right: 0; background: white
           </div>
         </div>
       </div>
-
-        </div>
+      
     </div>
   </div>
 </nav>
+
 <!-- ✅ ADD THIS SPACER -->
 <div style="height: 20px; background: transparent;"></div>
 
@@ -15411,36 +15412,64 @@ async function confirmDeleteSale(saleId) {
 }
 
  /**
- * Toggle Options Dropdown
+ * ==========================================
+ * OPTIONS DROPDOWN - DESKTOP & MOBILE
+ * ==========================================
  */
-function toggleOptionsDropdown() {
-  const dropdown = document.getElementById('optionsDropdown');
-  const arrow = document.getElementById('optionsArrow');
+
+/**
+ * Toggle Options Dropdown (Desktop and Mobile)
+ */
+function toggleOptionsDropdown(event) {
+  // Prevent event bubbling
+  if (event) {
+    event.stopPropagation();
+  }
   
-  if (dropdown.style.display === 'none' || dropdown.style.display === '') {
-    // Open dropdown
-    dropdown.style.display = 'block';
-    arrow.classList.remove('bi-chevron-down');
-    arrow.classList.add('bi-chevron-up');
-  } else {
-    // Close dropdown
-    dropdown.style.display = 'none';
-    arrow.classList.remove('bi-chevron-up');
-    arrow.classList.add('bi-chevron-down');
+  // Detect if mobile or desktop based on which button was clicked
+  const isMobile = event && event.target.closest('#optionsButtonContainerMobile');
+  
+  // Get the correct elements based on device
+  const dropdown = document.getElementById(isMobile ? 'optionsDropdownMobile' : 'optionsDropdown');
+  const arrow = document.getElementById(isMobile ? 'optionsArrowMobile' : 'optionsArrow');
+  
+  if (dropdown && arrow) {
+    if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+      // Open dropdown
+      dropdown.style.display = 'block';
+      arrow.classList.remove('bi-chevron-down');
+      arrow.classList.add('bi-chevron-up');
+    } else {
+      // Close dropdown
+      dropdown.style.display = 'none';
+      arrow.classList.remove('bi-chevron-up');
+      arrow.classList.add('bi-chevron-down');
+    }
   }
 }
 
 /**
- * Close Options Dropdown
+ * Close Options Dropdown (Desktop and Mobile)
  */
 function closeOptionsDropdown() {
-  const dropdown = document.getElementById('optionsDropdown');
-  const arrow = document.getElementById('optionsArrow');
+  // Close desktop dropdown
+  const dropdownDesktop = document.getElementById('optionsDropdown');
+  const arrowDesktop = document.getElementById('optionsArrow');
   
-  if (dropdown && arrow) {
-    dropdown.style.display = 'none';
-    arrow.classList.remove('bi-chevron-up');
-    arrow.classList.add('bi-chevron-down');
+  if (dropdownDesktop && arrowDesktop) {
+    dropdownDesktop.style.display = 'none';
+    arrowDesktop.classList.remove('bi-chevron-up');
+    arrowDesktop.classList.add('bi-chevron-down');
+  }
+  
+  // Close mobile dropdown
+  const dropdownMobile = document.getElementById('optionsDropdownMobile');
+  const arrowMobile = document.getElementById('optionsArrowMobile');
+  
+  if (dropdownMobile && arrowMobile) {
+    dropdownMobile.style.display = 'none';
+    arrowMobile.classList.remove('bi-chevron-up');
+    arrowMobile.classList.add('bi-chevron-down');
   }
 }
 
@@ -15448,13 +15477,33 @@ function closeOptionsDropdown() {
  * Close dropdown when clicking outside
  */
 document.addEventListener('click', function(event) {
-  const dropdown = document.getElementById('optionsDropdown');
-  const container = document.getElementById('optionsButtonContainer');
+  const dropdownDesktop = document.getElementById('optionsDropdown');
+  const containerDesktop = document.getElementById('optionsButtonContainer');
   
-  if (dropdown && container) {
-    // Check if click is outside the entire container
-    if (!container.contains(event.target)) {
-      closeOptionsDropdown();
+  const dropdownMobile = document.getElementById('optionsDropdownMobile');
+  const containerMobile = document.getElementById('optionsButtonContainerMobile');
+  
+  // Check desktop dropdown
+  if (dropdownDesktop && containerDesktop) {
+    if (!containerDesktop.contains(event.target)) {
+      dropdownDesktop.style.display = 'none';
+      const arrowDesktop = document.getElementById('optionsArrow');
+      if (arrowDesktop) {
+        arrowDesktop.classList.remove('bi-chevron-up');
+        arrowDesktop.classList.add('bi-chevron-down');
+      }
+    }
+  }
+  
+  // Check mobile dropdown
+  if (dropdownMobile && containerMobile) {
+    if (!containerMobile.contains(event.target)) {
+      dropdownMobile.style.display = 'none';
+      const arrowMobile = document.getElementById('optionsArrowMobile');
+      if (arrowMobile) {
+        arrowMobile.classList.remove('bi-chevron-up');
+        arrowMobile.classList.add('bi-chevron-down');
+      }
     }
   }
 });
@@ -15463,6 +15512,7 @@ document.addEventListener('click', function(event) {
 window.toggleOptionsDropdown = toggleOptionsDropdown;
 window.closeOptionsDropdown = closeOptionsDropdown;
 
+console.log('✅ Options Dropdown Module Loaded (Desktop + Mobile)');
 
 /**
  * ==========================================
@@ -17090,6 +17140,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
