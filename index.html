@@ -392,7 +392,7 @@
   <div class="container-fluid">
     <div class="w-100">
       
-      <!-- Row 1: Brand Title (Full Width on Mobile) -->
+      <!-- Row 1: Brand Title -->
       <div class="d-flex justify-content-between align-items-center mb-md-0 mb-2">
         <span class="navbar-brand mb-0 h1">
           <i class="bi bi-boxes"></i> Tile & Sanitaryware Inventory
@@ -468,7 +468,6 @@
               <i id="optionsArrow" class="bi bi-chevron-down ms-1"></i>
             </button>
 
-            <!-- Dropdown Menu -->
             <div id="optionsDropdown"
                  style="display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 200px; overflow: hidden; margin-top: 8px; z-index: 2000;">
               <button class="dropdown-option-btn" onclick="openSalesModal(); closeOptionsDropdown()">
@@ -529,20 +528,10 @@
         </div>
       </div>
       
-      <!-- Mobile Only: Row 3 - Action Buttons -->
+      <!-- Mobile Only: Row 3 - Action Buttons (REORDERED) -->
       <div class="d-md-none d-flex gap-2 justify-content-center">
-        <button id="backupButtonMobile" class="btn btn-sm flex-fill" 
-                style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); font-size: 0.85rem;"
-                onclick="sendBackupEmail()">
-          <i class="bi bi-cloud-download"></i> Backup
-        </button>
         
-        <button id="restoreButtonMobile" class="btn btn-sm flex-fill" 
-                style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2); font-size: 0.85rem;"
-                onclick="document.getElementById('restoreFileInput').click()">
-          <i class="bi bi-cloud-upload"></i> Restore
-        </button>
-        
+        <!-- Options Dropdown - FIRST -->
         <div id="optionsButtonContainerMobile" style="position: relative; flex: 1;">
           <button id="optionsToggleBtnMobile" 
                   class="btn btn-sm w-100"
@@ -553,7 +542,7 @@
           </button>
           
           <div id="optionsDropdownMobile" 
-               style="display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 180px; overflow: hidden; margin-top: 4px; z-index: 2000;">
+               style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 180px; overflow: hidden; margin-top: 4px; z-index: 2000;">
             <button class="dropdown-option-btn" onclick="openSalesModal(); closeOptionsDropdown()">
               <i class="bi bi-cart me-2"></i>Record Sale
             </button>
@@ -565,11 +554,27 @@
             </button>
           </div>
         </div>
+        
+        <!-- Backup Button - SECOND -->
+        <button id="backupButtonMobile" class="btn btn-sm flex-fill" 
+                style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); font-size: 0.85rem;"
+                onclick="sendBackupEmail()">
+          <i class="bi bi-cloud-download"></i> Backup
+        </button>
+        
+        <!-- Restore Button - THIRD -->
+        <button id="restoreButtonMobile" class="btn btn-sm flex-fill" 
+                style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2); font-size: 0.85rem;"
+                onclick="document.getElementById('restoreFileInput').click()">
+          <i class="bi bi-cloud-upload"></i> Restore
+        </button>
+        
       </div>
       
     </div>
   </div>
 </nav>
+
 
 <!-- ✅ ADD THIS SPACER -->
 <div style="height: 20px; background: transparent;"></div>
@@ -17140,6 +17145,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
