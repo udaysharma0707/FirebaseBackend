@@ -563,13 +563,14 @@
 
 <!-- ✅ SPACER -->
 <div style="height: 20px; background: transparent;"></div>
-<!-- Summary - 3 Cards (FIXED) -->
+<!-- Summary - 2 Cards (Total Products + Quick Create) -->
 <div class="row g-2 mb-3">
   
-  <!-- 1. Total Products Card -->
-  <div class="col-md-4 col-6">
+  <!-- 1. Total Products Card (Merged with Low Stock) -->
+  <div class="col-md-6 col-12">
     <div class="card summary-card shadow-sm h-100">
       <div class="card-body p-2">
+        <!-- Icon and Title -->
         <div class="text-center mb-1">
           <i class="bi bi-box-seam" style="font-size:2rem; color: var(--primary-green);"></i>
         </div>
@@ -577,31 +578,33 @@
           <h2 id="totalProducts" style="font-size:1.8rem; color: var(--primary-green); font-weight: 700; margin: 0;">0</h2>
           <p class="text-muted mb-0" style="font-size:0.7rem;">Total Products</p>
         </div>
+        
+        <!-- Divider -->
         <hr style="margin: 6px 0; border-top: 1px solid rgba(25, 135, 84, 0.15);">
-        <div class="d-flex justify-content-between align-items-center px-1">
+        
+        <!-- Qty in Hand -->
+        <div class="d-flex justify-content-between align-items-center px-1 mb-2">
           <div class="d-flex align-items-center">
             <i class="bi bi-layers me-1" style="color: var(--primary-green); font-size: 1rem;"></i>
             <span class="text-muted" style="font-size:0.7rem;">Qty in Hand</span>
           </div>
           <span class="fw-bold" id="quantityInHand" style="font-size:1rem; color: var(--primary-green);">0</span>
         </div>
+        
+        <!-- Low Stock Items -->
+        <div class="d-flex justify-content-between align-items-center px-1">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle me-1" style="color: #DC2626; font-size: 1rem;"></i>
+            <span class="text-muted" style="font-size:0.7rem;">Low Stock Items</span>
+          </div>
+          <span class="fw-bold" id="lowStock" style="font-size:1rem; color: #DC2626;">0</span>
+        </div>
       </div>
     </div>
   </div>
   
-  <!-- 2. Low Stock Items Card -->
-  <div class="col-md-4 col-6">
-    <div class="card summary-card shadow-sm h-100">
-      <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
-        <i class="bi bi-exclamation-triangle" style="font-size:2rem; color: #DC2626;"></i>
-        <h2 id="lowStock" class="mt-1 mb-0" style="font-size:1.8rem; color: #DC2626; font-weight: 700;">0</h2>
-        <p class="text-muted mb-0" style="font-size:0.7rem;">Low Stock Items</p>
-      </div>
-    </div>
-  </div>
-  
-  <!-- 3. Quick Actions Card - WITH FLIP ANIMATION (FIXED) -->
-  <div class="col-md-4 col-12">
+  <!-- 2. Quick Actions Card - WITH FLIP ANIMATION -->
+  <div class="col-md-6 col-12">
     <div class="flip-card h-100" onclick="toggleQuickActionsFlip()">
       <div class="flip-card-inner" id="flipCardInner">
         
@@ -666,9 +669,10 @@
   
 </div>
 
+
 <style>
 /* ==========================================
-   FLIP CARD ANIMATION (FIXED)
+   FLIP CARD ANIMATION
    ========================================== */
 
 .flip-card {
@@ -17108,6 +17112,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
