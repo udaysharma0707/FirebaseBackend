@@ -563,7 +563,7 @@
 
 <!-- ✅ SPACER -->
 <div style="height: 20px; background: transparent;"></div>
-<!-- Summary - 3 Cards (Updated Card 3 with Flip Animation) -->
+<!-- Summary - 3 Cards (FIXED) -->
 <div class="row g-2 mb-3">
   
   <!-- 1. Total Products Card -->
@@ -600,14 +600,14 @@
     </div>
   </div>
   
-  <!-- 3. Quick Actions Card - WITH FLIP ANIMATION -->
+  <!-- 3. Quick Actions Card - WITH FLIP ANIMATION (FIXED) -->
   <div class="col-md-4 col-12">
     <div class="flip-card h-100" onclick="toggleQuickActionsFlip()">
       <div class="flip-card-inner" id="flipCardInner">
         
-        <!-- FRONT SIDE: Quick Create -->
+        <!-- FRONT SIDE: Quick Create (DEFAULT VISIBLE) -->
         <div class="flip-card-front">
-          <div class="card summary-card shadow-sm h-100">
+          <div class="card summary-card shadow-sm h-100" style="border: none;">
             <div class="card-body p-0 d-flex flex-column justify-content-center align-items-center" style="min-height: 140px; cursor: pointer;">
               <i class="bi bi-plus-circle" style="font-size: 3rem; color: #666;"></i>
               <h5 class="mt-2 mb-0" style="color: #333; font-weight: 600;">Quick Create</h5>
@@ -616,41 +616,39 @@
           </div>
         </div>
         
-        <!-- BACK SIDE: 4 Action Buttons -->
+        <!-- BACK SIDE: 4 Action Buttons (HIDDEN BY DEFAULT) -->
         <div class="flip-card-back">
-          <div class="card summary-card shadow-sm h-100">
-            <div class="card-body p-0" style="position: relative; min-height: 140px;">
+          <div class="card summary-card shadow-sm h-100" style="border: none;">
+            <div class="card-body p-0 position-relative" style="min-height: 140px;">
               
-              <!-- Vertical Line -->
-              <div style="position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: #ddd; z-index: 1;"></div>
-              
-              <!-- Horizontal Line -->
-              <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: #ddd; z-index: 1;"></div>
-              
-              <!-- 2x2 Grid Buttons -->
+              <!-- 2x2 Grid Buttons with NO spacing -->
               <div class="row g-0 h-100">
-                <!-- Row 1: Instant Products & Add Product -->
-                <div class="col-6">
-                  <button class="btn tile-action-button-plain" onclick="event.stopPropagation(); openInstantProductsModal()">
+                <!-- Top Left: Instant Products -->
+                <div class="col-6 position-relative">
+                  <button class="btn tile-action-button-plain border-end border-bottom" onclick="event.stopPropagation(); openInstantProductsModal()">
                     <i class="bi bi-lightning-charge d-block" style="font-size: 1.5rem;"></i>
                     <span class="d-block mt-1" style="font-size: 0.65rem;">Instant Products</span>
                   </button>
                 </div>
-                <div class="col-6">
-                  <button class="btn tile-action-button-plain" onclick="event.stopPropagation(); showAddProduct()">
+                
+                <!-- Top Right: Add Product -->
+                <div class="col-6 position-relative">
+                  <button class="btn tile-action-button-plain border-bottom" onclick="event.stopPropagation(); showAddProduct()">
                     <i class="bi bi-plus-circle d-block" style="font-size: 1.5rem;"></i>
                     <span class="d-block mt-1" style="font-size: 0.65rem;">Add Product</span>
                   </button>
                 </div>
                 
-                <!-- Row 2: Record Purchase & Record Sale -->
-                <div class="col-6">
-                  <button class="btn tile-action-button-plain" onclick="event.stopPropagation(); openRecordPurchaseModal()">
+                <!-- Bottom Left: Record Purchase -->
+                <div class="col-6 position-relative">
+                  <button class="btn tile-action-button-plain border-end" onclick="event.stopPropagation(); openRecordPurchaseModal()">
                     <i class="bi bi-bag-plus d-block" style="font-size: 1.5rem;"></i>
                     <span class="d-block mt-1" style="font-size: 0.65rem;">Record Purchase</span>
                   </button>
                 </div>
-                <div class="col-6">
+                
+                <!-- Bottom Right: Record Sale -->
+                <div class="col-6 position-relative">
                   <button class="btn tile-action-button-plain" onclick="event.stopPropagation(); openSalesModal()">
                     <i class="bi bi-cart d-block" style="font-size: 1.5rem;"></i>
                     <span class="d-block mt-1" style="font-size: 0.65rem;">Record Sale</span>
@@ -667,6 +665,213 @@
   </div>
   
 </div>
+
+<style>
+/* ==========================================
+   FLIP CARD ANIMATION (FIXED)
+   ========================================== */
+
+.flip-card {
+  background-color: transparent;
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+/* Flip when class is added */
+.flip-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Position both sides absolutely */
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  top: 0;
+  left: 0;
+}
+
+/* Front visible by default */
+.flip-card-front {
+  z-index: 2;
+  transform: rotateY(0deg);
+}
+
+/* Back hidden initially */
+.flip-card-back {
+  transform: rotateY(180deg);
+  z-index: 1;
+}
+
+/* ==========================================
+   TILE ACTION BUTTONS (Plain Style)
+   ========================================== */
+.tile-action-button-plain {
+  background: white;
+  color: #333;
+  font-weight: 600;
+  border: none;
+  border-radius: 0;
+  padding: 10px 4px;
+  box-shadow: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  height: 100%;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.tile-action-button-plain:hover {
+  background: #f0f0f0;
+  color: #000;
+}
+
+.tile-action-button-plain:active {
+  background: #e0e0e0;
+}
+
+.tile-action-button-plain i {
+  color: #666;
+}
+
+/* Border styling for grid lines */
+.border-end {
+  border-right: 1px solid #ddd !important;
+}
+
+.border-bottom {
+  border-bottom: 1px solid #ddd !important;
+}
+
+/* Remove card border for flip card */
+.flip-card .summary-card {
+  border: none !important;
+}
+
+/* ==========================================
+   Summary Cards Styling
+   ========================================== */
+.summary-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Disable hover on flip card parent */
+.flip-card:hover .summary-card {
+  transform: none;
+}
+
+/* ==========================================
+   Navbar Responsive Adjustments
+   ========================================== */
+
+@media (max-width: 767px) {
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+  
+  .navbar-brand {
+    font-size: 0.9rem;
+  }
+  
+  .tile-action-button-plain {
+    min-height: 60px;
+    padding: 8px 2px;
+  }
+  
+  .tile-action-button-plain i {
+    font-size: 1.2rem !important;
+  }
+  
+  .tile-action-button-plain span {
+    font-size: 0.6rem !important;
+  }
+  
+  .flip-card-front .card-body,
+  .flip-card-back .card-body {
+    min-height: 120px !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .navbar-brand {
+    font-size: 1.25rem;
+  }
+  
+  .navbar-action-btn,
+  #backupButton,
+  #restoreButton {
+    min-width: 130px;
+  }
+}
+
+/* ==========================================
+   Mobile Action Buttons (Navbar)
+   ========================================== */
+.mobile-action-btn {
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(37, 211, 102, 0.3) !important;
+}
+
+/* ==========================================
+   User Dropdown Styling
+   ========================================== */
+.dropdown-menu {
+  border: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item,
+.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item {
+  color: #198754 !important;
+}
+
+.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item i,
+.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item i {
+  color: #198754 !important;
+}
+
+.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item span,
+.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item span {
+  color: #198754 !important;
+  font-weight: 500;
+}
+</style>
 
 
 
@@ -15811,34 +16016,25 @@ setTimeout(addBackupButtonBadge, 1000);
 let isFlipped = false;
 
 /**
- * Toggle flip animation for Quick Actions card
+ * Toggle flip animation
  */
 function toggleQuickActionsFlip() {
   const flipCardInner = document.getElementById('flipCardInner');
   
   if (flipCardInner) {
-    if (isFlipped) {
-      // Flip back to front
-      flipCardInner.classList.remove('flipped');
-      isFlipped = false;
-      console.log('✅ Card flipped to FRONT (Quick Create)');
-    } else {
-      // Flip to back
-      flipCardInner.classList.add('flipped');
-      isFlipped = true;
-      console.log('✅ Card flipped to BACK (4 Buttons)');
-    }
-  } else {
-    console.error('❌ Flip card element not found');
+    flipCardInner.classList.toggle('flipped');
+    isFlipped = !isFlipped;
+    console.log('✅ Card flipped:', isFlipped ? 'BACK (Buttons)' : 'FRONT (Quick Create)');
   }
 }
 
-// Optional: Double-click to flip back
-document.addEventListener('dblclick', function(event) {
-  const flipCard = event.target.closest('.flip-card');
-  
-  if (flipCard && isFlipped) {
-    toggleQuickActionsFlip();
+// Ensure card starts in front position on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const flipCardInner = document.getElementById('flipCardInner');
+  if (flipCardInner) {
+    flipCardInner.classList.remove('flipped');
+    isFlipped = false;
+    console.log('✅ Quick Actions card initialized (Front side visible)');
   }
 });
 
@@ -16912,6 +17108,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
