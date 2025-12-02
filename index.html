@@ -387,7 +387,7 @@
 </div>
 
 
-<!-- ✅ RESPONSIVE NAVBAR - 3 Rows Mobile, 1 Row Desktop -->
+<!-- ✅ RESPONSIVE NAVBAR - Simplified Layout -->
 <nav class="navbar navbar-dark sticky-top" style="background: linear-gradient(135deg, #198754 0%, #157347 100%);">
   <div class="container-fluid">
     <div class="w-100">
@@ -442,15 +442,29 @@
             </ul>
           </div>
           
+          <!-- Generate Invoice Button -->
+          <button class="btn btn-sm navbar-action-btn" 
+                  style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);"
+                  onclick="generateInvoice()">
+            <i class="bi bi-receipt"></i> Generate Invoice
+          </button>
+          
+          <!-- View Invoices Button -->
+          <button class="btn btn-sm navbar-action-btn" 
+                  style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);"
+                  onclick="viewSavedInvoices()">
+            <i class="bi bi-receipt-cutoff"></i> View Invoices
+          </button>
+          
           <!-- Backup Button -->
-          <button id="backupButton" class="btn btn-sm" 
+          <button id="backupButton" class="btn btn-sm navbar-action-btn" 
                   style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);"
                   onclick="sendBackupEmail()">
             <i class="bi bi-cloud-download"></i> Backup
           </button>
           
           <!-- Restore Button -->
-          <button id="restoreButton" class="btn btn-sm" 
+          <button id="restoreButton" class="btn btn-sm navbar-action-btn" 
                   style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);"
                   onclick="document.getElementById('restoreFileInput').click()">
             <i class="bi bi-cloud-upload"></i> Restore
@@ -458,29 +472,6 @@
           
           <!-- Hidden File Input -->
           <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
-          
-          <!-- Options Dropdown -->
-          <div id="optionsButtonContainer" style="position: relative; display: inline-block;">
-            <button id="optionsToggleBtn"
-                    style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); cursor: pointer;"
-                    onclick="toggleOptionsDropdown()">
-              <i class="bi bi-three-dots-vertical me-1"></i>Options
-              <i id="optionsArrow" class="bi bi-chevron-down ms-1"></i>
-            </button>
-
-            <div id="optionsDropdown"
-                 style="display: none; position: absolute; top: 100%; right: 0; background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 200px; overflow: hidden; margin-top: 8px; z-index: 2000;">
-              <button class="dropdown-option-btn" onclick="openSalesModal(); closeOptionsDropdown()">
-                <i class="bi bi-cart me-2"></i>Record Sale
-              </button>
-              <button class="dropdown-option-btn" onclick="generateInvoice(); closeOptionsDropdown()">
-                <i class="bi bi-receipt me-2"></i>Generate Invoice
-              </button>
-              <button class="dropdown-option-btn" onclick="viewSavedInvoices(); closeOptionsDropdown()">
-                <i class="bi bi-receipt-cutoff me-2"></i>View Invoices
-              </button>
-            </div>
-          </div>
           
         </div>
       </div>
@@ -528,368 +519,51 @@
         </div>
       </div>
       
-      <!-- Mobile Only: Row 3 - Action Buttons (REORDERED) -->
-      <div class="d-md-none d-flex gap-2 justify-content-center">
-        
-        <!-- Options Dropdown - FIRST -->
-        <div id="optionsButtonContainerMobile" style="position: relative; flex: 1;">
-          <button id="optionsToggleBtnMobile" 
-                  class="btn btn-sm w-100"
-                  style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); cursor: pointer; font-size: 0.85rem;"
-                  onclick="toggleOptionsDropdown()">
-            <i class="bi bi-three-dots-vertical"></i> Options
-            <i id="optionsArrowMobile" class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
-          </button>
-          
-          <div id="optionsDropdownMobile" 
-               style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); min-width: 180px; overflow: hidden; margin-top: 4px; z-index: 2000;">
-            <button class="dropdown-option-btn" onclick="openSalesModal(); closeOptionsDropdown()">
-              <i class="bi bi-cart me-2"></i>Record Sale
+      <!-- Mobile Only: Row 3 - Action Buttons (4 Equal Buttons) -->
+      <div class="d-md-none">
+        <div class="row g-1">
+          <div class="col-6">
+            <button class="btn btn-sm w-100 mobile-action-btn" 
+                    style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 8px; padding: 8px 4px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); font-size: 0.75rem;"
+                    onclick="generateInvoice()">
+              <i class="bi bi-receipt d-block" style="font-size: 1.2rem;"></i>
+              <span class="d-block mt-1" style="font-size: 0.7rem;">Generate Invoice</span>
             </button>
-            <button class="dropdown-option-btn" onclick="generateInvoice(); closeOptionsDropdown()">
-              <i class="bi bi-receipt me-2"></i>Generate Invoice
+          </div>
+          <div class="col-6">
+            <button class="btn btn-sm w-100 mobile-action-btn" 
+                    style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 8px; padding: 8px 4px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); font-size: 0.75rem;"
+                    onclick="viewSavedInvoices()">
+              <i class="bi bi-receipt-cutoff d-block" style="font-size: 1.2rem;"></i>
+              <span class="d-block mt-1" style="font-size: 0.7rem;">View Invoices</span>
             </button>
-            <button class="dropdown-option-btn" onclick="viewSavedInvoices(); closeOptionsDropdown()">
-              <i class="bi bi-receipt-cutoff me-2"></i>View Invoices
+          </div>
+          <div class="col-6">
+            <button id="backupButtonMobile" class="btn btn-sm w-100 mobile-action-btn" 
+                    style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 8px; padding: 8px 4px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); font-size: 0.75rem;"
+                    onclick="sendBackupEmail()">
+              <i class="bi bi-cloud-download d-block" style="font-size: 1.2rem;"></i>
+              <span class="d-block mt-1" style="font-size: 0.7rem;">Backup</span>
+            </button>
+          </div>
+          <div class="col-6">
+            <button id="restoreButtonMobile" class="btn btn-sm w-100 mobile-action-btn" 
+                    style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; font-weight: 600; border: none; border-radius: 8px; padding: 8px 4px; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2); font-size: 0.75rem;"
+                    onclick="document.getElementById('restoreFileInput').click()">
+              <i class="bi bi-cloud-upload d-block" style="font-size: 1.2rem;"></i>
+              <span class="d-block mt-1" style="font-size: 0.7rem;">Restore</span>
             </button>
           </div>
         </div>
-        
-        <!-- Backup Button - SECOND -->
-        <button id="backupButtonMobile" class="btn btn-sm flex-fill" 
-                style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); font-size: 0.85rem;"
-                onclick="sendBackupEmail()">
-          <i class="bi bi-cloud-download"></i> Backup
-        </button>
-        
-        <!-- Restore Button - THIRD -->
-        <button id="restoreButtonMobile" class="btn btn-sm flex-fill" 
-                style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 6px 12px; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2); font-size: 0.85rem;"
-                onclick="document.getElementById('restoreFileInput').click()">
-          <i class="bi bi-cloud-upload"></i> Restore
-        </button>
-        
       </div>
       
     </div>
   </div>
 </nav>
 
-
-<!-- ✅ ADD THIS SPACER -->
+<!-- ✅ SPACER -->
 <div style="height: 20px; background: transparent;"></div>
-
-
-<style>
-/* ==========================================
-   COMPLETE RESPONSIVE STYLES
-   ========================================== */
-
-/* ==========================================
-   Action Button Styling (Tile Cards)
-   ========================================== */
-.action-button {
-  background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%);
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);
-  transition: all 0.3s ease;
-  width: 100%;
-  font-size: 0.85rem;
-}
-
-.action-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
-}
-
-.action-button:active {
-  transform: translateY(0);
-}
-
-/* Action buttons gap - Reduced for compact design */
-.actions-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* ==========================================
-   Dropdown Option Buttons (Options Menu)
-   ========================================== */
-.dropdown-option-btn {
-  width: 100%;
-  padding: 10px 14px;
-  border: none;
-  background: white;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-  color: #333;
-}
-
-.dropdown-option-btn:hover {
-  background: #f8f9fa;
-}
-
-.dropdown-option-btn i {
-  color: #198754;
-}
-
-/* ==========================================
-   User Dropdown Styling
-   ========================================== */
-.dropdown-menu {
-  border: none;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-
-.dropdown-item:hover {
-  background-color: #f8f9fa;
-}
-
-.dropdown-item.text-danger:hover {
-  background-color: #fff5f5;
-}
-
-/* Force green color for dropdown items */
-.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item,
-.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item {
-  color: #198754 !important;
-}
-
-.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item i,
-.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item i {
-  color: #198754 !important;
-}
-
-.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item span,
-.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item span {
-  color: #198754 !important;
-  font-weight: 500;
-}
-
-/* ==========================================
-   Summary Cards Styling
-   ========================================== */
-.summary-card {
-  transition: all 0.3s ease;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.summary-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* ==========================================
-   Background Sync Indicator Animation
-   ========================================== */
-#backgroundSyncStatus i {
-  animation: syncPulse 2s infinite;
-}
-
-@keyframes syncPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* ==========================================
-   General Button Hover Effects
-   ========================================== */
-.btn:hover {
-  transform: translateY(-2px);
-  transition: all 0.2s ease;
-}
-
-.btn:active {
-  transform: translateY(0);
-}
-
-/* ==========================================
-   Navbar Responsive Adjustments
-   ========================================== */
-
-/* Mobile styles (smaller screens) */
-@media (max-width: 767px) {
-  /* Navbar */
-  .navbar {
-    padding: 0.5rem 1rem;
-  }
-  
-  .navbar-brand {
-    font-size: 0.9rem;
-  }
-  
-  /* Hide desktop user dropdown on mobile */
-  #userName {
-    display: none !important;
-  }
-  
-  /* Smaller buttons on mobile */
-  .btn-sm {
-    padding: 6px 10px;
-    font-size: 0.8rem;
-  }
-  
-  /* Background sync - hide text on mobile */
-  #backgroundSyncStatus span {
-    display: none;
-  }
-  
-  /* Add spacing below navbar on mobile */
-  .container-fluid.py-4 {
-    padding-top: 1rem !important;
-  }
-  
-  /* Compact tile cards on mobile */
-  .summary-card .card-body {
-    padding: 0.5rem !important;
-  }
-  
-  /* Smaller action buttons on mobile */
-  .action-button {
-    padding: 6px 10px;
-    font-size: 0.8rem;
-  }
-}
-
-/* Tablet and Desktop styles */
-@media (min-width: 768px) {
-  /* Hide mobile-specific elements */
-  #userNameMobile,
-  #backupButtonMobile,
-  #restoreButtonMobile,
-  #optionsButtonContainerMobile {
-    display: none !important;
-  }
-  
-  /* Standard spacing on desktop */
-  .container-fluid.py-4 {
-    padding-top: 1.5rem !important;
-  }
-  
-  /* Navbar brand normal size */
-  .navbar-brand {
-    font-size: 1.25rem;
-  }
-  
-  /* Standard button sizes */
-  .btn-sm {
-    padding: 8px 16px;
-    font-size: 0.875rem;
-  }
-}
-
-/* Large desktop (optional - for very large screens) */
-@media (min-width: 1200px) {
-  .container-fluid {
-    max-width: 1400px;
-  }
-}
-
-/* ==========================================
-   Additional Mobile Optimizations
-   ========================================== */
-@media (max-width: 575px) {
-  /* Even smaller font on very small screens */
-  .navbar-brand {
-    font-size: 0.85rem;
-  }
-  
-  /* Reduce icon sizes */
-  .summary-card i {
-    font-size: 1.5rem !important;
-  }
-  
-  /* Smaller card titles */
-  .summary-card h2 {
-    font-size: 1.5rem !important;
-  }
-  
-  /* Compact action buttons */
-  .action-button {
-    padding: 6px 8px;
-    font-size: 0.75rem;
-  }
-  
-  .action-button i {
-    font-size: 0.9rem;
-  }
-}
-
-/* ==========================================
-   Print Styles (Optional)
-   ========================================== */
-@media print {
-  .navbar,
-  .action-button,
-  .dropdown,
-  #backupButton,
-  #restoreButton,
-  #optionsButtonContainer {
-    display: none !important;
-  }
-  
-  .summary-card {
-    page-break-inside: avoid;
-  }
-}
-
-/* ==========================================
-   Accessibility Improvements
-   ========================================== */
-
-/* Focus styles for keyboard navigation */
-.btn:focus,
-.dropdown-toggle:focus,
-.action-button:focus {
-  outline: 2px solid #25D366;
-  outline-offset: 2px;
-}
-
-/* Ensure text is readable */
-.text-muted {
-  color: #6c757d !important;
-}
-
-/* High contrast for important elements */
-.summary-card h2 {
-  font-weight: 700;
-}
-
-/* ==========================================
-   Utility Classes
-   ========================================== */
-
-/* Gap utilities for flex containers */
-.gap-1 {
-  gap: 0.25rem;
-}
-
-.gap-2 {
-  gap: 0.5rem;
-}
-
-.gap-3 {
-  gap: 1rem;
-}
-
-/* Smooth transitions */
-.transition-all {
-  transition: all 0.3s ease;
-}
-</style>
-
-
-<!-- Summary - 3 Cards (Compact Height) -->
+<!-- Summary - 3 Cards (Updated Card 3 with 4 Buttons) -->
 <div class="row g-2 mb-3">
   
   <!-- 1. Total Products Card -->
@@ -926,26 +600,238 @@
     </div>
   </div>
   
-  <!-- 3. Quick Actions Card -->
+  <!-- 3. Quick Actions Card - 4 Square Buttons (2x2 Grid) -->
   <div class="col-md-4 col-12">
     <div class="card summary-card shadow-sm h-100">
-      <div class="card-body p-2 d-flex flex-column justify-content-center">
-        <div class="d-flex flex-column gap-1">
-          <button class="btn action-button" onclick="openInstantProductsModal()" style="padding: 8px 12px; font-size: 0.85rem;">
-            <i class="bi bi-lightning-charge me-1"></i>Instant Products
-          </button>
-          <button class="btn action-button" onclick="showAddProduct()" style="padding: 8px 12px; font-size: 0.85rem;">
-            <i class="bi bi-plus-circle me-1"></i>Add Product
-          </button>
-          <button class="btn action-button" onclick="openRecordPurchaseModal()" style="padding: 8px 12px; font-size: 0.85rem;">
-            <i class="bi bi-bag-plus me-1"></i>Record Purchase
-          </button>
+      <div class="card-body p-2">
+        <div class="row g-1">
+          <!-- Row 1: Instant Products & Add Product -->
+          <div class="col-6">
+            <button class="btn tile-action-button" onclick="openInstantProductsModal()">
+              <i class="bi bi-lightning-charge d-block" style="font-size: 1.5rem;"></i>
+              <span class="d-block mt-1" style="font-size: 0.65rem;">Instant Products</span>
+            </button>
+          </div>
+          <div class="col-6">
+            <button class="btn tile-action-button" onclick="showAddProduct()">
+              <i class="bi bi-plus-circle d-block" style="font-size: 1.5rem;"></i>
+              <span class="d-block mt-1" style="font-size: 0.65rem;">Add Product</span>
+            </button>
+          </div>
+          
+          <!-- Row 2: Record Purchase & Record Sale -->
+          <div class="col-6">
+            <button class="btn tile-action-button" onclick="openRecordPurchaseModal()">
+              <i class="bi bi-bag-plus d-block" style="font-size: 1.5rem;"></i>
+              <span class="d-block mt-1" style="font-size: 0.65rem;">Record Purchase</span>
+            </button>
+          </div>
+          <div class="col-6">
+            <button class="btn tile-action-button" onclick="openSalesModal()">
+              <i class="bi bi-cart d-block" style="font-size: 1.5rem;"></i>
+              <span class="d-block mt-1" style="font-size: 0.65rem;">Record Sale</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
   
 </div>
+
+  
+<style>
+/* ==========================================
+   TILE ACTION BUTTONS (2x2 Grid in Card 3)
+   ========================================== */
+.tile-action-button {
+  background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%);
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 4px;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);
+  transition: all 0.3s ease;
+  width: 100%;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.tile-action-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+  color: white;
+}
+
+.tile-action-button:active {
+  transform: translateY(0);
+}
+
+/* ==========================================
+   NAVBAR ACTION BUTTONS (Desktop)
+   ========================================== */
+.navbar-action-btn {
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.navbar-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4) !important;
+}
+
+/* ==========================================
+   MOBILE ACTION BUTTONS (Navbar Row 3)
+   ========================================== */
+.mobile-action-btn {
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(37, 211, 102, 0.3) !important;
+}
+
+/* ==========================================
+   User Dropdown Styling
+   ========================================== */
+.dropdown-menu {
+  border: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* Force green color for dropdown items */
+.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item,
+.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item {
+  color: #198754 !important;
+}
+
+.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item i,
+.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item i {
+  color: #198754 !important;
+}
+
+.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item span,
+.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item span {
+  color: #198754 !important;
+  font-weight: 500;
+}
+
+/* ==========================================
+   Summary Cards Styling
+   ========================================== */
+.summary-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ==========================================
+   Navbar Responsive Adjustments
+   ========================================== */
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+  
+  .navbar-brand {
+    font-size: 0.9rem;
+  }
+  
+  /* Tile buttons smaller on mobile */
+  .tile-action-button {
+    min-height: 60px;
+    padding: 8px 2px;
+  }
+  
+  .tile-action-button i {
+    font-size: 1.2rem !important;
+  }
+  
+  .tile-action-button span {
+    font-size: 0.6rem !important;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+  .navbar-brand {
+    font-size: 1.25rem;
+  }
+  
+  /* Equal size for all desktop navbar buttons */
+  .navbar-action-btn,
+  #backupButton,
+  #restoreButton {
+    min-width: 130px;
+  }
+}
+
+/* ==========================================
+   Additional Mobile Optimizations
+   ========================================== */
+@media (max-width: 575px) {
+  .navbar-brand {
+    font-size: 0.85rem;
+  }
+  
+  .mobile-action-btn {
+    min-height: 55px;
+    padding: 6px 2px;
+  }
+  
+  .mobile-action-btn i {
+    font-size: 1rem !important;
+  }
+  
+  .mobile-action-btn span {
+    font-size: 0.65rem !important;
+  }
+}
+
+/* ==========================================
+   General Button Hover Effects
+   ========================================== */
+.btn:hover {
+  transition: all 0.2s ease;
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* ==========================================
+   Utility Classes
+   ========================================== */
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+</style>
+
 
 
 
@@ -17145,6 +17031,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
