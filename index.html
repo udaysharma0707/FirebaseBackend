@@ -567,7 +567,8 @@
     </div>
   </div>
 </nav>
-
+<!-- ✅ ADD THIS SPACER -->
+<div style="height: 20px; background: transparent;"></div>
 
 
 <style>
@@ -16043,87 +16044,57 @@ function initializeUserDisplay() {
 }
 
 /**
- * Update username display in dropdown (Both Desktop and Mobile)
- */
+* Update username display in dropdown
+*/
 function updateUserDropdownDisplay(user) {
-  // Desktop elements
-  const userNameElement = document.getElementById('userName');
-  const userEmailDropdown = document.getElementById('userEmailDropdown');
-  
-  // Mobile elements
-  const userNameMobile = document.getElementById('userNameMobile');
-  const userEmailDropdownMobile = document.getElementById('userEmailDropdownMobile');
-  
-  if (user && user.email) {
-    // Get shortened username
-    const username = user.email.split('@')[0];
-    
-    // Update Desktop Header Username
-    if (userNameElement) {
-      userNameElement.textContent = username;
-      userNameElement.title = user.email; // Tooltip with full email
-    }
-    
-    // Update Desktop Dropdown Full Email
-    if (userEmailDropdown) {
-      userEmailDropdown.textContent = user.email;
-    }
-    
-    // Update Mobile Header Username
-    if (userNameMobile) {
-      userNameMobile.textContent = username;
-      userNameMobile.title = user.email; // Tooltip with full email
-    }
-    
-    // Update Mobile Dropdown Full Email
-    if (userEmailDropdownMobile) {
-      userEmailDropdownMobile.textContent = user.email;
-    }
-    
-    console.log('✅ User dropdown updated (Desktop + Mobile):', user.email);
-    console.log('   - Username:', username);
-  } else {
-    // Not signed in - Update all elements
-    if (userNameElement) {
-      userNameElement.textContent = 'Guest';
-      userNameElement.title = '';
-    }
-    if (userEmailDropdown) {
-      userEmailDropdown.textContent = 'Not signed in';
-    }
-    if (userNameMobile) {
-      userNameMobile.textContent = 'Guest';
-      userNameMobile.title = '';
-    }
-    if (userEmailDropdownMobile) {
-      userEmailDropdownMobile.textContent = 'Not signed in';
-    }
-    console.log('ℹ️ No user signed in');
-  }
+const userNameElement = document.getElementById('userName');
+const userEmailDropdown = document.getElementById('userEmailDropdown');
+
+if (user && user.email) {
+// Update header username (shortened version)
+if (userNameElement) {
+const username = user.email.split('@')[0];
+userNameElement.textContent = username;
+}
+
+// Update dropdown full email
+if (userEmailDropdown) {
+userEmailDropdown.textContent = user.email;
+}
+
+console.log('✅ User dropdown updated:', user.email);
+} else {
+// Not signed in
+if (userNameElement) {
+userNameElement.textContent = 'Guest';
+}
+if (userEmailDropdown) {
+userEmailDropdown.textContent = 'Not signed in';
+}
+console.log('ℹ️ No user signed in');
+}
 }
 
 // ✅ Initialize when DOM is ready
 window.addEventListener('DOMContentLoaded', () => {
-  console.log('📄 DOM loaded, waiting for Firebase Auth...');
-  
-  // Wait for Firebase Auth to be ready
-  const checkAuth = setInterval(() => {
-    if (window.auth) {
-      console.log('✅ Firebase Auth ready');
-      clearInterval(checkAuth);
-      initializeUserDisplay();
-    }
-  }, 100);
-  
-  // Timeout after 10 seconds
-  setTimeout(() => {
-    clearInterval(checkAuth);
-    console.warn('⚠️ Firebase Auth initialization timeout');
-  }, 10000);
+console.log('📄 DOM loaded, waiting for Firebase Auth...');
+
+// Wait for Firebase Auth to be ready
+const checkAuth = setInterval(() => {
+if (window.auth) {
+console.log('✅ Firebase Auth ready');
+clearInterval(checkAuth);
+initializeUserDisplay();
+}
+}, 100);
+
+// Timeout after 10 seconds
+setTimeout(() => {
+clearInterval(checkAuth);
+}, 10000);
 });
 
-console.log('✅ User Dropdown Module Loaded (Desktop + Mobile)');
-
+console.log('✅ User Dropdown Module Loaded');
   
 /**
  * ==========================================
@@ -17087,6 +17058,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
