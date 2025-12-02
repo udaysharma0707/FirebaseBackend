@@ -563,7 +563,7 @@
 
 <!-- ✅ SPACER -->
 <div style="height: 20px; background: transparent;"></div>
-<!-- Summary - 3 Cards (Updated Card 3 with 4 Buttons) -->
+<!-- Summary - 3 Cards (Updated Card 3 with Collapsible Actions) -->
 <div class="row g-2 mb-3">
   
   <!-- 1. Total Products Card -->
@@ -600,39 +600,60 @@
     </div>
   </div>
   
-  <!-- 3. Quick Actions Card - 4 Square Buttons (2x2 Grid) -->
+  <!-- 3. Quick Actions Card - Collapsible 2x2 Grid -->
   <div class="col-md-4 col-12">
-    <div class="card summary-card shadow-sm h-100">
-      <div class="card-body p-2">
-        <div class="row g-1">
-          <!-- Row 1: Instant Products & Add Product -->
-          <div class="col-6">
-            <button class="btn tile-action-button" onclick="openInstantProductsModal()">
-              <i class="bi bi-lightning-charge d-block" style="font-size: 1.5rem;"></i>
-              <span class="d-block mt-1" style="font-size: 0.65rem;">Instant Products</span>
-            </button>
-          </div>
-          <div class="col-6">
-            <button class="btn tile-action-button" onclick="showAddProduct()">
-              <i class="bi bi-plus-circle d-block" style="font-size: 1.5rem;"></i>
-              <span class="d-block mt-1" style="font-size: 0.65rem;">Add Product</span>
-            </button>
+    <div class="card summary-card shadow-sm h-100" style="cursor: pointer;" id="quickActionsCard">
+      <div class="card-body p-0" style="position: relative;">
+        
+        <!-- Initial State: Quick Create Button -->
+        <div id="quickCreateInitial" class="text-center d-flex flex-column justify-content-center align-items-center" style="height: 100%; min-height: 140px;" onclick="toggleQuickActions()">
+          <i class="bi bi-plus-circle" style="font-size: 3rem; color: #666;"></i>
+          <h5 class="mt-2 mb-0" style="color: #333; font-weight: 600;">Quick Create</h5>
+          <p class="text-muted mb-0" style="font-size: 0.75rem;">Click to expand</p>
+        </div>
+        
+        <!-- Expanded State: 4 Action Buttons with Cross Lines -->
+        <div id="quickActionsExpanded" style="display: none; height: 100%; min-height: 140px; position: relative;">
+          
+          <!-- Vertical Line -->
+          <div style="position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: #ddd; z-index: 1;"></div>
+          
+          <!-- Horizontal Line -->
+          <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: #ddd; z-index: 1;"></div>
+          
+          <!-- 2x2 Grid Buttons -->
+          <div class="row g-0" style="height: 100%;">
+            <!-- Row 1: Instant Products & Add Product -->
+            <div class="col-6" style="border-right: 1px solid #ddd; border-bottom: 1px solid #ddd;">
+              <button class="btn tile-action-button-plain" onclick="openInstantProductsModal()">
+                <i class="bi bi-lightning-charge d-block" style="font-size: 1.5rem;"></i>
+                <span class="d-block mt-1" style="font-size: 0.65rem;">Instant Products</span>
+              </button>
+            </div>
+            <div class="col-6" style="border-bottom: 1px solid #ddd;">
+              <button class="btn tile-action-button-plain" onclick="showAddProduct()">
+                <i class="bi bi-plus-circle d-block" style="font-size: 1.5rem;"></i>
+                <span class="d-block mt-1" style="font-size: 0.65rem;">Add Product</span>
+              </button>
+            </div>
+            
+            <!-- Row 2: Record Purchase & Record Sale -->
+            <div class="col-6" style="border-right: 1px solid #ddd;">
+              <button class="btn tile-action-button-plain" onclick="openRecordPurchaseModal()">
+                <i class="bi bi-bag-plus d-block" style="font-size: 1.5rem;"></i>
+                <span class="d-block mt-1" style="font-size: 0.65rem;">Record Purchase</span>
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn tile-action-button-plain" onclick="openSalesModal()">
+                <i class="bi bi-cart d-block" style="font-size: 1.5rem;"></i>
+                <span class="d-block mt-1" style="font-size: 0.65rem;">Record Sale</span>
+              </button>
+            </div>
           </div>
           
-          <!-- Row 2: Record Purchase & Record Sale -->
-          <div class="col-6">
-            <button class="btn tile-action-button" onclick="openRecordPurchaseModal()">
-              <i class="bi bi-bag-plus d-block" style="font-size: 1.5rem;"></i>
-              <span class="d-block mt-1" style="font-size: 0.65rem;">Record Purchase</span>
-            </button>
-          </div>
-          <div class="col-6">
-            <button class="btn tile-action-button" onclick="openSalesModal()">
-              <i class="bi bi-cart d-block" style="font-size: 1.5rem;"></i>
-              <span class="d-block mt-1" style="font-size: 0.65rem;">Record Sale</span>
-            </button>
-          </div>
         </div>
+        
       </div>
     </div>
   </div>
@@ -642,18 +663,19 @@
   
 <style>
 /* ==========================================
-   TILE ACTION BUTTONS (2x2 Grid in Card 3)
+   TILE ACTION BUTTONS (Plain Style - No Green)
    ========================================== */
-.tile-action-button {
-  background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%);
-  color: white;
+.tile-action-button-plain {
+  background: transparent;
+  color: #333;
   font-weight: 600;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 10px 4px;
-  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);
-  transition: all 0.3s ease;
+  box-shadow: none;
+  transition: all 0.2s ease;
   width: 100%;
+  height: 100%;
   min-height: 70px;
   display: flex;
   flex-direction: column;
@@ -662,14 +684,27 @@
   text-align: center;
 }
 
-.tile-action-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
-  color: white;
+.tile-action-button-plain:hover {
+  background: #f8f9fa;
+  color: #000;
+  transform: none;
 }
 
-.tile-action-button:active {
-  transform: translateY(0);
+.tile-action-button-plain:active {
+  background: #e9ecef;
+}
+
+.tile-action-button-plain i {
+  color: #666;
+}
+
+/* Quick Create Card Hover Effect */
+#quickActionsCard:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
+}
+
+#quickCreateInitial:hover {
+  background: #f8f9fa;
 }
 
 /* ==========================================
@@ -759,17 +794,25 @@
   }
   
   /* Tile buttons smaller on mobile */
-  .tile-action-button {
+  .tile-action-button-plain {
     min-height: 60px;
     padding: 8px 2px;
   }
   
-  .tile-action-button i {
+  .tile-action-button-plain i {
     font-size: 1.2rem !important;
   }
   
-  .tile-action-button span {
+  .tile-action-button-plain span {
     font-size: 0.6rem !important;
+  }
+  
+  #quickCreateInitial {
+    min-height: 120px !important;
+  }
+  
+  #quickActionsExpanded {
+    min-height: 120px !important;
   }
 }
 
@@ -831,7 +874,6 @@
   gap: 0.5rem;
 }
 </style>
-
 
 
 
@@ -15969,6 +16011,50 @@ setTimeout(addBackupButtonBadge, 1000);
 
 /**
  * ==========================================
+ * QUICK ACTIONS CARD TOGGLE
+ * ==========================================
+ */
+
+let quickActionsExpanded = false;
+
+/**
+ * Toggle Quick Actions Card between collapsed and expanded states
+ */
+function toggleQuickActions() {
+  const initialView = document.getElementById('quickCreateInitial');
+  const expandedView = document.getElementById('quickActionsExpanded');
+  
+  if (!quickActionsExpanded) {
+    // Expand: Show 4 buttons
+    initialView.style.display = 'none';
+    expandedView.style.display = 'block';
+    quickActionsExpanded = true;
+    console.log('✅ Quick Actions expanded');
+  } else {
+    // Collapse: Show Quick Create
+    initialView.style.display = 'flex';
+    expandedView.style.display = 'none';
+    quickActionsExpanded = false;
+    console.log('✅ Quick Actions collapsed');
+  }
+}
+
+// Optional: Click outside to collapse
+document.addEventListener('click', function(event) {
+  const card = document.getElementById('quickActionsCard');
+  
+  if (quickActionsExpanded && card && !card.contains(event.target)) {
+    toggleQuickActions();
+  }
+});
+
+console.log('✅ Quick Actions Toggle Loaded');
+
+
+
+    
+/**
+ * ==========================================
  * USER DROPDOWN DISPLAY (Desktop + Mobile)
  * ==========================================
  */
@@ -17031,6 +17117,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
