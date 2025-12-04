@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Tile & Sanitarywaree Inventory</title>
+  <title>Tile & Sanitaryware Inventory</title>
 
 <!-- PWA Manifest -->
 <link rel="manifest" href="manifest.json">
@@ -387,7 +387,7 @@
 </div>
 
 
-<!-- ✅ RESPONSIVE NAVBAR - Simplified Layout -->
+<!-- ✅ RESPONSIVE NAVBAR - Mobile Collapsible -->
 <nav class="navbar navbar-dark sticky-top" style="background: linear-gradient(135deg, #198754 0%, #157347 100%);">
   <div class="container-fluid">
     <div class="w-100">
@@ -401,7 +401,7 @@
         <!-- Desktop: All buttons in same row -->
         <div class="d-none d-md-flex align-items-center gap-2">
           
-          <!-- User Dropdown -->
+          <!-- User Dropdown (Desktop) -->
           <div class="dropdown">
             <button class="btn text-white text-decoration-none d-flex align-items-center p-2" 
                     type="button" 
@@ -427,12 +427,34 @@
                 </div>
               </li>
               <li><hr class="dropdown-divider" style="margin: 0;"></li>
+              
+              <!-- Backup Option -->
+              <li>
+                <a class="dropdown-item" href="#" onclick="sendBackupEmail(); return false;" style="padding: 12px 16px;">
+                  <i class="bi bi-cloud-download me-2" style="color: #198754 !important;"></i>
+                  <span style="color: #198754 !important; font-weight: 500;">Backup Data</span>
+                </a>
+              </li>
+              
+              <!-- Restore Option -->
+              <li>
+                <a class="dropdown-item" href="#" onclick="document.getElementById('restoreFileInput').click(); return false;" style="padding: 12px 16px;">
+                  <i class="bi bi-cloud-upload me-2" style="color: #0d6efd !important;"></i>
+                  <span style="color: #0d6efd !important; font-weight: 500;">Restore Data</span>
+                </a>
+              </li>
+              
+              <li><hr class="dropdown-divider" style="margin: 0;"></li>
+              
+              <!-- Change Password -->
               <li>
                 <a class="dropdown-item" href="#" onclick="openChangePasswordModal(); return false;" style="padding: 12px 16px;">
                   <i class="bi bi-key me-2" style="color: #198754 !important;"></i>
                   <span style="color: #198754 !important; font-weight: 500;">Change Password</span>
                 </a>
               </li>
+              
+              <!-- Sign Out -->
               <li>
                 <a class="dropdown-item" href="#" onclick="signOut(); return false;" style="padding: 12px 16px;">
                   <i class="bi bi-box-arrow-right me-2" style="color: #198754 !important;"></i>
@@ -441,38 +463,31 @@
               </li>
             </ul>
           </div>
-          
-          <!-- Generate Invoice Button -->
+
+          <!-- Generate Invoice Button (Desktop) -->
           <button class="btn btn-sm navbar-action-btn" 
                   style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);"
                   onclick="generateInvoice()">
             <i class="bi bi-receipt"></i> Generate Invoice
           </button>
           
-          <!-- View Invoices Button -->
+          <!-- View Invoices Button (Desktop) -->
           <button class="btn btn-sm navbar-action-btn" 
                   style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);"
                   onclick="viewSavedInvoices()">
             <i class="bi bi-receipt-cutoff"></i> View Invoices
           </button>
           
-          <!-- Backup Button -->
-          <button id="backupButton" class="btn btn-sm navbar-action-btn" 
-                  style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);"
-                  onclick="sendBackupEmail()">
-            <i class="bi bi-cloud-download"></i> Backup
-          </button>
-          
-          <!-- Restore Button -->
-          <button id="restoreButton" class="btn btn-sm navbar-action-btn" 
-                  style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; font-weight: 600; border: none; border-radius: 10px; padding: 8px 16px; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);"
-                  onclick="document.getElementById('restoreFileInput').click()">
-            <i class="bi bi-cloud-upload"></i> Restore
-          </button>
-          
           <!-- Hidden File Input -->
           <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
           
+        </div>
+        
+        <!-- Mobile: Toggle Arrow -->
+        <div class="d-md-none">
+          <button class="btn text-white" onclick="toggleMobileNavbar()" style="background: transparent; border: none; padding: 8px;">
+            <i id="navbarToggleIcon" class="bi bi-chevron-down" style="font-size: 1.5rem;"></i>
+          </button>
         </div>
       </div>
       
@@ -503,12 +518,34 @@
               </div>
             </li>
             <li><hr class="dropdown-divider" style="margin: 0;"></li>
+            
+            <!-- Backup Option (Mobile) -->
+            <li>
+              <a class="dropdown-item" href="#" onclick="sendBackupEmail(); return false;" style="padding: 12px 16px;">
+                <i class="bi bi-cloud-download me-2" style="color: #198754 !important;"></i>
+                <span style="color: #198754 !important; font-weight: 500;">Backup Data</span>
+              </a>
+            </li>
+            
+            <!-- Restore Option (Mobile) -->
+            <li>
+              <a class="dropdown-item" href="#" onclick="document.getElementById('restoreFileInput').click(); return false;" style="padding: 12px 16px;">
+                <i class="bi bi-cloud-upload me-2" style="color: #0d6efd !important;"></i>
+                <span style="color: #0d6efd !important; font-weight: 500;">Restore Data</span>
+              </a>
+            </li>
+            
+            <li><hr class="dropdown-divider" style="margin: 0;"></li>
+            
+            <!-- Change Password (Mobile) -->
             <li>
               <a class="dropdown-item" href="#" onclick="openChangePasswordModal(); return false;" style="padding: 12px 16px;">
                 <i class="bi bi-key me-2" style="color: #198754 !important;"></i>
                 <span style="color: #198754 !important; font-weight: 500;">Change Password</span>
               </a>
             </li>
+            
+            <!-- Sign Out (Mobile) -->
             <li>
               <a class="dropdown-item" href="#" onclick="signOut(); return false;" style="padding: 12px 16px;">
                 <i class="bi bi-box-arrow-right me-2" style="color: #198754 !important;"></i>
@@ -519,8 +556,8 @@
         </div>
       </div>
       
-      <!-- Mobile Only: Row 3 - Action Buttons (4 Equal Buttons) -->
-      <div class="d-md-none">
+      <!-- Mobile Only: Row 3 - COLLAPSIBLE Invoice Buttons (HIDDEN BY DEFAULT) -->
+      <div class="d-md-none" id="mobileInvoiceSection" style="display: none;">
         <div class="row g-1">
           <div class="col-6">
             <button class="btn btn-sm w-100 mobile-action-btn" 
@@ -538,22 +575,6 @@
               <span class="d-block mt-1" style="font-size: 0.7rem;">View Invoices</span>
             </button>
           </div>
-          <div class="col-6">
-            <button id="backupButtonMobile" class="btn btn-sm w-100 mobile-action-btn" 
-                    style="background: linear-gradient(135deg, #25D366 0%, #1FAD5D 100%); color: white; font-weight: 600; border: none; border-radius: 8px; padding: 8px 4px; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); font-size: 0.75rem;"
-                    onclick="sendBackupEmail()">
-              <i class="bi bi-cloud-download d-block" style="font-size: 1.2rem;"></i>
-              <span class="d-block mt-1" style="font-size: 0.7rem;">Backup</span>
-            </button>
-          </div>
-          <div class="col-6">
-            <button id="restoreButtonMobile" class="btn btn-sm w-100 mobile-action-btn" 
-                    style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; font-weight: 600; border: none; border-radius: 8px; padding: 8px 4px; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2); font-size: 0.75rem;"
-                    onclick="document.getElementById('restoreFileInput').click()">
-              <i class="bi bi-cloud-upload d-block" style="font-size: 1.2rem;"></i>
-              <span class="d-block mt-1" style="font-size: 0.7rem;">Restore</span>
-            </button>
-          </div>
         </div>
       </div>
       
@@ -563,6 +584,7 @@
 
 <!-- ✅ SPACER -->
 <div style="height: 20px; background: transparent;"></div>
+
 <!-- Summary - 2 Cards (Side-by-Side on ALL screens) -->
 <div class="row g-2 mb-3">
   
@@ -670,213 +692,233 @@
 </div>
 
 
-
 <style>
-/* ==========================================
-   FLIP CARD ANIMATION
-   ========================================== */
-
-.flip-card {
-  background-color: transparent;
-  perspective: 1000px;
-  cursor: pointer;
-}
-
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-}
-
-/* Flip when class is added */
-.flip-card-inner.flipped {
-  transform: rotateY(180deg);
-}
-
-/* Position both sides absolutely */
-.flip-card-front,
-.flip-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  top: 0;
-  left: 0;
-}
-
-/* Front visible by default */
-.flip-card-front {
-  z-index: 2;
-  transform: rotateY(0deg);
-}
-
-/* Back hidden initially */
-.flip-card-back {
-  transform: rotateY(180deg);
-  z-index: 1;
-}
-
-/* ==========================================
-   TILE ACTION BUTTONS (Plain Style)
-   ========================================== */
-.tile-action-button-plain {
-  background: white;
-  color: #333;
-  font-weight: 600;
-  border: none;
-  border-radius: 0;
-  padding: 10px 4px;
-  box-shadow: none;
-  transition: all 0.2s ease;
-  width: 100%;
-  height: 100%;
-  min-height: 70px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.tile-action-button-plain:hover {
-  background: #f0f0f0;
-  color: #000;
-}
-
-.tile-action-button-plain:active {
-  background: #e0e0e0;
-}
-
-.tile-action-button-plain i {
-  color: #666;
-}
-
-/* Border styling for grid lines */
-.border-end {
-  border-right: 1px solid #ddd !important;
-}
-
-.border-bottom {
-  border-bottom: 1px solid #ddd !important;
-}
-
-/* Remove card border for flip card */
-.flip-card .summary-card {
-  border: none !important;
-}
-
-/* ==========================================
-   Summary Cards Styling
-   ========================================== */
-.summary-card {
-  transition: all 0.3s ease;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e0e0e0;
-}
-
-.summary-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Disable hover on flip card parent */
-.flip-card:hover .summary-card {
-  transform: none;
-}
-
-/* ==========================================
-   Navbar Responsive Adjustments
-   ========================================== */
-
-@media (max-width: 767px) {
-  .navbar {
-    padding: 0.5rem 1rem;
+  /* ==========================================
+     MOBILE NAVBAR COLLAPSIBLE ANIMATION
+     ========================================== */
+  
+  #mobileInvoiceSection {
+    transition: all 0.3s ease;
+    overflow: hidden;
   }
   
-  .navbar-brand {
-    font-size: 0.9rem;
+  #navbarToggleIcon {
+    transition: transform 0.3s ease;
   }
   
+  /* ==========================================
+     FLIP CARD ANIMATION
+     ========================================== */
+  
+  .flip-card {
+    background-color: transparent;
+    perspective: 1000px;
+    cursor: pointer;
+  }
+  
+  .flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+  
+  /* Flip when class is added */
+  .flip-card-inner.flipped {
+    transform: rotateY(180deg);
+  }
+  
+  /* Position both sides absolutely */
+  .flip-card-front,
+  .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    top: 0;
+    left: 0;
+  }
+  
+  /* Front visible by default */
+  .flip-card-front {
+    z-index: 2;
+    transform: rotateY(0deg);
+  }
+  
+  /* Back hidden initially */
+  .flip-card-back {
+    transform: rotateY(180deg);
+    z-index: 1;
+  }
+  
+  /* ==========================================
+     TILE ACTION BUTTONS (Plain Style)
+     ========================================== */
   .tile-action-button-plain {
-    min-height: 60px;
-    padding: 8px 2px;
+    background: white;
+    color: #333;
+    font-weight: 600;
+    border: none;
+    border-radius: 0;
+    padding: 10px 4px;
+    box-shadow: none;
+    transition: all 0.2s ease;
+    width: 100%;
+    height: 100%;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .tile-action-button-plain:hover {
+    background: #f0f0f0;
+    color: #000;
+  }
+  
+  .tile-action-button-plain:active {
+    background: #e0e0e0;
   }
   
   .tile-action-button-plain i {
-    font-size: 1.2rem !important;
+    color: #666;
   }
   
-  .tile-action-button-plain span {
-    font-size: 0.6rem !important;
+  /* Border styling for grid lines */
+  .border-end {
+    border-right: 1px solid #ddd !important;
   }
   
-  .flip-card-front .card-body,
-  .flip-card-back .card-body {
-    min-height: 120px !important;
-  }
-}
-
-@media (min-width: 768px) {
-  .navbar-brand {
-    font-size: 1.25rem;
+  .border-bottom {
+    border-bottom: 1px solid #ddd !important;
   }
   
-  .navbar-action-btn,
-  #backupButton,
-  #restoreButton {
-    min-width: 130px;
+  /* Remove card border for flip card */
+  .flip-card .summary-card {
+    border: none !important;
   }
-}
-
-/* ==========================================
-   Mobile Action Buttons (Navbar)
-   ========================================== */
-.mobile-action-btn {
-  min-height: 60px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.mobile-action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(37, 211, 102, 0.3) !important;
-}
-
-/* ==========================================
-   User Dropdown Styling
-   ========================================== */
-.dropdown-menu {
-  border: none;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-
-.dropdown-item:hover {
-  background-color: #f8f9fa;
-}
-
-.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item,
-.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item {
-  color: #198754 !important;
-}
-
-.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item i,
-.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item i {
-  color: #198754 !important;
-}
-
-.dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item span,
-.dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item span {
-  color: #198754 !important;
-  font-weight: 500;
-}
-</style>
+  
+  /* ==========================================
+     Summary Cards Styling
+     ========================================== */
+  .summary-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Disable hover on flip card parent */
+  .flip-card:hover .summary-card {
+    transform: none;
+  }
+  
+  /* ==========================================
+     Navbar Responsive Adjustments
+     ========================================== */
+  
+  @media (max-width: 767px) {
+    .navbar {
+      padding: 0.5rem 1rem;
+    }
+    
+    .navbar-brand {
+      font-size: 0.9rem;
+    }
+    
+    .tile-action-button-plain {
+      min-height: 60px;
+      padding: 8px 2px;
+    }
+    
+    .tile-action-button-plain i {
+      font-size: 1.2rem !important;
+    }
+    
+    .tile-action-button-plain span {
+      font-size: 0.6rem !important;
+    }
+    
+    .flip-card-front .card-body,
+    .flip-card-back .card-body {
+      min-height: 120px !important;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .navbar-brand {
+      font-size: 1.25rem;
+    }
+    
+    .navbar-action-btn {
+      min-width: 130px;
+    }
+  }
+  
+  /* ==========================================
+     Mobile Action Buttons (Navbar)
+     ========================================== */
+  .mobile-action-btn {
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .mobile-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(37, 211, 102, 0.3) !important;
+  }
+  
+  /* ==========================================
+     User Dropdown Styling
+     ========================================== */
+  .dropdown-menu {
+    border: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+  
+  .dropdown-item:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item,
+  .dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item {
+    color: #198754 !important;
+  }
+  
+  .dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item i,
+  .dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item i {
+    color: #198754 !important;
+  }
+  
+  .dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item span,
+  .dropdown-menu[aria-labelledby="userDropdownMobile"] .dropdown-item span {
+    color: #198754 !important;
+    font-weight: 500;
+  }
+  
+  /* Blue color for Restore option */
+  .dropdown-menu .dropdown-item i.bi-cloud-upload {
+    color: #0d6efd !important;
+  }
+  
+  .dropdown-menu .dropdown-item span:has(+ i.bi-cloud-upload) {
+    color: #0d6efd !important;
+  }
+  </style>
+  
 
 
 
@@ -16151,6 +16193,52 @@ window.addEventListener('DOMContentLoaded', () => {
 
 console.log('✅ User Dropdown Module Loaded (Desktop + Mobile)');
 
+
+
+/**
+ * ==========================================
+ * MOBILE NAVBAR TOGGLE FUNCTION
+ * ==========================================
+ */
+
+ let mobileNavbarExpanded = false;
+
+/**
+ * Toggle mobile navbar invoice section
+ */
+function toggleMobileNavbar() {
+  const invoiceSection = document.getElementById('mobileInvoiceSection');
+  const toggleIcon = document.getElementById('navbarToggleIcon');
+  
+  if (!mobileNavbarExpanded) {
+    // Expand: Show invoice buttons
+    invoiceSection.style.display = 'block';
+    toggleIcon.classList.remove('bi-chevron-down');
+    toggleIcon.classList.add('bi-chevron-up');
+    mobileNavbarExpanded = true;
+    console.log('✅ Mobile navbar expanded');
+  } else {
+    // Collapse: Hide invoice buttons
+    invoiceSection.style.display = 'none';
+    toggleIcon.classList.remove('bi-chevron-up');
+    toggleIcon.classList.add('bi-chevron-down');
+    mobileNavbarExpanded = false;
+    console.log('✅ Mobile navbar collapsed');
+  }
+}
+
+// Optional: Auto-collapse when clicking outside
+document.addEventListener('click', function(event) {
+  const navbar = document.querySelector('.navbar');
+  const invoiceSection = document.getElementById('mobileInvoiceSection');
+  
+  if (mobileNavbarExpanded && !navbar.contains(event.target)) {
+    toggleMobileNavbar();
+  }
+});
+
+console.log('✅ Mobile Navbar Toggle Loaded');
+
 /**
  * ==========================================
  * MAKE ALL FUNCTIONS GLOBAL FOR BUTTONS
@@ -17113,6 +17201,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
