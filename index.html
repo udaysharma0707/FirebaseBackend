@@ -162,6 +162,9 @@
 </head>
 <body>
 
+
+
+  
 <!-- ==========================================
      SIDEBAR MENU (Zoho-style)
      ========================================== -->
@@ -380,11 +383,96 @@
   </div>
 </div>
 
+<!-- ✅ MONTHLY BACKUP REMINDER POPUP (FIXED) -->
+<div id="backupReminderModal" class="backup-reminder-overlay">
+  <div class="backup-reminder-container">
+    <div class="backup-reminder-content">
+      
+      <!-- Header -->
+      <div class="backup-reminder-header">
+        <i class="bi bi-calendar-check" style="font-size: 2.5rem; color: #25D366;"></i>
+        <h4 style="margin: 12px 0 8px 0; color: #333; font-weight: 700;">Monthly Backup Reminder</h4>
+        <p style="color: #666; font-size: 0.9rem; margin: 0;">It's time to backup your inventory data</p>
+      </div>
+      
+      <!-- Body -->
+      <div class="backup-reminder-body">
+        <div style="background: #f8f9fa; padding: 16px; border-radius: 10px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: start; margin-bottom: 12px;">
+            <i class="bi bi-shield-check" style="color: #25D366; font-size: 1.5rem; margin-right: 12px;"></i>
+            <div>
+              <strong style="color: #333; display: block; margin-bottom: 4px;">Protect Your Data</strong>
+              <span style="color: #666; font-size: 0.85rem;">Download a backup to keep your inventory safe</span>
+            </div>
+          </div>
+          
+          <div style="display: flex; align-items: start;">
+            <i class="bi bi-clock-history" style="color: #0d6efd; font-size: 1.5rem; margin-right: 12px;"></i>
+            <div>
+              <strong style="color: #333; display: block; margin-bottom: 4px;">Quick & Easy</strong>
+              <span style="color: #666; font-size: 0.85rem;">Takes less than 30 seconds to complete</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Last Backup Info -->
+        <div id="lastBackupInfo" style="text-align: center; margin-bottom: 16px; padding: 10px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+          <small style="color: #856404;">
+            <i class="bi bi-info-circle me-1"></i>
+            <span id="lastBackupText">No backup found this month</span>
+          </small>
+        </div>
+        
+        <!-- Checkbox -->
+        <div style="margin-bottom: 0;">
+          <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;" 
+                 onmouseover="this.style.background='#f8f9fa'" 
+                 onmouseout="this.style.background='transparent'">
+            <input type="checkbox" id="dontShowAgainCheckbox" style="width: 18px; height: 18px; margin-right: 10px; cursor: pointer;">
+            <span style="color: #666; font-size: 0.9rem;">Don't show this notification this month again</span>
+          </label>
+        </div>
+      </div>
+      
+      <!-- Footer - Action Buttons -->
+      <div class="backup-reminder-footer">
+        
+        <!-- Cancel Button -->
+        <button 
+          onclick="cancelBackupReminder()" 
+          class="btn-backup-cancel"
+        >
+          <i class="bi bi-x-circle" style="margin-right: 8px;"></i>
+          <span>Cancel</span>
+        </button>
+        
+        <!-- Backup Button -->
+        <button 
+          onclick="startBackupFromReminder()" 
+          class="btn-backup-download"
+        >
+          <i class="bi bi-cloud-download" style="margin-right: 8px;"></i>
+          <span>Backup Now</span>
+        </button>
+        
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+
+
+
 <!-- Sync indicator -->
 <div id="syncIndicator" class="sync-indicator">
   <i class="bi bi-arrow-repeat"></i> 
   <span id="syncText">Syncing...</span>
 </div>
+
+
+
+
 
 
 <!-- ✅ RESPONSIVE NAVBAR - Mobile Collapsible -->
@@ -587,6 +675,7 @@
     </div>
   </div>
 </nav>
+
 
 <!-- ✅ SPACER -->
 <div style="height: 20px; background: transparent;"></div>
@@ -3757,73 +3846,6 @@ async function saveProductToSheet(product, isUpdate = false) {
 }
 
 
-    // Comprehensive duplicate cleanup
-async function cleanupAllDuplicates() {
-  const user = window.auth.currentUser;
-  const { collection, getDocs, doc, deleteDoc } = window.firebaseImports;
-  
-  console.log('🧹 Starting comprehensive duplicate cleanup...');
-  
-  const productsRef = collection(window.db, 'tenants', user.uid, 'products');
-  const snapshot = await getDocs(productsRef);
-  
-  const productsByName = {};
-  
-  // Group products by name
-  snapshot.forEach(d => {
-    const data = d.data();
-    const name = data.name?.toLowerCase().trim();
-    
-    if (!name) return;
-    
-    if (!productsByName[name]) {
-      productsByName[name] = [];
-    }
-    
-    productsByName[name].push({
-      id: d.id,
-      data: data,
-      updatedAt: data.updatedAt || '1970-01-01'
-    });
-  });
-  
-  let deleted = 0;
-  
-  // Find and delete duplicates
-  for (const name in productsByName) {
-    const products = productsByName[name];
-    
-    if (products.length > 1) {
-      console.log(`⚠️ Found ${products.length} products named "${name}"`);
-      
-      // Sort by updatedAt (keep newest)
-      products.sort((a, b) => {
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      });
-      
-      // Keep first (newest), delete rest
-      const toKeep = products[0];
-      console.log('✅ Keeping:', toKeep.id, '| Updated:', toKeep.updatedAt);
-      
-      for (let i = 1; i < products.length; i++) {
-        const toDelete = products[i];
-        console.log('🗑️ Deleting:', toDelete.id, '| Updated:', toDelete.updatedAt);
-        
-        const productRef = doc(window.db, 'tenants', user.uid, 'products', toDelete.id);
-        await deleteDoc(productRef);
-        deleted++;
-      }
-    }
-  }
-  
-  console.log(`✅ Cleanup complete! Deleted ${deleted} duplicate products.`);
-  
-  // Reload
-  location.reload();
-}
-
-// Run cleanup
-cleanupAllDuplicates();
 
 
 /**
@@ -16049,122 +16071,17 @@ function togglePasswordVisibility() {
 
 console.log('✅ Password Toggle Module Loaded');
 
-
 /**
  * ==========================================
- * BACKUP REMINDER BADGE (Mobile + Desktop)
+ * MONTHLY BACKUP REMINDER SYSTEM (UPDATED)
+ * With Popup Instead of Badges
  * ==========================================
  */
-
-/**
- * Add notification badge to backup buttons (both mobile and desktop)
- */
- function addBackupButtonBadge() {
-  const today = new Date();
-  const dayOfMonth = today.getDate();
-  
-  // Show badge on first 3 days of the month
-  if (dayOfMonth <= 5) {
-    console.log('📅 First 3 days of month - Adding backup reminder badge');
-    
-    // Target both desktop and mobile backup buttons
-    const desktopButton = document.getElementById('backupButton');
-    const mobileButton = document.getElementById('backupButtonMobile');
-    
-    // Add badge to desktop button
-    if (desktopButton && !desktopButton.querySelector('.backup-badge')) {
-      addBadgeToButton(desktopButton, 'desktop');
-    }
-    
-    // Add badge to mobile button
-    if (mobileButton && !mobileButton.querySelector('.backup-badge')) {
-      addBadgeToButton(mobileButton, 'mobile');
-    }
-    
-    console.log('✅ Backup reminder badges added');
-  } else {
-    console.log(`ℹ️ Day ${dayOfMonth} - No backup reminder needed`);
-  }
-}
-
-/**
- * Add badge to a specific button
- */
-function addBadgeToButton(button, device) {
-  // Make button position relative
-  button.style.position = 'relative';
-  
-  // Create badge element
-  const badge = document.createElement('span');
-  badge.className = 'badge bg-danger backup-badge';
-  badge.style.cssText = `
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    padding: 3px 6px;
-    font-size: 9px;
-    font-weight: 700;
-    border-radius: 10px;
-    animation: pulse 2s infinite;
-    z-index: 10;
-    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
-  `;
-  badge.textContent = 'BACKUP';
-  
-  button.appendChild(badge);
-  
-  console.log(`✅ Badge added to ${device} button`);
-}
-
-/**
- * Add pulse animation (only once)
- */
-function addPulseAnimation() {
-  // Check if animation already exists
-  if (document.getElementById('backupBadgePulseAnimation')) {
-    return;
-  }
-  
-  const style = document.createElement('style');
-  style.id = 'backupBadgePulseAnimation';
-  style.textContent = `
-    @keyframes pulse {
-      0%, 100% { 
-        transform: scale(1); 
-        opacity: 1; 
-      }
-      50% { 
-        transform: scale(1.15); 
-        opacity: 0.85; 
-      }
-    }
-    
-    /* Hover effect for backup badge */
-    .backup-badge:hover {
-      animation: none;
-      transform: scale(1.1);
-      cursor: pointer;
-    }
-  `;
-  document.head.appendChild(style);
-  console.log('✅ Pulse animation added');
-}
-
-/**
- * Remove backup badges (optional - for testing or after backup)
- */
-function removeBackupBadges() {
-  const badges = document.querySelectorAll('.backup-badge');
-  badges.forEach(badge => {
-    badge.remove();
-  });
-  console.log('✅ Backup badges removed');
-}
 
 /**
  * Check if backup was done this month
  */
-function wasBackupDoneThisMonth() {
+ function wasBackupDoneThisMonth() {
   const lastBackupDate = localStorage.getItem('lastBackupDate');
   if (!lastBackupDate) return false;
   
@@ -16176,88 +16093,483 @@ function wasBackupDoneThisMonth() {
 }
 
 /**
+ * Check if backup reminder should be shown
+ */
+function shouldShowBackupReminder() {
+  const today = new Date();
+  const dayOfMonth = today.getDate();
+  
+  // Only show during first 5 days of month
+  if (dayOfMonth > 5) {
+    console.log(`ℹ️ Day ${dayOfMonth} - Outside reminder window (1-5)`);
+    return false;
+  }
+  
+  // Check if user dismissed for this month
+  const dismissedMonth = localStorage.getItem('backupReminderDismissedMonth');
+  const currentMonth = `${today.getFullYear()}-${today.getMonth()}`;
+  
+  if (dismissedMonth === currentMonth) {
+    console.log('ℹ️ User dismissed reminder for this month');
+    return false;
+  }
+  
+  // Check if backup was already done this month
+  if (wasBackupDoneThisMonth()) {
+    console.log('✅ Backup already completed this month');
+    return false;
+  }
+  
+  console.log('⚠️ Backup reminder should be shown');
+  return true;
+}
+
+/**
+ * Show backup reminder popup
+ */
+function showBackupReminder() {
+  const modal = document.getElementById('backupReminderModal');
+  if (!modal) {
+    console.error('❌ Backup reminder modal not found');
+    return;
+  }
+  
+  // Update last backup info
+  updateLastBackupInfo();
+  
+  // Show modal with animation
+  modal.style.display = 'flex';
+  console.log('📅 Backup reminder popup shown');
+}
+
+/**
+ * Hide backup reminder popup
+ */
+function hideBackupReminder() {
+  const modal = document.getElementById('backupReminderModal');
+  if (modal) {
+    modal.style.display = 'none';
+    console.log('✅ Backup reminder hidden');
+  }
+}
+
+/**
+ * Update last backup info text
+ */
+function updateLastBackupInfo() {
+  const lastBackupText = document.getElementById('lastBackupText');
+  const lastBackupInfo = document.getElementById('lastBackupInfo');
+  
+  if (!lastBackupText || !lastBackupInfo) return;
+  
+  const lastBackupDate = localStorage.getItem('lastBackupDate');
+  
+  if (lastBackupDate) {
+    const lastBackup = new Date(lastBackupDate);
+    const today = new Date();
+    
+    // Calculate days ago
+    const diffTime = Math.abs(today - lastBackup);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const formattedDate = lastBackup.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    
+    if (diffDays === 0) {
+      lastBackupText.textContent = `Last backup: Today`;
+      lastBackupInfo.style.background = '#d1ecf1';
+      lastBackupInfo.style.borderLeftColor = '#0dcaf0';
+    } else if (diffDays === 1) {
+      lastBackupText.textContent = `Last backup: Yesterday`;
+      lastBackupInfo.style.background = '#d1ecf1';
+      lastBackupInfo.style.borderLeftColor = '#0dcaf0';
+    } else if (diffDays <= 7) {
+      lastBackupText.textContent = `Last backup: ${diffDays} days ago (${formattedDate})`;
+      lastBackupInfo.style.background = '#fff3cd';
+      lastBackupInfo.style.borderLeftColor = '#ffc107';
+    } else {
+      lastBackupText.textContent = `Last backup: ${formattedDate} (${diffDays} days ago)`;
+      lastBackupInfo.style.background = '#f8d7da';
+      lastBackupInfo.style.borderLeftColor = '#dc3545';
+    }
+  } else {
+    lastBackupText.textContent = 'No backup found this month';
+    lastBackupInfo.style.background = '#fff3cd';
+    lastBackupInfo.style.borderLeftColor = '#ffc107';
+  }
+}
+
+/**
+ * Cancel backup reminder
+ */
+function cancelBackupReminder() {
+  const checkbox = document.getElementById('dontShowAgainCheckbox');
+  
+  // Check if user selected "don't show again"
+  if (checkbox && checkbox.checked) {
+    const today = new Date();
+    const currentMonth = `${today.getFullYear()}-${today.getMonth()}`;
+    localStorage.setItem('backupReminderDismissedMonth', currentMonth);
+    console.log('✅ Reminder dismissed for this month');
+  }
+  
+  hideBackupReminder();
+  console.log('❌ User cancelled backup reminder');
+}
+
+/**
+ * Start backup from reminder popup
+ */
+async function startBackupFromReminder() {
+  console.log('📥 Starting backup from reminder...');
+  
+  const downloadButton = document.querySelector('.btn-backup-download');
+  
+  try {
+    // Add loading state
+    if (downloadButton) {
+      downloadButton.classList.add('loading');
+      downloadButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating backup...';
+    }
+    
+    // Call the actual backup function
+    await sendBackupEmail();
+    
+    // Mark backup as completed (in case wrapper doesn't work)
+    markBackupCompleted();
+    
+    // Hide modal
+    hideBackupReminder();
+    
+    console.log('✅ Backup completed from reminder');
+    
+  } catch (error) {
+    console.error('❌ Backup failed:', error);
+    
+    // Reset button
+    if (downloadButton) {
+      downloadButton.classList.remove('loading');
+      downloadButton.innerHTML = '<i class="bi bi-cloud-download me-2"></i>Backup Now';
+    }
+    
+    alert('❌ Backup failed: ' + error.message);
+  }
+}
+
+/**
  * Mark backup as completed
  */
 function markBackupCompleted() {
   const now = new Date().toISOString();
   localStorage.setItem('lastBackupDate', now);
+  
+  // Also clear any "dismissed" flag since backup is done
+  localStorage.removeItem('backupReminderDismissedMonth');
+  
   console.log('✅ Backup marked as completed:', now);
-  
-  // Remove badges after backup
-  removeBackupBadges();
+  console.log('✅ Reminder preferences cleared');
 }
 
 /**
- * Initialize backup reminder system
+ * ==========================================
+ * BACKUP FUNCTION WRAPPER
+ * ==========================================
  */
-function initializeBackupReminder() {
-  console.log('🔄 Initializing backup reminder...');
+
+/**
+ * Wrap the backup function to add completion tracking
+ */
+function wrapBackupFunction() {
+  // Check if function exists
+  if (typeof window.sendBackupEmail !== 'function') {
+    console.warn('⚠️ sendBackupEmail function not found - skipping wrap');
+    return false;
+  }
   
-  // Add pulse animation CSS
-  addPulseAnimation();
+  // Check if already wrapped
+  if (window.sendBackupEmail._isWrapped) {
+    console.log('ℹ️ sendBackupEmail already wrapped');
+    return true;
+  }
   
-  // Check if backup needed
-  const today = new Date();
-  const dayOfMonth = today.getDate();
+  // Store reference to original function
+  const originalSendBackupEmail = window.sendBackupEmail;
   
-  // Only show badge if:
-  // 1. It's first 3 days of month
-  // 2. Backup hasn't been done this month
-  if (dayOfMonth <= 5 && !wasBackupDoneThisMonth()) {
-    console.log('⚠️ Backup reminder active - No backup this month yet');
+  // Replace with wrapped version
+  window.sendBackupEmail = async function(event) {
+    console.log('📧 Starting backup (wrapped)...');
     
-    // Wait for buttons to be loaded, then add badges
-    const checkButtons = setInterval(() => {
-      const desktopBtn = document.getElementById('backupButton');
-      const mobileBtn = document.getElementById('backupButtonMobile');
+    try {
+      // Call original backup function
+      await originalSendBackupEmail(event);
       
-      if (desktopBtn || mobileBtn) {
-        clearInterval(checkButtons);
-        addBackupButtonBadge();
-      }
-    }, 100);
-    
-    // Timeout after 5 seconds
-    setTimeout(() => {
-      clearInterval(checkButtons);
-      console.log('⏱️ Button check timeout - Adding badges anyway');
-      addBackupButtonBadge();
-    }, 5000);
-    
-  } else if (dayOfMonth <= 5) {
-    console.log('✅ Backup already done this month');
-  } else {
-    console.log(`ℹ️ Day ${dayOfMonth} - No reminder needed`);
-  }
+      // Mark backup as completed (only if successful)
+      markBackupCompleted();
+      
+      console.log('✅ Backup completed and tracked');
+      
+      return true;
+      
+    } catch (error) {
+      console.error('❌ Backup error:', error);
+      throw error;
+    }
+  };
+  
+  // Mark as wrapped
+  window.sendBackupEmail._isWrapped = true;
+  
+  console.log('✅ sendBackupEmail function wrapped with completion tracking');
+  return true;
 }
 
 /**
- * Update sendBackupEmail to mark backup as completed
+ * Try to wrap backup function with retries
  */
-const originalSendBackupEmail = sendBackupEmail;
-async function sendBackupEmail(event) {
-  try {
-    // Call original backup function
-    await originalSendBackupEmail(event);
+function tryWrapBackupFunction() {
+  let attempts = 0;
+  const maxAttempts = 50;
+  
+  const checkInterval = setInterval(() => {
+    attempts++;
     
-    // Mark backup as completed
-    markBackupCompleted();
-    
-  } catch (error) {
-    console.error('❌ Backup error:', error);
-    throw error;
+    if (wrapBackupFunction()) {
+      clearInterval(checkInterval);
+      console.log(`✅ Backup function wrapped after ${attempts} attempts`);
+    } else if (attempts >= maxAttempts) {
+      clearInterval(checkInterval);
+      console.warn('⚠️ Could not wrap sendBackupEmail after', maxAttempts, 'attempts');
+      console.warn('⚠️ Manual tracking will be used instead');
+    }
+  }, 100);
+}
+
+/**
+ * ==========================================
+ * EVENT LISTENERS
+ * ==========================================
+ */
+
+/**
+ * Close modal when clicking outside
+ */
+function setupModalClickOutside() {
+  document.addEventListener('click', function(event) {
+    const modal = document.getElementById('backupReminderModal');
+    if (modal && event.target === modal) {
+      cancelBackupReminder();
+    }
+  });
+}
+
+/**
+ * Close modal with Escape key
+ */
+function setupModalEscapeKey() {
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      const modal = document.getElementById('backupReminderModal');
+      if (modal && modal.style.display === 'flex') {
+        cancelBackupReminder();
+      }
+    }
+  });
+}
+
+/**
+ * Add keyboard shortcut (Ctrl+B to backup)
+ */
+function setupBackupKeyboardShortcut() {
+  document.addEventListener('keydown', function(event) {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
+      event.preventDefault();
+      console.log('⌨️ Keyboard shortcut triggered (Ctrl+B)');
+      
+      if (typeof window.sendBackupEmail === 'function') {
+        window.sendBackupEmail();
+      } else {
+        console.error('❌ Backup function not available');
+        alert('Backup function is not ready yet. Please wait a moment and try again.');
+      }
+    }
+  });
+}
+
+/**
+ * ==========================================
+ * INITIALIZATION
+ * ==========================================
+ */
+
+/**
+ * Log backup status for debugging
+ */
+function logBackupStatus() {
+  const today = new Date();
+  const lastBackupDate = localStorage.getItem('lastBackupDate');
+  const dismissedMonth = localStorage.getItem('backupReminderDismissedMonth');
+  
+  console.log('📊 Backup Status:');
+  console.log('  - Current Date:', today.toLocaleDateString());
+  console.log('  - Day of Month:', today.getDate());
+  console.log('  - Last Backup:', lastBackupDate || 'Never');
+  console.log('  - Dismissed Month:', dismissedMonth || 'None');
+  console.log('  - Should Show Reminder:', shouldShowBackupReminder());
+}
+
+/**
+ * Initialize the backup reminder system
+ */
+function initializeBackupReminderSystem() {
+  console.log('🔄 Initializing backup reminder system...');
+  
+  // Check if modal exists
+  const modal = document.getElementById('backupReminderModal');
+  if (!modal) {
+    console.warn('⚠️ Backup reminder modal not found in DOM');
+    return;
   }
+  
+  // Setup event listeners
+  setupModalClickOutside();
+  setupModalEscapeKey();
+  setupBackupKeyboardShortcut();
+  
+  // Try to wrap backup function
+  tryWrapBackupFunction();
+  
+  // Log current status
+  logBackupStatus();
+  
+  // Wait a bit for page to settle, then check if reminder should show
+  setTimeout(() => {
+    if (shouldShowBackupReminder()) {
+      console.log('📅 Showing backup reminder popup...');
+      showBackupReminder();
+    } else {
+      console.log('ℹ️ Backup reminder not needed at this time');
+    }
+  }, 1500); // 1.5 second delay after page load
 }
 
-// Initialize on page load
+/**
+ * Main initialization - runs on page load
+ */
+function initBackupReminder() {
+  console.log('🚀 Backup Reminder Module Loading...');
+  initializeBackupReminderSystem();
+  console.log('✅ Backup Reminder System Loaded');
+  console.log('💡 Press Ctrl+B to quickly start a backup');
+}
+
+/**
+ * Initialize based on document ready state
+ */
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeBackupReminder);
+  // DOM not ready yet
+  document.addEventListener('DOMContentLoaded', initBackupReminder);
+  console.log('⏳ Waiting for DOM to load...');
 } else {
-  initializeBackupReminder();
+  // DOM already loaded
+  initBackupReminder();
 }
 
-console.log('✅ Backup Reminder System Loaded');
+/**
+ * ==========================================
+ * UTILITY FUNCTIONS (for testing/debugging)
+ * ==========================================
+ */
 
+/**
+ * Manually trigger backup reminder (for testing)
+ */
+window.showBackupReminderTest = function() {
+  console.log('🧪 Showing backup reminder (test mode)');
+  const modal = document.getElementById('backupReminderModal');
+  if (modal) {
+    updateLastBackupInfo();
+    modal.style.display = 'flex';
+  } else {
+    console.error('❌ Modal not found');
+  }
+};
+
+/**
+ * Reset all backup preferences (for testing)
+ */
+window.resetBackupPreferences = function() {
+  localStorage.removeItem('lastBackupDate');
+  localStorage.removeItem('backupReminderDismissedMonth');
+  console.log('✅ Backup preferences reset');
+  console.log('🔄 Reload page to see reminder popup');
+};
+
+/**
+ * Get backup statistics
+ */
+window.getBackupStats = function() {
+  const lastBackupDate = localStorage.getItem('lastBackupDate');
+  const dismissedMonth = localStorage.getItem('backupReminderDismissedMonth');
+  const today = new Date();
+  
+  const stats = {
+    currentDay: today.getDate(),
+    currentMonth: today.getMonth() + 1,
+    currentYear: today.getFullYear(),
+    lastBackup: lastBackupDate || 'Never',
+    dismissedMonth: dismissedMonth || 'None',
+    shouldShowReminder: shouldShowBackupReminder(),
+    isBackupWindow: today.getDate() <= 5,
+    backupDoneThisMonth: wasBackupDoneThisMonth()
+  };
+  
+  console.table(stats);
+  return stats;
+};
+
+/**
+ * Force backup (bypass reminder)
+ */
+window.forceBackup = function() {
+  if (typeof window.sendBackupEmail === 'function') {
+    console.log('🚀 Forcing backup...');
+    window.sendBackupEmail();
+  } else {
+    console.error('❌ Backup function not available');
+  }
+};
+
+/**
+ * Simulate first 3 days scenario (for testing)
+ */
+window.testBackupScenario = function() {
+  console.log('🧪 Testing backup reminder scenario...');
+  
+  // Clear all preferences
+  localStorage.removeItem('lastBackupDate');
+  localStorage.removeItem('backupReminderDismissedMonth');
+  
+  // Show the popup
+  const modal = document.getElementById('backupReminderModal');
+  if (modal) {
+    updateLastBackupInfo();
+    modal.style.display = 'flex';
+    console.log('✅ Test scenario activated - Popup shown');
+  } else {
+    console.error('❌ Modal not found');
+  }
+};
+
+console.log('✅ Backup Reminder Module Ready');
+console.log('💡 Debug commands:');
+console.log('   - window.showBackupReminderTest()  // Show popup');
+console.log('   - window.resetBackupPreferences()  // Reset settings');
+console.log('   - window.getBackupStats()          // View status');
+console.log('   - window.forceBackup()             // Quick backup');
+console.log('   - window.testBackupScenario()      // Test popup');
 
 /**
  * ==========================================
@@ -16293,6 +16605,239 @@ document.addEventListener('DOMContentLoaded', function() {
 console.log('✅ Quick Actions Flip Animation Loaded');
 
 
+/**
+ * ==========================================
+ * MONTHLY BACKUP REMINDER SYSTEM
+ * ==========================================
+ */
+
+/**
+ * Check if backup reminder should be shown
+ */
+ function shouldShowBackupReminder() {
+  const today = new Date();
+  const dayOfMonth = today.getDate();
+  
+  // Only show during first 3 days of month
+  if (dayOfMonth > 5) {
+    console.log(`ℹ️ Day ${dayOfMonth} - Outside reminder window (1-5)`);
+    return false;
+  }
+  
+  // Check if user dismissed for this month
+  const dismissedMonth = localStorage.getItem('backupReminderDismissedMonth');
+  const currentMonth = `${today.getFullYear()}-${today.getMonth()}`;
+  
+  if (dismissedMonth === currentMonth) {
+    console.log('ℹ️ User dismissed reminder for this month');
+    return false;
+  }
+  
+  // Check if backup was already done this month
+  const lastBackupDate = localStorage.getItem('lastBackupDate');
+  if (lastBackupDate) {
+    const lastBackup = new Date(lastBackupDate);
+    if (lastBackup.getMonth() === today.getMonth() && 
+        lastBackup.getFullYear() === today.getFullYear()) {
+      console.log('✅ Backup already completed this month');
+      return false;
+    }
+  }
+  
+  console.log('⚠️ Backup reminder should be shown');
+  return true;
+}
+
+/**
+ * Show backup reminder popup
+ */
+function showBackupReminder() {
+  const modal = document.getElementById('backupReminderModal');
+  if (!modal) {
+    console.error('❌ Backup reminder modal not found');
+    return;
+  }
+  
+  // Update last backup info
+  updateLastBackupInfo();
+  
+  // Show modal with animation
+  modal.style.display = 'flex';
+  console.log('📅 Backup reminder shown');
+}
+
+/**
+ * Hide backup reminder popup
+ */
+function hideBackupReminder() {
+  const modal = document.getElementById('backupReminderModal');
+  if (modal) {
+    modal.style.display = 'none';
+    console.log('✅ Backup reminder hidden');
+  }
+}
+
+/**
+ * Update last backup info text
+ */
+function updateLastBackupInfo() {
+  const lastBackupText = document.getElementById('lastBackupText');
+  const lastBackupInfo = document.getElementById('lastBackupInfo');
+  
+  if (!lastBackupText || !lastBackupInfo) return;
+  
+  const lastBackupDate = localStorage.getItem('lastBackupDate');
+  
+  if (lastBackupDate) {
+    const lastBackup = new Date(lastBackupDate);
+    const today = new Date();
+    
+    // Calculate days ago
+    const diffTime = Math.abs(today - lastBackup);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const formattedDate = lastBackup.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    
+    if (diffDays === 0) {
+      lastBackupText.textContent = `Last backup: Today`;
+      lastBackupInfo.style.background = '#d1ecf1';
+      lastBackupInfo.style.borderLeftColor = '#0dcaf0';
+    } else if (diffDays === 1) {
+      lastBackupText.textContent = `Last backup: Yesterday`;
+      lastBackupInfo.style.background = '#d1ecf1';
+      lastBackupInfo.style.borderLeftColor = '#0dcaf0';
+    } else if (diffDays <= 7) {
+      lastBackupText.textContent = `Last backup: ${diffDays} days ago (${formattedDate})`;
+      lastBackupInfo.style.background = '#fff3cd';
+      lastBackupInfo.style.borderLeftColor = '#ffc107';
+    } else {
+      lastBackupText.textContent = `Last backup: ${formattedDate} (${diffDays} days ago)`;
+      lastBackupInfo.style.background = '#f8d7da';
+      lastBackupInfo.style.borderLeftColor = '#dc3545';
+    }
+  } else {
+    lastBackupText.textContent = 'No backup found this month';
+    lastBackupInfo.style.background = '#fff3cd';
+    lastBackupInfo.style.borderLeftColor = '#ffc107';
+  }
+}
+
+/**
+ * Cancel backup reminder
+ */
+function cancelBackupReminder() {
+  const checkbox = document.getElementById('dontShowAgainCheckbox');
+  
+  // Check if user selected "don't show again"
+  if (checkbox && checkbox.checked) {
+    const today = new Date();
+    const currentMonth = `${today.getFullYear()}-${today.getMonth()}`;
+    localStorage.setItem('backupReminderDismissedMonth', currentMonth);
+    console.log('✅ Reminder dismissed for this month');
+  }
+  
+  hideBackupReminder();
+  console.log('❌ User cancelled backup reminder');
+}
+
+/**
+ * Start backup from reminder popup
+ */
+async function startBackupFromReminder() {
+  console.log('📥 Starting backup from reminder...');
+  
+  const downloadButton = document.querySelector('.btn-backup-download');
+  
+  try {
+    // Add loading state
+    if (downloadButton) {
+      downloadButton.classList.add('loading');
+      downloadButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating backup...';
+    }
+    
+    // Call the actual backup function
+    await sendBackupEmail();
+    
+    // Mark backup as completed
+    markBackupCompleted();
+    
+    // Hide modal
+    hideBackupReminder();
+    
+    console.log('✅ Backup completed from reminder');
+    
+  } catch (error) {
+    console.error('❌ Backup failed:', error);
+    
+    // Reset button
+    if (downloadButton) {
+      downloadButton.classList.remove('loading');
+      downloadButton.innerHTML = '<i class="bi bi-cloud-download me-2"></i>Backup Now';
+    }
+    
+    alert('❌ Backup failed: ' + error.message);
+  }
+}
+
+/**
+ * Mark backup as completed
+ */
+function markBackupCompleted() {
+  const now = new Date().toISOString();
+  localStorage.setItem('lastBackupDate', now);
+  console.log('✅ Backup marked as completed:', now);
+}
+
+/**
+ * Initialize backup reminder on page load
+ */
+function initializeBackupReminder() {
+  console.log('🔄 Initializing backup reminder system...');
+  
+  // Wait for page to fully load
+  setTimeout(() => {
+    if (shouldShowBackupReminder()) {
+      showBackupReminder();
+    } else {
+      console.log('ℹ️ Backup reminder not needed');
+    }
+  }, 1500); // Show 1.5 seconds after page load
+}
+
+/**
+ * Close modal when clicking outside
+ */
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('backupReminderModal');
+  if (modal && event.target === modal) {
+    cancelBackupReminder();
+  }
+});
+
+/**
+ * Close modal with Escape key
+ */
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    const modal = document.getElementById('backupReminderModal');
+    if (modal && modal.style.display === 'flex') {
+      cancelBackupReminder();
+    }
+  }
+});
+
+// Initialize on page load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeBackupReminder);
+} else {
+  initializeBackupReminder();
+}
+
+console.log('✅ Backup Reminder System Loaded');
 
 
     
