@@ -1,7 +1,21 @@
+/**
+ * ==========================================
+ * BRANDS MANAGEMENT MODULE (FIREBASE)
+ * File: brand-manager.js
+ * ==========================================
+ */
 
+/**
+ * ==========================================
+ * GLOBAL VARIABLES
+ * ==========================================
+ */
 
+// ✅ THESE WERE MISSING!
+let brandsCache = [];
+let pendingBrands = [];
 
-
+console.log('✅ Brand Manager Module Loaded');
 
 /**
  * ==========================================
@@ -12,9 +26,9 @@
 function navigateToBrands() {
   console.log('🏷️ Navigating to Brands');
   
+  pendingBrands = [];
   currentPage = 'brands';
   
-  // === STEP 1: Get page elements ===
   const mainApp = document.getElementById('mainApp');
   const allProductsPage = document.getElementById('allProductsPage');
   const productGroupsPage = document.getElementById('productGroupsPage');
@@ -22,7 +36,6 @@ function navigateToBrands() {
   const brandsPage = document.getElementById('brandsPage');
   const groupDetailPage = document.getElementById('groupDetailPage');
   
-  // === STEP 2: Hide all other pages ===
   if (mainApp) {
     mainApp.style.display = 'none';
     mainApp.classList.remove('active');
@@ -48,7 +61,6 @@ function navigateToBrands() {
     groupDetailPage.style.display = 'none';
   }
   
-  // === STEP 3: Show brands page ===
   if (brandsPage) {
     brandsPage.classList.add('active');
     brandsPage.style.display = 'block';
@@ -58,27 +70,18 @@ function navigateToBrands() {
     return;
   }
   
-  // === STEP 4: Hide the blue navbar ===
   const navbar = document.querySelector('.navbar.navbar-dark.bg-primary');
   if (navbar) {
     navbar.style.display = 'none';
   }
   
-  // === STEP 5: Clear search input ===
   const searchInput = document.getElementById('searchBrandsInput');
   if (searchInput) {
     searchInput.value = '';
   }
   
-  // === STEP 6: Load brands from Firebase ===
-  if (typeof loadBrands === 'function') {
-    loadBrands();
-    console.log('✅ Brands data loading...');
-  } else {
-    console.warn('⚠️ loadBrands function not found');
-  }
+  loadBrands();
   
-  // === STEP 7: Close sidebar and scroll ===
   if (typeof closeSidebar === 'function') {
     closeSidebar();
   }
@@ -92,9 +95,6 @@ function navigateToBrands() {
  * ==========================================
  */
 
-/**
- * Load Brands from Firebase
- */
 async function loadBrands() {
   try {
     console.log('📡 Fetching brands from Firebase...');
@@ -109,11 +109,9 @@ async function loadBrands() {
     const { collection, getDocs } = window.firebaseImports;
     const userId = user.uid;
     
-    // Get brands collection reference
     const brandsRef = collection(window.db, 'tenants', userId, 'brands');
     const brandsSnap = await getDocs(brandsRef);
     
-    // Extract brand names
     brandsCache = [];
     brandsSnap.forEach((doc) => {
       const data = doc.data();
@@ -123,14 +121,13 @@ async function loadBrands() {
     });
     
     console.log('✅ Loaded', brandsCache.length, 'brands from Firebase');
+    console.log('  Brands:', brandsCache);
     
-    // Render immediately
     renderBrandsList();
     
   } catch (error) {
     console.error('❌ Error loading brands:', error);
     
-    // Show error message
     const container = document.getElementById('brandsListContainer');
     if (container) {
       container.innerHTML = `
@@ -153,9 +150,6 @@ async function loadBrands() {
  * ==========================================
  */
 
-/**
- * Render Brands List
- */
 function renderBrandsList() {
   console.log('🎨 Rendering brands list...');
   
@@ -167,29 +161,24 @@ function renderBrandsList() {
     return;
   }
   
-  // Check if no brands
   if (!brandsCache || brandsCache.length === 0) {
     container.innerHTML = '';
     if (emptyState) {
       emptyState.style.display = 'block';
     }
-    console.log('No brands to display');
+    console.log('📋 No brands to display');
     return;
   }
   
-  // Hide empty state
   if (emptyState) {
     emptyState.style.display = 'none';
   }
   
-  // Sort brands alphabetically
   const sortedBrands = [...brandsCache].sort((a, b) => a.localeCompare(b));
   
-  // Build HTML
   let html = '<div style="padding:20px; max-width:1200px; margin:0 auto;">';
   
   sortedBrands.forEach(brand => {
-    // Create brand card
     html += `
       <div class="card mb-3 shadow-sm" style="cursor:pointer; transition:transform 0.2s;" 
            onmouseover="this.style.transform='scale(1.02)'" 
@@ -216,14 +205,10 @@ function renderBrandsList() {
   
   html += '</div>';
   
-  // Render to page
   container.innerHTML = html;
   console.log(`✅ Rendered ${brandsCache.length} brands`);
 }
 
-/**
- * Filter brands based on search input
- */
 function filterBrands(searchTerm) {
   if (!brandsCache) {
     console.warn('⚠️ brandsCache is empty');
@@ -236,25 +221,21 @@ function filterBrands(searchTerm) {
   
   if (!container) return;
   
-  // If search is empty, show all brands
   if (!term || term.length === 0) {
     renderBrandsList();
     return;
   }
   
-  // Filter brands
   const filtered = brandsCache.filter(brand => 
     brand.toLowerCase().includes(term)
   );
   
   console.log(`🔍 Search: "${searchTerm}" - Found ${filtered.length} matches`);
   
-  // Hide empty state
   if (emptyState) {
     emptyState.style.display = 'none';
   }
   
-  // Render filtered list
   if (filtered.length === 0) {
     container.innerHTML = `
       <div style="text-align:center; padding:40px; color:#999;">
@@ -269,7 +250,6 @@ function filterBrands(searchTerm) {
     return;
   }
   
-  // Build HTML for filtered brands
   const sortedFiltered = filtered.sort((a, b) => a.localeCompare(b));
   
   let html = '<div style="padding:20px; max-width:1200px; margin:0 auto;">';
@@ -308,34 +288,36 @@ function filterBrands(searchTerm) {
  * SECTION 4: MODAL FUNCTIONS
  * ==========================================
  */
-
-/**
- * Open Add Brands Modal
- */
 function openAddBrandModal() {
   console.log('➕ Opening Add Brands modal');
   
+  // Reset pending brands
   pendingBrands = [];
   
-  // Reset form
-  const input = document.getElementById('brandInput');
-  if (input) {
-    input.value = '';
-  }
+  // ✅ Use WORKING clear method
+  document.querySelectorAll('#brandInput').forEach(inp => {
+    inp.value = '';
+    inp.setAttribute('value', '');
+    window.lastBrandInput = '';
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+  });
   
+  // Update preview (should show empty state)
   updateBrandPreviewList();
   
-  // Show modal using Bootstrap
+  // Open modal
   const modal = new bootstrap.Modal(document.getElementById('addBrandsModal'));
   modal.show();
   
-  // Focus input
+  // Focus on input after modal opens
   setTimeout(() => {
+    const input = document.getElementById('brandInput');
     if (input) {
       input.focus();
     }
-  }, 100);
+  }, 200);
 }
+
 
 /**
  * ==========================================
@@ -343,6 +325,23 @@ function openAddBrandModal() {
  * ==========================================
  */
 
+/**
+ * Force clear brand input (WORKING METHOD)
+ */
+function forceClearBrandInput() {
+  // Clear ALL inputs with this ID
+  document.querySelectorAll('#brandInput').forEach(inp => {
+    inp.value = '';
+    inp.setAttribute('value', '');
+    window.lastBrandInput = '';
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  console.log('🧹 Input cleared');
+}
+
+/**
+ * Handle brand input (Enter or Comma keys)
+ */
 function handleBrandInputKeydown(event) {
   const input = document.getElementById('brandInput');
   if (!input) {
@@ -350,63 +349,168 @@ function handleBrandInputKeydown(event) {
     return;
   }
   
-  // ✅ Initialize pendingBrands if undefined
-  if (typeof pendingBrands === 'undefined') {
-    window.pendingBrands = [];
-  }
-  
-  const value = input.value.trim();
-  
-  console.log('🔑 Key pressed:', event.key, '| Value:', value); // Debug log
-  
-  // Enter or Comma key
+  // Check if Enter or Comma key
   if (event.key === 'Enter' || event.key === ',') {
     event.preventDefault();
     
-    if (value && value.length > 0) {
-      // Remove comma if typed
-      const brand = value.replace(/,\s*$/, '').trim();
-      
-      console.log('🏷️ Adding brand:', brand); // Debug log
-      
-      // Check if brand is empty after cleaning
-      if (!brand || brand.length === 0) {
-        console.warn('⚠️ Brand is empty after cleaning');
-        return;
-      }
-      
-      // Check for duplicates in pending list
-      if (pendingBrands.includes(brand)) {
-        alert(`⚠️ "${brand}" is already in the list!`);
-        input.value = '';
-        return;
-      }
-      
-      // Check if brand already exists in Firebase
-      if (brandsCache && brandsCache.includes(brand)) {
-        alert(`⚠️ Brand "${brand}" already exists!`);
-        input.value = '';
-        return;
-      }
-      
-      // Add to pending list
-      pendingBrands.push(brand);
-      console.log('✅ Brand added to preview:', brand);
-      console.log('📋 Current pending brands:', pendingBrands);
-      
-      // Clear input
-      input.value = '';
-      
-      // Update preview
-      updateBrandPreviewList();
+    // Get value from storage or directly from input
+    let value = window.lastBrandInput || input.value;
+    value = value.trim();
+    
+    // Remove trailing comma if present
+    if (value.endsWith(',')) {
+      value = value.slice(0, -1).trim();
     }
+    
+    console.log('⌨️ Key pressed:', event.key);
+    console.log('📝 Value:', value);
+    
+    if (value && value.length > 0) {
+      // Check if already in pending list
+      if (pendingBrands.includes(value)) {
+        alert('⚠️ This brand is already in the list!');
+      } else {
+        // Add to pending brands
+        pendingBrands.push(value);
+        console.log('✅ Brand added to preview:', value);
+        
+        // Update preview
+        updateBrandPreviewList();
+      }
+    }
+    
+    // ✅ Use the WORKING clear method
+    forceClearBrandInput();
   }
 }
 
 
+
+/**
+ * ✅ NEW FUNCTION - Add brand from button click
+ * This function is triggered by the Enter icon button
+ */
+function addBrandFromButtonClick(event) {
+  // Prevent any default behavior
+  event.preventDefault();
+  event.stopPropagation();
+  
+  const input = document.getElementById('brandInput');
+  if (!input) {
+    console.error('❌ brandInput not found');
+    return;
+  }
+  
+  const brandName = input.value.trim();
+  
+  console.log('🔘 Enter button clicked');
+  console.log('📝 Input value:', brandName);
+  console.log('📋 Current pending brands:', pendingBrands);
+  
+  // Check if empty
+  if (!brandName || brandName.length === 0) {
+    alert('⚠️ Please enter a brand name');
+    input.focus();
+    return;
+  }
+  
+  // Check for duplicates in pending list
+  if (pendingBrands.includes(brandName)) {
+    alert('⚠️ This brand is already in the list!');
+    input.value = '';
+    input.focus();
+    return;
+  }
+  
+  // Check if brand already exists in database
+  if (brandsCache && brandsCache.includes(brandName)) {
+    const confirm = window.confirm(`⚠️ Brand "${brandName}" already exists in your database!\n\nDo you want to add it to the list anyway?`);
+    if (!confirm) {
+      input.value = '';
+      input.focus();
+      return;
+    }
+  }
+  
+  // Add to pending list
+  pendingBrands.push(brandName);
+  console.log('✅ Brand added to preview:', brandName);
+  console.log('📋 Updated pending brands:', pendingBrands);
+  
+  // Clear input
+  input.value = '';
+  
+  // Update preview
+  updateBrandPreviewList();
+  
+  // Focus back to input
+  setTimeout(() => {
+    input.focus();
+  }, 50);
+}
+
 /**
  * ==========================================
- * SECTION 6: UPDATE BRAND PREVIEW
+ * SECTION 6: BUTTON HANDLER
+ * ==========================================
+ */
+
+function setupBrandInputButton() {
+  const btn = document.getElementById('addBrandBtn');
+  const input = document.getElementById('brandInput');
+  
+  if (!btn || !input) {
+    console.error('❌ Button or input not found');
+    return;
+  }
+  
+  // Remove old listener if exists
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  
+  // Add fresh listener
+  newBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const brandName = input.value.trim();
+    
+    console.log('🔘 Button clicked');
+    console.log('📝 Value:', brandName);
+    console.log('📋 Current pending:', pendingBrands);
+    
+    if (!brandName) {
+      alert('⚠️ Please enter a brand name');
+      return;
+    }
+    
+    if (pendingBrands.includes(brandName)) {
+      alert('⚠️ This brand is already in the list!');
+      return;
+    }
+    
+    pendingBrands.push(brandName);
+    console.log('✅ Added:', brandName);
+    
+    input.value = '';
+    updateBrandPreviewList();
+    input.focus();
+  });
+  
+  newBtn.addEventListener('mouseenter', function() {
+    this.style.background = '#218838';
+  });
+  
+  newBtn.addEventListener('mouseleave', function() {
+    this.style.background = '#28a745';
+  });
+  
+  console.log('✅ Brand input button setup complete');
+}
+
+/**
+ * ==========================================
+ * SECTION 7: UPDATE BRAND PREVIEW
  * ==========================================
  */
 
@@ -414,9 +518,11 @@ function updateBrandPreviewList() {
   const previewList = document.getElementById('brandPreviewList');
   const previewCount = document.getElementById('previewCount');
   
-  if (!previewList) return;
+  if (!previewList) {
+    console.error('❌ brandPreviewList not found');
+    return;
+  }
   
-  // Update count
   if (previewCount) {
     previewCount.textContent = `📝 Brands to Save (${pendingBrands.length}):`;
   }
@@ -435,28 +541,28 @@ function updateBrandPreviewList() {
     html += `
       <div style="
         display: flex; justify-content: space-between; align-items: center;
-        padding: 8px 10px; border-bottom: 1px solid #e0e0e0;
+        padding: 10px 12px; border-bottom: 1px solid #e0e0e0;
         background: white; transition: background 0.2s;
       " onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='white'">
         
-        <span style="font-size: 13px; color: #333; flex: 1;">
+        <span style="font-size: 14px; color: #333; flex: 1;">
           <strong style="color: #007bff;">${index + 1}.</strong> 
-          <span>${escapeHtml(brand)}</span>
+          <span style="margin-left: 8px;">${escapeHtml(brand)}</span>
         </span>
         
         <button onclick="removePendingBrand('${escapeHtml(brand)}')" style="
           background: #dc3545; color: white; border: none; 
-          padding: 4px 8px; border-radius: 3px; cursor: pointer;
-          font-size: 11px; font-weight: bold; transition: background 0.2s;
-        " onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'"
-           title="Remove this brand">
-          ✕
+          padding: 5px 10px; border-radius: 5px; cursor: pointer;
+          font-size: 12px; font-weight: 600; transition: background 0.2s;
+        " onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
+          <i class="bi bi-x"></i>
         </button>
       </div>
     `;
   });
   
   previewList.innerHTML = html;
+  console.log(`📋 Updated preview: ${pendingBrands.length} brands`);
 }
 
 function removePendingBrand(brand) {
@@ -465,6 +571,11 @@ function removePendingBrand(brand) {
   console.log('🗑️ Removed from preview:', brand);
 }
 
+/**
+ * ==========================================
+ * SECTION 8: SAVE ALL BRANDS TO FIREBASE
+ * ==========================================
+ */
 /**
  * ==========================================
  * SECTION 7: SAVE ALL BRANDS TO FIREBASE
@@ -487,6 +598,15 @@ async function saveAllBrands() {
   }
   
   try {
+    // ✅ Clear input field immediately
+    document.querySelectorAll('#brandInput').forEach(inp => {
+      inp.value = '';
+      inp.setAttribute('value', '');
+      window.lastBrandInput = '';
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    console.log('🧹 Input cleared on save');
+    
     // Close modal immediately (Optimistic UI)
     const modal = bootstrap.Modal.getInstance(document.getElementById('addBrandsModal'));
     if (modal) {
@@ -506,8 +626,8 @@ async function saveAllBrands() {
     // Clear pending brands
     pendingBrands = [];
     
-    // Save to Firebase in background
-    const { collection, addDoc, serverTimestamp } = window.firebaseImports;
+    // ✅ Save to Firebase using WORKING pattern
+    const { collection, addDoc } = window.firebaseImports;
     const userId = user.uid;
     
     const brandsRef = collection(window.db, 'tenants', userId, 'brands');
@@ -516,9 +636,10 @@ async function saveAllBrands() {
     const savePromises = brandsToSave.map(async (brandName) => {
       try {
         await addDoc(brandsRef, {
-          name: brandName,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          name: brandName,  // ✅ Use 'name' field (matches loadBrands)
+          createdAt: new Date().toISOString(),  // ✅ Use ISO string
+          updatedAt: new Date().toISOString(),  // ✅ Use ISO string
+          userId: userId  // ✅ Store userId
         });
         console.log('✅ Firebase: Brand saved:', brandName);
         return { success: true, brand: brandName };
@@ -560,15 +681,13 @@ async function saveAllBrands() {
   }
 }
 
+
 /**
  * ==========================================
- * SECTION 8: DELETE BRAND FROM FIREBASE
+ * SECTION 9: DELETE BRAND FROM FIREBASE
  * ==========================================
  */
 
-/**
- * Confirm delete brand
- */
 function confirmDeleteBrand(brand) {
   const confirmed = confirm(`🗑️ Delete "${brand}"?\n\nThis cannot be undone.`);
   
@@ -577,9 +696,6 @@ function confirmDeleteBrand(brand) {
   }
 }
 
-/**
- * Delete brand with Optimistic UI
- */
 async function deleteBrand(brandName) {
   console.log('🗑️ Deleting brand:', brandName);
   
@@ -591,16 +707,12 @@ async function deleteBrand(brandName) {
   }
   
   try {
-    // Remove from cache immediately (Optimistic UI)
     brandsCache = brandsCache.filter(b => b !== brandName);
     
-    // Refresh display immediately
     renderBrandsList();
     
-    // Show success alert immediately
     alert(`✅ Brand "${brandName}" deleted successfully!`);
     
-    // Delete from Firebase in background
     const { collection, query, where, getDocs, deleteDoc } = window.firebaseImports;
     const userId = user.uid;
     
@@ -614,7 +726,6 @@ async function deleteBrand(brandName) {
       return;
     }
     
-    // Delete all matching documents (should be only one)
     const deletePromises = [];
     querySnapshot.forEach((doc) => {
       deletePromises.push(deleteDoc(doc.ref));
@@ -624,7 +735,6 @@ async function deleteBrand(brandName) {
     
     console.log('✅ Firebase: Brand deleted:', brandName);
     
-    // Update autocomplete cache in product form
     if (typeof refreshBrandAutocompleteCache === 'function') {
       refreshBrandAutocompleteCache();
     }
@@ -632,46 +742,39 @@ async function deleteBrand(brandName) {
   } catch (error) {
     console.error('❌ Firebase: Error deleting brand:', error);
     
-    // If error, restore to cache
     brandsCache.push(brandName);
     renderBrandsList();
     
-    // Show error
     alert('⚠️ Error deleting from Firebase. Refreshing list...');
     
-    // Reload brands to sync
     loadBrands();
   }
 }
 
 /**
  * ==========================================
- * SECTION 9: HELPER FUNCTIONS
+ * SECTION 10: HELPER FUNCTIONS
  * ==========================================
  */
 
 function goBackHome() {
   console.log('🏠 Going back to home');
   
-  // Show navbar
   const navbar = document.querySelector('.navbar');
   if (navbar) {
     navbar.style.display = 'flex';
   }
   
-  // Hide brands page
   const brandsPage = document.getElementById('brandsPage');
   if (brandsPage) {
     brandsPage.style.display = 'none';
   }
   
-  // Call navigate to home
   if (typeof navigateToHome === 'function') {
     navigateToHome();
   } else if (typeof navigateTo === 'function') {
     navigateTo('dashboard');
   } else {
-    // Fallback: reload page
     location.reload();
   }
 }
@@ -688,25 +791,3 @@ function escapeHtml(text) {
 }
 
 console.log('✅ Brand Manager Module Loaded (Firebase)');
-
-/**
- * Test function - Remove after debugging
- */
-function testBrandInput() {
-  console.log('=== BRAND INPUT TEST ===');
-  console.log('pendingBrands:', typeof pendingBrands, pendingBrands);
-  console.log('brandsCache:', typeof brandsCache, brandsCache);
-  console.log('========================');
-  
-  // Test adding a brand
-  if (typeof pendingBrands !== 'undefined') {
-    pendingBrands.push('Test Brand');
-    updateBrandPreviewList();
-    console.log('✅ Test brand added successfully');
-  } else {
-    console.error('❌ pendingBrands is undefined!');
-  }
-}
-
-// Call it from console: testBrandInput()
-window.testBrandInput = testBrandInput;
