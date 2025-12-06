@@ -5,37 +5,29 @@
  * ==========================================
  */
 
-/**
- * ==========================================
- * GLOBAL VARIABLES
- * ==========================================
- */
 
 // ✅ THESE WERE MISSING!
 let brandsCache = [];
 let pendingBrands = [];
 
-console.log('✅ Brand Manager Module Loaded');
 
-/**
- * ==========================================
- * SECTION 1: NAVIGATION FUNCTIONS
- * ==========================================
- */
+
+console.log('✅ Brand Manager Module Loaded');
 
 function navigateToBrands() {
   console.log('🏷️ Navigating to Brands');
   
-  pendingBrands = [];
   currentPage = 'brands';
   
+  // Get page elements
   const mainApp = document.getElementById('mainApp');
   const allProductsPage = document.getElementById('allProductsPage');
   const productGroupsPage = document.getElementById('productGroupsPage');
   const customersPage = document.getElementById('customersPage');
-  const brandsPage = document.getElementById('brandsPage');
   const groupDetailPage = document.getElementById('groupDetailPage');
+  const brandsPage = document.getElementById('brandsPage');
   
+  // Hide all other pages
   if (mainApp) {
     mainApp.style.display = 'none';
     mainApp.classList.remove('active');
@@ -61,33 +53,50 @@ function navigateToBrands() {
     groupDetailPage.style.display = 'none';
   }
   
+  // ✅ CRITICAL FIX: Hide main app navbar
+  const mainNavbar = document.getElementById('mainAppNavbar');
+  if (mainNavbar) {
+    mainNavbar.style.display = 'none';
+    console.log('✅ Hidden main app navbar');
+  }
+  
+  // Also hide by class selector as backup
+  const stickyNavbar = document.querySelector('.navbar.sticky-top');
+  if (stickyNavbar) {
+    stickyNavbar.style.display = 'none';
+    console.log('✅ Hidden sticky navbar');
+  }
+  
+  // Show brands page
   if (brandsPage) {
     brandsPage.classList.add('active');
     brandsPage.style.display = 'block';
+    brandsPage.style.marginTop = '0';
+    brandsPage.style.paddingTop = '0';
     console.log('✅ Brands page displayed');
   } else {
     console.error('❌ brandsPage element not found!');
     return;
   }
   
-  const navbar = document.querySelector('.navbar.navbar-dark.bg-primary');
-  if (navbar) {
-    navbar.style.display = 'none';
+  // Refresh brand caches
+  if (typeof refreshBrandAutocompleteCache === 'function') {
+    refreshBrandAutocompleteCache();
   }
   
-  const searchInput = document.getElementById('searchBrandsInput');
-  if (searchInput) {
-    searchInput.value = '';
+  // Load brands
+  if (typeof loadBrands === 'function') {
+    loadBrands();
   }
   
-  loadBrands();
-  
+  // Close sidebar and scroll
   if (typeof closeSidebar === 'function') {
     closeSidebar();
   }
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 
 /**
  * ==========================================
@@ -576,12 +585,6 @@ function removePendingBrand(brand) {
  * SECTION 8: SAVE ALL BRANDS TO FIREBASE
  * ==========================================
  */
-/**
- * ==========================================
- * SECTION 7: SAVE ALL BRANDS TO FIREBASE
- * ==========================================
- */
-
 async function saveAllBrands() {
   if (pendingBrands.length === 0) {
     alert('⚠️ Please add at least one brand');
@@ -598,48 +601,53 @@ async function saveAllBrands() {
   }
   
   try {
-    // ✅ Clear input field immediately
+    // Clear input field
     document.querySelectorAll('#brandInput').forEach(inp => {
       inp.value = '';
       inp.setAttribute('value', '');
       window.lastBrandInput = '';
       inp.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    console.log('🧹 Input cleared on save');
     
-    // Close modal immediately (Optimistic UI)
+    // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('addBrandsModal'));
     if (modal) {
       modal.hide();
     }
     
-    // Add brands to cache immediately (Optimistic UI)
+    // Add brands to cache immediately
     const brandsToSave = [...pendingBrands];
     brandsCache.push(...brandsToSave);
     
-    // Refresh display immediately
+    // ✅ FIXED: Also update autocomplete cache
+    brandsToSave.forEach(brand => {
+      if (!brandAutocompleteCache.includes(brand)) {
+        brandAutocompleteCache.push(brand);
+      }
+    });
+    console.log('✅ Updated both caches');
+    
+    // Refresh display
     renderBrandsList();
     
-    // Show success alert immediately
+    // Show success
     alert(`✅ Success!\n\n${brandsToSave.length} brand(s) added!`);
     
-    // Clear pending brands
+    // Clear pending
     pendingBrands = [];
     
-    // ✅ Save to Firebase using WORKING pattern
+    // Save to Firebase
     const { collection, addDoc } = window.firebaseImports;
     const userId = user.uid;
-    
     const brandsRef = collection(window.db, 'tenants', userId, 'brands');
     
-    // Save each brand
     const savePromises = brandsToSave.map(async (brandName) => {
       try {
         await addDoc(brandsRef, {
-          name: brandName,  // ✅ Use 'name' field (matches loadBrands)
-          createdAt: new Date().toISOString(),  // ✅ Use ISO string
-          updatedAt: new Date().toISOString(),  // ✅ Use ISO string
-          userId: userId  // ✅ Store userId
+          name: brandName,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          userId: userId
         });
         console.log('✅ Firebase: Brand saved:', brandName);
         return { success: true, brand: brandName };
@@ -649,34 +657,21 @@ async function saveAllBrands() {
       }
     });
     
-    // Wait for all saves to complete
     const results = await Promise.all(savePromises);
-    
-    // Check results
     const failed = results.filter(r => !r.success);
     
     if (failed.length > 0) {
-      console.warn(`⚠️ ${failed.length} brand(s) failed to save to Firebase`);
-      console.warn('Failed brands:', failed.map(f => f.brand));
-      
-      // Reload brands from Firebase to sync
+      console.warn(`⚠️ ${failed.length} brand(s) failed to save`);
       setTimeout(() => {
         loadBrands();
       }, 1000);
     } else {
-      console.log(`✅ All ${brandsToSave.length} brands saved to Firebase`);
-    }
-    
-    // Refresh brand autocomplete cache
-    if (typeof refreshBrandAutocompleteCache === 'function') {
-      refreshBrandAutocompleteCache();
+      console.log(`✅ All ${brandsToSave.length} brands saved`);
     }
     
   } catch (error) {
     console.error('❌ Error saving brands:', error);
     alert('❌ Error saving brands. Please try again.');
-    
-    // Reload brands to sync with Firebase
     loadBrands();
   }
 }
@@ -695,8 +690,17 @@ function confirmDeleteBrand(brand) {
     deleteBrand(brand);
   }
 }
-
+/**
+ * Delete a brand
+ * ✅ FIXED - Actually deletes from Firebase
+ */
 async function deleteBrand(brandName) {
+  const confirmed = confirm(`Are you sure you want to delete "${brandName}"?\n\nThis action cannot be undone.`);
+  
+  if (!confirmed) {
+    return;
+  }
+  
   console.log('🗑️ Deleting brand:', brandName);
   
   const user = window.auth.currentUser;
@@ -707,49 +711,79 @@ async function deleteBrand(brandName) {
   }
   
   try {
+    // Remove from local caches immediately (Optimistic UI)
     brandsCache = brandsCache.filter(b => b !== brandName);
+    brandAutocompleteCache = brandAutocompleteCache.filter(b => b !== brandName);
     
+    console.log('🧹 Removed from local caches');
+    console.log('  brandsCache:', brandsCache.length, 'items');
+    console.log('  brandAutocompleteCache:', brandAutocompleteCache.length, 'items');
+    
+    // Refresh display immediately
     renderBrandsList();
     
-    alert(`✅ Brand "${brandName}" deleted successfully!`);
-    
-    const { collection, query, where, getDocs, deleteDoc } = window.firebaseImports;
+    // ✅ FIXED: Delete from Firebase properly
+    const { collection, query, where, getDocs, deleteDoc, doc } = window.firebaseImports;
     const userId = user.uid;
     
     const brandsRef = collection(window.db, 'tenants', userId, 'brands');
+    
+    // Query for brands with this name
     const q = query(brandsRef, where('name', '==', brandName));
+    const snapshot = await getDocs(q);
     
-    const querySnapshot = await getDocs(q);
+    console.log('📊 Firebase query found', snapshot.size, 'documents to delete');
     
-    if (querySnapshot.empty) {
+    if (snapshot.empty) {
       console.warn('⚠️ Brand not found in Firebase:', brandName);
+      
+      // Try alternate field name
+      const q2 = query(brandsRef, where('brandName', '==', brandName));
+      const snapshot2 = await getDocs(q2);
+      
+      console.log('📊 Trying "brandName" field, found', snapshot2.size, 'documents');
+      
+      if (snapshot2.empty) {
+        console.error('❌ Brand not found with either field name');
+        alert(`⚠️ Brand "${brandName}" not found in database`);
+        return;
+      }
+      
+      // Delete from alternate query
+      const deletePromises2 = [];
+      snapshot2.forEach((docSnap) => {
+        console.log('  Deleting doc:', docSnap.id);
+        deletePromises2.push(deleteDoc(docSnap.ref));
+      });
+      
+      await Promise.all(deletePromises2);
+      console.log('✅ Brand deleted from Firebase (brandName field)');
+      alert(`✅ Brand "${brandName}" deleted successfully!`);
       return;
     }
     
+    // Delete all matching documents
     const deletePromises = [];
-    querySnapshot.forEach((doc) => {
-      deletePromises.push(deleteDoc(doc.ref));
+    snapshot.forEach((docSnap) => {
+      console.log('  Deleting doc:', docSnap.id, '→', docSnap.data());
+      deletePromises.push(deleteDoc(docSnap.ref));
     });
     
     await Promise.all(deletePromises);
     
-    console.log('✅ Firebase: Brand deleted:', brandName);
-    
-    if (typeof refreshBrandAutocompleteCache === 'function') {
-      refreshBrandAutocompleteCache();
-    }
+    console.log('✅ Brand deleted from Firebase:', brandName);
+    alert(`✅ Brand "${brandName}" deleted successfully!`);
     
   } catch (error) {
-    console.error('❌ Firebase: Error deleting brand:', error);
+    console.error('❌ Error deleting brand:', error);
+    console.error('Error details:', error.message);
+    alert('❌ Error deleting brand: ' + error.message);
     
-    brandsCache.push(brandName);
-    renderBrandsList();
-    
-    alert('⚠️ Error deleting from Firebase. Refreshing list...');
-    
+    // Reload brands to sync
     loadBrands();
   }
 }
+
 
 /**
  * ==========================================
