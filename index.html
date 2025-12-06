@@ -1472,14 +1472,14 @@
   </div>
 </div>
 
-  <!-- ✅✅✅ BRANDS PAGE ✅✅✅ -->
+ <!-- ✅✅✅ BRANDS PAGE ✅✅✅ -->
 <div class="page-view" id="brandsPage">
   <!-- Header -->
   <div class="page-header">
-    <button class="back-btn" onclick="navigateTo('dashboard')">
+    <button class="back-btn" onclick="goBackHome()">
       <i class="bi bi-arrow-left"></i> Back
     </button>
-    <h3>Brands</h3>
+    <h3><i class="bi bi-tags"></i> Brands</h3>
     <button class="btn btn-success" onclick="openAddBrandModal()">
       <i class="bi bi-plus-lg"></i> Add
     </button>
@@ -1499,6 +1499,10 @@
     <!-- Brands List Container -->
     <div id="brandsListContainer">
       <!-- Brand cards will be rendered here by JavaScript -->
+      <div style="text-align:center; padding:40px;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3">Loading brands...</p>
+      </div>
     </div>
     
     <!-- Empty State -->
@@ -1513,6 +1517,66 @@
   </div>
 </div>
 
+<!-- Add Brands Modal -->
+<div class="modal fade" id="addBrandsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-plus-circle"></i> Add New Brands
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Instructions -->
+        <div class="alert alert-info" style="font-size: 14px;">
+          <i class="bi bi-info-circle"></i>
+          Enter brand names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each brand.
+        </div>
+        
+        <!-- Input Field -->
+        <input 
+          id="brandInput" 
+          type="text" 
+          class="form-control form-control-lg" 
+          placeholder="e.g., Samsung, Apple, Sony..."
+          onkeydown="handleBrandInputKeydown(event)"
+          autocomplete="off"
+        >
+        
+        <!-- Preview Section -->
+        <div style="margin-top: 20px;">
+          <p style="font-weight: 600; margin-bottom: 10px; font-size: 14px; color: #333;" id="previewCount">
+            📝 Brands to Save (0):
+          </p>
+          <div id="brandPreviewList" style="
+            background: #f8f9fa; 
+            border: 1px solid #e0e0e0;
+            border-radius: 8px; 
+            max-height: 250px; 
+            overflow-y: auto;
+            min-height: 80px; 
+            padding: 10px;
+          ">
+            <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
+              No brands added yet
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Cancel
+        </button>
+        <button type="button" class="btn btn-success" onclick="saveAllBrands()">
+          <i class="bi bi-check-circle"></i> Save All Brands
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
     
@@ -18278,50 +18342,6 @@ console.log('✅ Sales functions made globally available');
   </div>
 </div>
 
-<!-- Add Brands Modal -->
-<div class="modal fade" id="addBrandsModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">➕ Add New Brands</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        
-        <!-- Instructions -->
-        <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
-          Enter brand names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each brand:
-        </p>
-        
-        <!-- Input Field -->
-        <input id="brandInput" type="text" class="form-control" placeholder="e.g., Somany"
-          onkeydown="handleBrandInputKeydown(event)">
-        
-        <!-- Preview Section -->
-        <div style="margin-top: 20px;">
-          <p style="font-weight: bold; margin-bottom: 10px; font-size: 14px;" id="previewCount">
-            📝 Brands to Save (0):
-          </p>
-          <div id="brandPreviewList" style="
-            background: #f8f9fa; border: 1px solid #e0e0e0;
-            border-radius: 5px; max-height: 200px; overflow-y: auto;
-            min-height: 60px; padding: 10px;
-          ">
-            <div style="padding: 10px; color: #999; text-align: center; font-size: 14px;">
-              No brands added yet
-            </div>
-          </div>
-        </div>
-        
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveAllBrands()">💾 Save All</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 
 
 <!-- BULK MODAL FOR INVOICE -->
@@ -18921,6 +18941,7 @@ console.log('✅ Sales functions made globally available');
   
 </body>
 </html>
+
 
 
 
