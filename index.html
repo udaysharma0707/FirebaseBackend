@@ -1527,7 +1527,7 @@
 <div class="page-view" id="brandsPage">
   <!-- Header -->
   <div class="page-header">
-    <button class="back-btn" onclick="goBackHome()">
+    <button class="back-btn" onclick="navigateTo('dashboard')">
       <i class="bi bi-arrow-left"></i> Back
     </button>
     <h3><i class="bi bi-tags"></i> Brands</h3>
@@ -14389,6 +14389,56 @@ async function loadBrands() {
 }
 
 /**
+ * Render brands list
+ */
+ function renderBrandsList() {
+  const container = document.getElementById('brandsListContainer');
+  const emptyState = document.getElementById('brandsEmptyState');
+  
+  if (!container) return;
+  
+  if (brandsCache.length === 0) {
+    container.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'block';
+    return;
+  }
+  
+  container.style.display = 'grid';
+  if (emptyState) emptyState.style.display = 'none';
+  
+  // Sort alphabetically
+  const sortedBrands = [...brandsCache].sort((a, b) => a.localeCompare(b));
+  
+  let html = '<div class="row g-3">';
+  
+  sortedBrands.forEach(brand => {
+    html += `
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="card h-100" style="border-radius: 8px; transition: all 0.2s;">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="mb-0" style="font-weight: 600;">
+                <i class="bi bi-tag text-success"></i> ${brand}
+              </h6>
+            </div>
+            <button 
+              class="btn btn-sm btn-outline-danger" 
+              onclick="deleteBrand('${escapeHtml(brand)}')"
+              title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  
+  container.innerHTML = html;
+}
+    
+/**
  * Sync autocomplete cache with brands cache
  */
 function syncBrandCaches() {
@@ -15040,6 +15090,63 @@ function navigateToPurchaseOrders() {
   // Redirect to purchase page
   window.location.href = 'purchase.html';
 }
+
+    /**
+ * Navigate to Brands Page
+ */
+ function navigateToBrands() {
+  console.log('🏷️ Navigating to Brands page');
+  
+  // Hide all pages manually
+  const mainApp = document.getElementById('mainApp');
+  const allProductsPage = document.getElementById('allProductsPage');
+  const productGroupsPage = document.getElementById('productGroupsPage');
+  const customersPage = document.getElementById('customersPage');
+  const groupDetailPage = document.getElementById('groupDetailPage');
+  const brandsPage = document.getElementById('brandsPage');
+  const sizesPage = document.getElementById('sizesPage');
+  
+  if (mainApp) mainApp.style.display = 'none';
+  if (allProductsPage) {
+    allProductsPage.classList.remove('active');
+    allProductsPage.style.display = 'none';
+  }
+  if (productGroupsPage) {
+    productGroupsPage.classList.remove('active');
+    productGroupsPage.style.display = 'none';
+  }
+  if (customersPage) {
+    customersPage.classList.remove('active');
+    customersPage.style.display = 'none';
+  }
+  if (sizesPage) {
+    sizesPage.classList.remove('active');
+    sizesPage.style.display = 'none';
+  }
+  if (groupDetailPage) {
+    groupDetailPage.classList.remove('active');
+    groupDetailPage.style.display = 'none';
+  }
+  
+  // Show brands page
+  if (brandsPage) {
+    brandsPage.style.display = 'block';
+    brandsPage.classList.add('active');
+  }
+  
+  // Hide navbar
+  const navbar = document.querySelector('.navbar');
+  if (navbar) navbar.style.display = 'none';
+  
+  if (typeof closeSidebar === 'function') {
+    closeSidebar();
+  }
+  
+  loadBrands();
+}
+
+// ✅ Make it global
+window.navigateToBrands = navigateToBrands;
 
 
 
@@ -21116,6 +21223,7 @@ window.saveNewBrandFromBulkField = saveNewBrandFromBulkField;
   
 </body>
 </html>
+
 
 
 
