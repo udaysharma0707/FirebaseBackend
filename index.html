@@ -1137,16 +1137,67 @@
       <i class="bi bi-rulers"></i> Update Size (<span id="selectedCountSize" style="font-weight: 700;">0</span> selected)
     </button>
 
-    <div id="brandInputContainer" style="display: none;">
-      <label style="font-size: 14px; font-weight: 600; color: #495057;">Enter Brand to Update</label>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <input type="text" id="brandInput" class="form-control" placeholder="e.g., Somany" style="max-width: 200px; font-weight: 600;">
-      </div>
-    </div>
+  <!-- Brand Input Container - FIXED VERSION -->
+<div id="brandInputContainer" style="display: none; position: relative; flex: 1;">
+  <div style="position: relative;">
+    <input 
+      id="bulkBrandInput" 
+      type="text" 
+      class="form-control" 
+      placeholder="e.g., Somany"
+      autocomplete="off"
+      onfocus="showBulkBrandSuggestions()"
+      oninput="filterBulkBrandSuggestions(this.value); updateBulkBrandMode(this.value);"
+      style="padding-right: 40px;"
+    >
     
-    <button id="updateBrandBtn" class="btn btn-success" style="display: none; font-weight: 600; color: white;" onclick="applyBulkBrandUpdate()">
-      <i class="bi bi-award"></i> Update Brand (<span id="selectedCountBrand" style="font-weight: 700;">0</span> selected)
+    <!-- Save Brand Button -->
+    <button 
+      id="saveBulkBrandInsideBtn" 
+      onclick="saveNewBrandFromBulkField()" 
+      style="
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: #28a745;
+        color: white;
+        border-radius: 5px;
+        padding: 5px 10px;
+        cursor: pointer;
+        display: none;
+        font-size: 14px;
+        z-index: 10;
+      ">
+      💾
     </button>
+    
+    <!-- Dropdown for suggestions -->
+    <div id="brandSuggestionsDropdown" style="
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 0 0 8px 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    "></div>
+  </div>
+</div>
+
+
+<button id="updateBrandBtn" class="btn btn-success" style="display: none; font-weight: 600; color: white;" onclick="applyBulkBrandUpdate()">
+  <i class="bi bi-award"></i> Update Brand (<span id="selectedCountBrand" style="font-weight: 700;">0</span> selected)
+</button>
+
+
+    
 
     <div id="stockAdjustmentContainer" style="display: none;">
       <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -2078,120 +2129,119 @@
   </div>
 </div>
 
+<!-- ✅ ADVANCED OPTIONS (EXPANDABLE) -->
+<div style="margin-bottom: 15px;">
+  <button 
+    type="button" 
+    class="btn btn-link btn-sm" 
+    onclick="toggleAdvancedOptions()"
+    style="padding: 0; text-decoration: none;">
+    <i class="bi bi-chevron-down" id="advOptionsIcon"></i>
+    <span style="color: #007bff; font-weight: 500;">+ Advanced Options</span>
+  </button>
+</div>
 
-          
-          <!-- ✅ ADVANCED OPTIONS (EXPANDABLE) -->
-          <div style="margin-bottom: 15px;">
-            <button 
-              type="button" 
-              class="btn btn-link btn-sm" 
-              onclick="toggleAdvancedOptions()"
-              style="padding: 0; text-decoration: none;">
-              <i class="bi bi-chevron-down" id="advOptionsIcon"></i>
-              <span style="color: #007bff; font-weight: 500;">+ Advanced Options</span>
-            </button>
-          </div>
-          
-          <!-- Advanced Options Container (Hidden by default) -->
-          <div id="advancedOptionsContainer" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 15px;">
-            
-            <!-- Brand & Size -->
-            <div class="row mb-3">
-              <!-- Brand Field -->
-              <div class="col-md-6" style="position: relative;">
-                <label class="form-label">Brand</label>
-                
-                <!-- Input Field Container -->
-                <div style="position: relative;">
-                  <input 
-                    id="brand" 
-                    class="form-control" 
-                    type="text"
-                    autocomplete="off"
-                    oninput="filterBrandSuggestions(this.value); checkAndShowSaveBrandButton(this.value)"
-                    onfocus="showBrandSuggestions()"
-                    onblur="setTimeout(() => hideBrandSuggestions(), 200)"
-                    placeholder="Type to search brands..."
-                    style="padding-right: 40px;">
-                  
-                  <!-- 💾 Save Brand Button (Inside Field) -->
-                  <button id="saveBrandInsideBtn" 
-                    type="button"
-                    onclick="saveNewBrandFromProductField()"
-                    style="
-                      display: none;
-                      position: absolute;
-                      right: 8px;
-                      top: 50%;
-                      transform: translateY(-50%);
-                      background: #28a745;
-                      color: white;
-                      border: none;
-                      padding: 6px 10px;
-                      border-radius: 4px;
-                      cursor: pointer;
-                      font-size: 14px;
-                      font-weight: bold;
-                      transition: all 0.2s;
-                      z-index: 10;
-                    "
-                    onmouseover="this.style.background='#218838'"
-                    onmouseout="this.style.background='#28a745'"
-                    title="Save this brand">
-                    💾
-                  </button>
-                </div>
-                
-                <!-- Brand Suggestions Dropdown -->
-                <div id="brandSuggestionsDropdown" style="
-                  display: none;
-                  position: absolute;
-                  top: 100%;
-                  left: 0;
-                  right: 0;
-                  background: white;
-                  border: 1px solid #ddd;
-                  border-top: none;
-                  max-height: 200px;
-                  overflow-y: auto;
-                  z-index: 1000;
-                  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                  margin-top: -1px;
-                ">
-                  <!-- Suggestions rendered here -->
-                </div>
-              </div>
-              
-              <!-- Size Field -->
-              <div class="col-md-6">
-                <label class="form-label">Size</label>
-                <input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/>
-              </div>
-            </div>
-            
-            <!-- Pieces per Box & SFT per Box -->
-            <div class="row mb-0">
-              <div class="col-md-6">
-                <label class="form-label">Pieces per Box</label>
-                <input id="piecesPerBox" class="form-control" type="number" value="1"/>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">SFT per Box</label>
-                <input id="sftPerBox" class="form-control" type="number" step="0.01"/>
-              </div>
-            </div>
-            
-          </div>
-          
-        </form>
+<!-- Advanced Options Container (Hidden by default) -->
+<div id="advancedOptionsContainer" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 15px;">
+  
+  <!-- Brand & Size -->
+  <div class="row mb-3">
+    <!-- Brand Field -->
+    <div class="col-md-6" style="position: relative;">
+      <label class="form-label">Brand</label>
+      
+      <!-- Input Field Container -->
+      <div style="position: relative;">
+        <input 
+          id="brand" 
+          class="form-control" 
+          type="text"
+          autocomplete="off"
+          oninput="filterBrandSuggestions(this.value); checkAndShowSaveBrandButton(this.value)"
+          onfocus="showBrandSuggestions()"
+          onblur="setTimeout(() => hideBrandSuggestions(), 200)"
+          placeholder="Type to search brands..."
+          style="padding-right: 40px;">
+        
+        <!-- 💾 Save Brand Button (Inside Field) -->
+        <button id="saveBrandInsideBtn" 
+          type="button"
+          onclick="saveNewBrandFromProductField()"
+          style="
+            display: none;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            z-index: 10;
+          "
+          onmouseover="this.style.background='#218838'"
+          onmouseout="this.style.background='#28a745'"
+          title="Save this brand">
+          💾
+        </button>
       </div>
       
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+      <!-- ✅ SEPARATE Brand Suggestions Dropdown for Add Product Modal -->
+      <div id="addProductBrandSuggestionsDropdown" style="
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-top: -1px;
+      ">
+        <!-- Suggestions rendered here -->
       </div>
     </div>
+    
+    <!-- Size Field -->
+    <div class="col-md-6">
+      <label class="form-label">Size</label>
+      <input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/>
+    </div>
   </div>
+  
+  <!-- Pieces per Box & SFT per Box -->
+  <div class="row mb-0">
+    <div class="col-md-6">
+      <label class="form-label">Pieces per Box</label>
+      <input id="piecesPerBox" class="form-control" type="number" value="1"/>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">SFT per Box</label>
+      <input id="sftPerBox" class="form-control" type="number" step="0.01"/>
+    </div>
+  </div>
+  
+</div>
+
+</form>
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+<button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+</div>
+</div>
+</div>
 </div>
 
 
@@ -14229,7 +14279,6 @@ let brandCacheLoaded = false;
 
 /**
  * Load brands from Firestore and cache them
- * ✅ FIXED - Uses 'name' field consistently
  */
 async function loadBrandAutocompleteCache() {
   if (brandCacheLoaded) {
@@ -14249,14 +14298,12 @@ async function loadBrandAutocompleteCache() {
   try {
     const { collection, getDocs } = window.firebaseImports;
     
-    // Load from Firestore
     const brandsRef = collection(window.db, 'tenants', user.uid, 'brands');
     const snapshot = await getDocs(brandsRef);
     
     const brands = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      // ✅ FIXED: Use 'name' field (with fallback to 'brandName' for old data)
       const brandName = data.name || data.brandName;
       if (brandName) {
         brands.push(brandName);
@@ -14271,7 +14318,7 @@ async function loadBrandAutocompleteCache() {
   } catch (error) {
     console.error('❌ Error loading brand cache from Firestore:', error);
     
-    // Fallback: Try to extract unique brands from products
+    // Fallback: Extract from products
     try {
       const uniqueBrands = [...new Set(
         cachedProducts
@@ -14287,7 +14334,9 @@ async function loadBrandAutocompleteCache() {
       console.error('❌ Fallback brand extraction failed:', fallbackError);
     }
   }
-}async function loadBrands() {
+}
+
+async function loadBrands() {
   try {
     console.log('📡 Fetching brands from Firebase...');
     
@@ -14314,9 +14363,8 @@ async function loadBrandAutocompleteCache() {
     });
     
     console.log('✅ Loaded', brandsCache.length, 'brands from Firebase');
-    console.log('  Brands:', brandsCache);
     
-    // ✅ CRITICAL: Always sync after loading
+    // Sync caches
     syncBrandCaches();
     
     renderBrandsList();
@@ -14340,95 +14388,43 @@ async function loadBrandAutocompleteCache() {
   }
 }
 
-
 /**
- * Filter and show brand suggestions
+ * Sync autocomplete cache with brands cache
  */
-function filterBrandSuggestions(inputText) {
-  const dropdown = document.getElementById('brandSuggestionsDropdown');
-  
-  if (!inputText || inputText.trim().length === 0) {
-    hideBrandSuggestions();
-    return;
-  }
-  
-  const query = inputText.toLowerCase().trim();
-  
-  // Filter brands that START with query (case-insensitive)
-  const matches = brandAutocompleteCache.filter(brand => 
-    brand.toLowerCase().startsWith(query)
-  );
-  
-  if (matches.length > 0) {
-    renderBrandSuggestions(matches);
-    dropdown.style.display = 'block';
-  } else {
-    hideBrandSuggestions();
-  }
-  
-  // ✅ Also check if we should show save button
-  checkAndShowSaveBrandButton(inputText);
+function syncBrandCaches() {
+  console.log('🔄 Syncing brand caches...');
+  brandAutocompleteCache = [...brandsCache];
+  brandAutocompleteCache = [...new Set(brandAutocompleteCache)];
+  console.log('✅ Sync complete -', brandAutocompleteCache.length, 'brands');
 }
 
 /**
- * Render brand suggestions in dropdown
+ * Refresh brand cache
  */
-function renderBrandSuggestions(matches) {
-  const dropdown = document.getElementById('brandSuggestionsDropdown');
-  
-  // Limit to max 15 suggestions
-  const limitedMatches = matches.slice(0, 15);
-  
-  let html = '';
-  limitedMatches.forEach(brand => {
-    html += `
-      <div onclick="selectBrandSuggestion('${escapeHtml(brand)}')" style="
-        padding: 10px;
-        cursor: pointer;
-        border-bottom: 1px solid #f0f0f0;
-        transition: background 0.2s;
-      " onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='transparent'">
-        <strong>${brand}</strong>
-      </div>
-    `;
-  });
-  
-  dropdown.innerHTML = html;
-  dropdown.style.display = 'block';
-  
-  console.log('🎯 Rendered', limitedMatches.length, 'brand suggestions');
+function refreshBrandAutocompleteCache() {
+  console.log('🔄 Forcing brand cache refresh...');
+  brandCacheLoaded = false;
+  brandAutocompleteCache = [];
+  loadBrandAutocompleteCache();
 }
 
 /**
- * Select brand from dropdown
+ * ==========================================
+ * ADD PRODUCT MODAL - BRAND FUNCTIONS
+ * ==========================================
  */
-function selectBrandSuggestion(brandName) {
-  document.getElementById('brand').value = brandName;
-  
-  // ✅ Hide save button when brand is selected
-  const saveBtn = document.getElementById('saveBrandInsideBtn');
-  if (saveBtn) {
-    saveBtn.style.display = 'none';
-  }
-  
-  hideBrandSuggestions();
-  console.log('✅ Selected brand:', brandName);
-}
+
 /**
- * Show all brands when field is focused (clicked)
- * ✅ FIXED - Always ensures cache is loaded
+ * Show brand suggestions for ADD PRODUCT modal
  */
- async function showBrandSuggestions() {
+async function showBrandSuggestions() {
   const input = document.getElementById('brand');
   if (!input) return;
   
-  console.log('👆 Brand field clicked');
-  console.log('  Current cache size:', brandAutocompleteCache.length);
+  console.log('👆 Add Product brand field clicked');
   
-  // ✅ CRITICAL FIX: If cache is empty, force load immediately
+  // Load cache if empty
   if (!brandAutocompleteCache || brandAutocompleteCache.length === 0) {
-    console.log('⚠️ Cache empty, force loading now...');
-    
     const user = window.auth.currentUser;
     if (user) {
       try {
@@ -14440,18 +14436,14 @@ function selectBrandSuggestion(brandName) {
         snapshot.forEach((doc) => {
           const data = doc.data();
           const brandName = data.name || data.brandName;
-          if (brandName) {
-            brands.push(brandName);
-          }
+          if (brandName) brands.push(brandName);
         });
         
         brandAutocompleteCache = brands;
         brandCacheLoaded = true;
-        
-        console.log('✅ Force loaded', brands.length, 'brands');
-        console.log('  Brands:', brands);
+        console.log('✅ Force loaded', brands.length, 'brands for Add Product');
       } catch (error) {
-        console.error('❌ Error force loading brands:', error);
+        console.error('❌ Error:', error);
         return;
       }
     }
@@ -14459,25 +14451,97 @@ function selectBrandSuggestion(brandName) {
   
   const inputValue = input.value.trim();
   
-  // Show all brands or filtered
   if (!inputValue || inputValue.length === 0) {
     if (brandAutocompleteCache && brandAutocompleteCache.length > 0) {
       renderBrandSuggestions(brandAutocompleteCache);
-      console.log('📋 Showing all', brandAutocompleteCache.length, 'brands');
-    } else {
-      console.warn('⚠️ Still no brands after force load');
     }
   } else {
     filterBrandSuggestions(inputValue);
   }
 }
 
+/**
+ * Filter brand suggestions for ADD PRODUCT modal
+ */
+function filterBrandSuggestions(inputText) {
+  const dropdown = document.getElementById('addProductBrandSuggestionsDropdown');
+  
+  if (!inputText || inputText.trim().length === 0) {
+    if (dropdown) dropdown.style.display = 'none';
+    return;
+  }
+  
+  const query = inputText.toLowerCase().trim();
+  const matches = brandAutocompleteCache.filter(brand => 
+    brand.toLowerCase().startsWith(query)
+  );
+  
+  if (matches.length > 0) {
+    renderBrandSuggestions(matches);
+  } else {
+    if (dropdown) dropdown.style.display = 'none';
+  }
+  
+  checkAndShowSaveBrandButton(inputText);
+}
 
 /**
- * Hide suggestions dropdown
+ * Render brand suggestions for ADD PRODUCT modal
+ */
+function renderBrandSuggestions(matches) {
+  const dropdown = document.getElementById('addProductBrandSuggestionsDropdown');
+  if (!dropdown) return;
+  
+  const limitedMatches = matches.slice(0, 15);
+  
+  let html = '';
+  limitedMatches.forEach(brand => {
+    const escaped = escapeHtml(brand);
+    html += `
+      <div onclick="selectBrandSuggestion('${escaped}')" style="
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+      " onmouseover="this.style.background='#f5f5f5'" 
+         onmouseout="this.style.background='transparent'">
+        <strong>${brand}</strong>
+      </div>
+    `;
+  });
+  
+  dropdown.innerHTML = html;
+  dropdown.style.display = 'block';
+  
+  console.log('✅ Rendered', limitedMatches.length, 'brands for Add Product');
+}
+
+/**
+ * Select brand for ADD PRODUCT modal
+ */
+function selectBrandSuggestion(brandName) {
+  const input = document.getElementById('brand');
+  const dropdown = document.getElementById('addProductBrandSuggestionsDropdown');
+  
+  if (input) {
+    input.value = brandName;
+  }
+  
+  // Hide dropdown
+  if (dropdown) dropdown.style.display = 'none';
+  
+  // Hide save button
+  const saveBtn = document.getElementById('saveBrandInsideBtn');
+  if (saveBtn) saveBtn.style.display = 'none';
+  
+  console.log('✅ Selected brand:', brandName);
+}
+
+/**
+ * Hide brand suggestions for ADD PRODUCT modal
  */
 function hideBrandSuggestions() {
-  const dropdown = document.getElementById('brandSuggestionsDropdown');
+  const dropdown = document.getElementById('addProductBrandSuggestionsDropdown');
   if (dropdown) {
     dropdown.style.display = 'none';
   }
@@ -14485,7 +14549,6 @@ function hideBrandSuggestions() {
 
 /**
  * Check if brand exists and show/hide save button
- * Hides "Saved" state when user modifies the field
  */
 function checkAndShowSaveBrandButton(inputText) {
   const btn = document.getElementById('saveBrandInsideBtn');
@@ -14493,36 +14556,28 @@ function checkAndShowSaveBrandButton(inputText) {
   
   const input = inputText.trim();
   
-  // Hide button if input is empty
   if (!input || input.length === 0) {
     btn.style.display = 'none';
     return;
   }
   
-  // Check if brand already exists in cache
   const brandExists = brandAutocompleteCache.some(brand => 
     brand.toLowerCase() === input.toLowerCase()
   );
   
-  // Show button ONLY if brand doesn't exist
   if (!brandExists) {
-    // ✅ Reset to save icon when user modifies field
     btn.innerHTML = '💾';
     btn.style.background = '#28a745';
     btn.style.cursor = 'pointer';
     btn.disabled = false;
     btn.style.display = 'block';
-    
-    console.log('✅ Show save button - new brand:', input);
   } else {
     btn.style.display = 'none';
-    console.log('ℹ️ Hide save button - brand already exists:', input);
   }
 }
 
 /**
- * Save new brand to Firestore
- * ✅ FIXED - Uses 'name' field consistently
+ * Save new brand from ADD PRODUCT field
  */
 async function saveNewBrandFromProductField() {
   const input = document.getElementById('brand');
@@ -14540,93 +14595,53 @@ async function saveNewBrandFromProductField() {
     return;
   }
   
-  // Check if brand already exists
   const brandExists = brandAutocompleteCache.some(brand => 
     brand.toLowerCase() === brandName.toLowerCase()
   );
   
   if (brandExists) {
-    if (btn) {
-      btn.style.display = 'none';
-    }
+    if (btn) btn.style.display = 'none';
     return;
   }
   
-  console.log('💾 Saving new brand to Firestore:', brandName);
+  console.log('💾 Saving new brand:', brandName);
   
-  // Instant feedback
   if (btn) {
     btn.innerHTML = '✅ Saved';
     btn.style.background = '#218838';
     btn.disabled = true;
-    btn.style.cursor = 'default';
   }
   
   try {
     const { collection, addDoc } = window.firebaseImports;
     
-    // Save to Firestore
     const brandsRef = collection(window.db, 'tenants', user.uid, 'brands');
     await addDoc(brandsRef, {
-      name: brandName,  // ✅ FIXED: Use 'name' instead of 'brandName'
+      name: brandName,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),  // ✅ Added updatedAt
+      updatedAt: new Date().toISOString(),
       userId: user.uid
     });
     
-    console.log('✅ Brand saved successfully in Firestore:', brandName);
+    console.log('✅ Brand saved successfully:', brandName);
     
     // Add to cache
     brandAutocompleteCache.push(brandName);
     
-    // Button stays as "✅ Saved"
-    
   } catch (error) {
-    console.error('❌ Error saving brand to Firestore:', error);
+    console.error('❌ Error saving brand:', error);
     
-    // Show error on button
     if (btn) {
       btn.innerHTML = '❌ Error';
       btn.style.background = '#dc3545';
       
-      // Reset after 2 seconds
       setTimeout(() => {
         btn.innerHTML = '💾';
         btn.style.background = '#28a745';
         btn.disabled = false;
-        btn.style.cursor = 'pointer';
       }, 2000);
     }
   }
-}
-
-/**
- * Refresh brand cache
- * ✅ FIXED - Forces reload
- */
- function refreshBrandAutocompleteCache() {
-  console.log('🔄 Forcing brand cache refresh...');
-  brandCacheLoaded = false;
-  brandAutocompleteCache = [];  // ✅ Clear cache first
-  loadBrandAutocompleteCache();
-}
-/**
- * Sync autocomplete cache with brands cache
- * ✅ FIXED - Syncs both ways (add AND remove)
- */
- function syncBrandCaches() {
-  console.log('🔄 Syncing brand caches...');
-  console.log('  brandsCache:', brandsCache.length, 'items');
-  console.log('  brandAutocompleteCache (before):', brandAutocompleteCache.length, 'items');
-  
-  // ✅ METHOD 1: Complete sync (replace autocomplete with brands)
-  brandAutocompleteCache = [...brandsCache];
-  
-  // Remove duplicates (just in case)
-  brandAutocompleteCache = [...new Set(brandAutocompleteCache)];
-  
-  console.log('  brandAutocompleteCache (after):', brandAutocompleteCache.length, 'items');
-  console.log('✅ Sync complete');
 }
 
 
@@ -18142,7 +18157,2069 @@ window.confirmDeleteSale = confirmDeleteSale;
 
 console.log('✅ Sales functions made globally available');
 
+    /**
+ * ==========================================
+ * 📦 BULK EDIT MODULE - ALL OPERATIONS
+ * ==========================================
+ * Handles: Category, Unit Type, Stock, Selling Price, Brand, Size
+ * Created: Nov 11, 2025
+ * Fixed: Nov 11, 2025 - Cancel button & counter issues
+ * ==========================================
+ */
+
+
+
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - CATEGORY
+ * ==========================================
+ */
+
+/**
+ * Show Category Bulk Edit - FIXED: Shows cancel button immediately
+ */
+function showCategoryBulkEdit() {
+  console.log('📝 Opening category bulk edit mode...');
+  
+  // ✅ HIDE THE MAIN DROPDOWN BUTTON
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // ✅ Show category selection UI AND cancel button
+  document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block'; // ← FIXED: Show immediately
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  console.log('✅ Category selection UI shown');
+}
+
+
+/**
+ * Select Bulk Category - FIXED: No toast message
+ */
+function selectBulkCategory(category) {
+  console.log('📦 Selected category:', category);
+  
+  // ✅ Close category dropdown
+  document.getElementById('categoryDropdownBtn').click();
+  
+  setTimeout(() => {
+    // ✅ Set bulk edit mode
+    bulkEditMode = {
+      active: true,
+      field: 'category',
+      value: category,
+      selectedProducts: []
+    };
     
+    // ✅ Update UI
+    document.getElementById('selectedCategoryText').textContent = category;
+    document.getElementById('updateCategoryBtn').style.display = 'inline-block';
+    // Cancel button already shown by showCategoryBulkEdit()
+    document.getElementById('selectedCount').textContent = '0';
+    
+    // ✅ Enable product selection
+    enableProductSelection();
+    
+    // ❌ REMOVED: showToast() - No longer showing toast message
+  }, 100);
+}
+
+
+/**
+ * Apply Bulk Category Update - FIRESTORE VERSION
+ */
+async function applyBulkCategoryUpdate() {
+  if (bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const category = bulkEditMode.value;
+  const count = bulkEditMode.selectedProducts.length;
+  
+  if (!confirm(`Update category to "${category}" for ${count} product(s)?`)) {
+    return;
+  }
+  
+  const btn = document.getElementById('updateCategoryBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    // ✅ Update each product in Firestore
+    let successCount = 0;
+    for (const productId of bulkEditMode.selectedProducts) {
+      try {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (!product) continue;
+        
+        // Update product data
+        const updatedProduct = {
+          ...product,
+          category: category,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Save to Firestore
+        const productRef = doc(window.db, 'tenants', userId, 'products', productId);
+        await setDoc(productRef, updatedProduct);
+        
+        // Update local cache
+        const cacheIdx = cachedProducts.findIndex(p => p.id === productId);
+        if (cacheIdx !== -1) {
+          cachedProducts[cacheIdx].category = category;
+        }
+        
+        successCount++;
+      } catch (error) {
+        console.error('Error updating product:', productId, error);
+      }
+    }
+    
+    // Update cache
+    localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    
+    console.log(`✅ Updated ${successCount}/${count} products`);
+    
+    // Cancel and re-render
+    cancelBulkEdit();
+    
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+    alert(`✅ Updated ${successCount} products successfully!`);
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error updating products: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - UNIT TYPE
+ * ==========================================
+ */
+
+/**
+ * Show Unit Type Bulk Edit - FIXED: Shows cancel button immediately
+ */
+function showUnitTypeBulkEdit() {
+  console.log('📝 Opening unit type bulk edit mode...');
+  
+  // ✅ HIDE THE MAIN DROPDOWN BUTTON
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // ✅ Show unit type selection UI AND cancel button
+  document.getElementById('unitTypeSelectionDropdown').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block'; // ← FIXED: Show immediately
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  console.log('✅ Unit type selection UI shown');
+}
+
+/**
+ * Select Bulk Unit Type - FIXED: No toast message
+ */
+function selectBulkUnitType(unitType) {
+  console.log('📦 Selected unit type:', unitType);
+  
+  // ✅ Close unit type dropdown
+  document.getElementById('unitTypeDropdownBtn').click();
+  
+  setTimeout(() => {
+    // ✅ Set bulk edit mode
+    bulkEditMode = {
+      active: true,
+      field: 'unitType',
+      value: unitType,
+      selectedProducts: []
+    };
+    
+    // ✅ Update UI
+    document.getElementById('selectedUnitTypeText').textContent = unitType;
+    document.getElementById('updateUnitTypeBtn').style.display = 'inline-block';
+    // Cancel button already shown by showUnitTypeBulkEdit()
+    document.getElementById('selectedCountUnitType').textContent = '0';
+    
+    // ✅ Enable product selection
+    enableProductSelection();
+    
+    // ❌ REMOVED: showToast() - No longer showing toast message
+  }, 100);
+}
+
+/**
+ * Apply Bulk Unit Type Update - FIRESTORE VERSION
+ */
+async function applyBulkUnitTypeUpdate() {
+  if (bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const unitType = bulkEditMode.value;
+  const count = bulkEditMode.selectedProducts.length;
+  
+  if (!confirm(`Update unit type to "${unitType}" for ${count} product(s)?`)) {
+    return;
+  }
+  
+  const btn = document.getElementById('updateUnitTypeBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) throw new Error('Not authenticated');
+    
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    let successCount = 0;
+    for (const productId of bulkEditMode.selectedProducts) {
+      try {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (!product) continue;
+        
+        const updatedProduct = {
+          ...product,
+          unitType: unitType,
+          updatedAt: new Date().toISOString()
+        };
+        
+        const productRef = doc(window.db, 'tenants', userId, 'products', productId);
+        await setDoc(productRef, updatedProduct);
+        
+        const cacheIdx = cachedProducts.findIndex(p => p.id === productId);
+        if (cacheIdx !== -1) {
+          cachedProducts[cacheIdx].unitType = unitType;
+        }
+        
+        successCount++;
+      } catch (error) {
+        console.error('Error updating product:', productId, error);
+      }
+    }
+    
+    localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    
+    cancelBulkEdit();
+    
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+    alert(`✅ Updated ${successCount} products successfully!`);
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error updating products: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+
+/**
+ * ==========================================
+ * 🎯 COMMON FUNCTIONS - SELECTION & CANCEL
+ * ==========================================
+ */
+
+/**
+ * Enable Product Selection Mode
+ */
+function enableProductSelection() {
+  console.log('🖱️ Product selection mode enabled');
+  enableProductSelectionDesktop();
+  enableProductSelectionMobile();
+}
+
+/**
+ * Enable Desktop Selection
+ */
+function enableProductSelectionDesktop() {
+  const tableRows = document.querySelectorAll('#productsTableBody tr[data-product-id]');
+  
+  tableRows.forEach(row => {
+    const productId = row.getAttribute('data-product-id');
+    row.classList.add('product-selectable');
+    row.onclick = null;
+    row.onclick = function(event) {
+      if (event.target.closest('.btn')) return;
+      event.stopPropagation();
+      event.preventDefault();
+      toggleProductSelectionDesktop(productId, row);
+    };
+  });
+  
+  console.log('✅ Desktop selection enabled for', tableRows.length, 'rows');
+}
+
+/**
+ * Enable Mobile Selection
+ */
+function enableProductSelectionMobile() {
+  const mobileCards = document.querySelectorAll('.mobile-item[data-product-id]');
+  
+  mobileCards.forEach(card => {
+    const productId = card.getAttribute('data-product-id');
+    card.classList.add('product-selectable');
+    card.onclick = null;
+    card.onclick = function(event) {
+      if (event.target.closest('.btn')) return;
+      event.stopPropagation();
+      event.preventDefault();
+      toggleProductSelectionMobile(productId, card);
+    };
+  });
+  
+  console.log('✅ Mobile selection enabled for', mobileCards.length, 'cards');
+}
+
+/**
+ * Toggle Desktop Product Selection - FIXED: Updates correct counter
+ */
+function toggleProductSelectionDesktop(productId, row) {
+  if (!bulkEditMode.active) return;
+  
+  const index = bulkEditMode.selectedProducts.indexOf(productId);
+  
+  if (index > -1) {
+    bulkEditMode.selectedProducts.splice(index, 1);
+    row.classList.remove('product-selected');
+  } else {
+    bulkEditMode.selectedProducts.push(productId);
+    row.classList.add('product-selected');
+  }
+  
+  // ✅ FIXED: Update count based on field
+  updateSelectedCount();
+}
+
+/**
+ * Toggle Mobile Product Selection - FIXED: Updates correct counter
+ */
+function toggleProductSelectionMobile(productId, card) {
+  if (!bulkEditMode.active) return;
+  
+  const indicator = card.querySelector('.selection-indicator');
+  const index = bulkEditMode.selectedProducts.indexOf(productId);
+  
+  if (index > -1) {
+    bulkEditMode.selectedProducts.splice(index, 1);
+    card.classList.remove('product-selected');
+    if (indicator) indicator.style.display = 'none';
+  } else {
+    bulkEditMode.selectedProducts.push(productId);
+    card.classList.add('product-selected');
+    if (indicator) indicator.style.display = 'flex';
+  }
+  
+  // ✅ FIXED: Update count based on field
+  updateSelectedCount();
+}
+
+/**
+ * Update Selected Count - FIXED: Updates correct counter based on field
+ */
+/**
+ * Update Selected Count - FIXED: Updates correct counter based on field
+ */
+function updateSelectedCount() {
+  const count = bulkEditMode.selectedProducts.length;
+  
+  if (bulkEditMode.field === 'category') {
+    const el = document.getElementById('selectedCount');
+    if (el) el.textContent = count;
+  } else if (bulkEditMode.field === 'unitType') {
+    const el = document.getElementById('selectedCountUnitType');
+    if (el) el.textContent = count;
+  } else if (bulkEditMode.field === 'sellingPrice') {
+    const el = document.getElementById('selectedCountSellingPrice');
+    if (el) el.textContent = count;
+  } else if (bulkEditMode.field === 'size') {
+    const el = document.getElementById('selectedCountSize');
+    if (el) el.textContent = count;
+  } else if (bulkEditMode.field === 'brand') {
+    const el = document.getElementById('selectedCountBrand');
+    if (el) el.textContent = count;
+  } else if (bulkEditMode.field === 'stockStatus') {
+    const el = document.getElementById('selectedCountStockStatus');
+    if (el) el.textContent = count;
+  }
+}
+
+
+
+
+/**
+ * Cancel Bulk Edit Mode - FIXED: Hides ALL elements properly
+ */
+/**
+ * Cancel Bulk Edit Mode - FIXED: Hides ALL elements properly
+ */
+/**
+ * Cancel Bulk Edit Mode - FIXED: Hides ALL elements properly
+ */
+function cancelBulkEdit() {
+  console.log('✕ Cancelling bulk edit mode');
+  
+  // ✅ Reset state
+  bulkEditMode = {
+    active: false,
+    field: null,
+    value: null,
+    selectedProducts: []
+  };
+  
+  // ✅ SHOW MAIN DROPDOWN BUTTON BACK
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'inline-block';
+  }
+  
+  // ✅ FIXED: Hide ALL UI elements
+  hideElement('categorySelectionDropdown');
+  hideElement('unitTypeSelectionDropdown');
+  hideElement('sellingPriceInputContainer');
+  hideElement('sizeInputContainer');
+  hideElement('brandInputContainer');
+  hideElement('stockAdjustmentContainer');
+  hideElement('stockStatusSelectionDropdown'); // ← NEW
+  hideElement('updateCategoryBtn');
+  hideElement('updateUnitTypeBtn');
+  hideElement('updateSellingPriceBtn');
+  hideElement('updateSizeBtn');
+  hideElement('updateBrandBtn');
+  hideElement('updateStockStatusBtn'); // ← NEW
+  hideElement('cancelBulkEditBtn');
+  hideElement('updateStockChangesBtn');
+  hideElement('bulkEditInfoText');
+  
+  const bulkToolbar = document.getElementById('bulkEditToolbar');
+  if (bulkToolbar) bulkToolbar.classList.remove('active');
+  
+  // ✅ Reset text
+  const selectedCategoryText = document.getElementById('selectedCategoryText');
+  if (selectedCategoryText) selectedCategoryText.textContent = 'Select Category';
+  
+  const selectedUnitTypeText = document.getElementById('selectedUnitTypeText');
+  if (selectedUnitTypeText) selectedUnitTypeText.textContent = 'Select Unit Type';
+  
+  const selectedStockStatusText = document.getElementById('selectedStockStatusText');
+  if (selectedStockStatusText) selectedStockStatusText.textContent = 'Select Stock Status';
+  
+  const selectedCount = document.getElementById('selectedCount');
+  if (selectedCount) selectedCount.textContent = '0';
+  
+  const selectedCountUnitType = document.getElementById('selectedCountUnitType');
+  if (selectedCountUnitType) selectedCountUnitType.textContent = '0';
+  
+  const selectedCountSellingPrice = document.getElementById('selectedCountSellingPrice');
+  if (selectedCountSellingPrice) selectedCountSellingPrice.textContent = '0';
+  
+  const selectedCountSize = document.getElementById('selectedCountSize');
+  if (selectedCountSize) selectedCountSize.textContent = '0';
+  
+  const selectedCountBrand = document.getElementById('selectedCountBrand');
+  if (selectedCountBrand) selectedCountBrand.textContent = '0';
+  
+  const selectedCountStockStatus = document.getElementById('selectedCountStockStatus');
+  if (selectedCountStockStatus) selectedCountStockStatus.textContent = '0';
+  
+  // ✅ Clear inputs
+  const priceInput = document.getElementById('sellingPriceInput');
+  if (priceInput) priceInput.value = '';
+  
+  const sizeInput = document.getElementById('sizeInput');
+  if (sizeInput) sizeInput.value = '';
+  
+  const brandInput = document.getElementById('brandInput');
+  if (brandInput) brandInput.value = '';
+  
+  const stockInput = document.getElementById('stockAdjustmentInput');
+  if (stockInput) stockInput.value = '10';
+  
+  // ✅ Remove selection classes
+  document.querySelectorAll('.product-selected').forEach(el => {
+    el.classList.remove('product-selected');
+  });
+  
+  document.querySelectorAll('.selection-indicator').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  document.querySelectorAll('.product-selectable').forEach(el => {
+    el.classList.remove('product-selectable');
+    el.onclick = null;
+  });
+  
+  // ✅ Remove stock adjustable classes
+  document.querySelectorAll('.stock-adjustable').forEach(el => {
+    el.classList.remove('stock-adjustable');
+    el.onclick = null;
+  });
+  
+  console.log('✅ Bulk edit mode cancelled');
+}
+
+/**
+ * Helper: Hide Element
+ */
+function hideElement(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+/**
+ * ==========================================
+ * CLOSE DROPDOWN ON OUTSIDE CLICK (ENHANCED)
+ * ==========================================
+ */
+
+ (function() {
+  let dropdownCloseHandler = null;
+  
+  /**
+   * Attach click outside handler
+   */
+  function attachBrandDropdownCloseHandler() {
+    // Remove old handler if exists
+    if (dropdownCloseHandler) {
+      document.removeEventListener('click', dropdownCloseHandler);
+    }
+    
+    // Create new handler
+    dropdownCloseHandler = function(event) {
+      const dropdown = document.getElementById('brandSuggestionsDropdown');
+      const input = document.getElementById('bulkBrandInput');
+      const saveBtn = document.getElementById('saveBulkBrandInsideBtn');
+      
+      // Skip if dropdown doesn't exist or is hidden
+      if (!dropdown || dropdown.style.display === 'none') {
+        return;
+      }
+      
+      // Check if click is on input, dropdown, or save button
+      const clickedInsideInput = input && input.contains(event.target);
+      const clickedInsideDropdown = dropdown && dropdown.contains(event.target);
+      const clickedOnSaveBtn = saveBtn && saveBtn.contains(event.target);
+      
+      // Close dropdown if clicked outside
+      if (!clickedInsideInput && !clickedInsideDropdown && !clickedOnSaveBtn) {
+        dropdown.style.display = 'none';
+        console.log('🔽 Dropdown closed (clicked outside)');
+      }
+    };
+    
+    // Attach handler
+    document.addEventListener('click', dropdownCloseHandler);
+    console.log('✅ Dropdown close handler attached');
+  }
+  
+  /**
+   * Remove click outside handler
+   */
+  function removeBrandDropdownCloseHandler() {
+    if (dropdownCloseHandler) {
+      document.removeEventListener('click', dropdownCloseHandler);
+      dropdownCloseHandler = null;
+      console.log('🗑️ Dropdown close handler removed');
+    }
+  }
+  
+  // Attach on page load
+  attachBrandDropdownCloseHandler();
+  
+  // Also attach when bulk edit mode opens
+  const originalShowBrandBulkEdit = window.showBrandBulkEdit;
+  if (originalShowBrandBulkEdit) {
+    window.showBrandBulkEdit = function() {
+      originalShowBrandBulkEdit.apply(this, arguments);
+      attachBrandDropdownCloseHandler();
+    };
+  }
+  
+  // Make functions global (optional - for manual control)
+  window.attachBrandDropdownCloseHandler = attachBrandDropdownCloseHandler;
+  window.removeBrandDropdownCloseHandler = removeBrandDropdownCloseHandler;
+  
+})();
+
+
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - SELLING PRICE
+ * ==========================================
+ */
+
+/**
+ * Show Selling Price Bulk Edit
+ */
+/**
+ * Show Selling Price Bulk Edit - FIXED: Resets state properly
+ */
+function showSellingPriceBulkEdit() {
+  console.log('📝 Opening selling price bulk edit mode...');
+  
+  // ✅ RESET STATE FIRST (prevents ghost selections)
+  bulkEditMode = {
+    active: false, // Not active until user enters a price
+    field: null,
+    value: null,
+    selectedProducts: []
+  };
+  
+  // ✅ HIDE THE MAIN DROPDOWN BUTTON
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // ✅ Show selling price input AND cancel button
+  document.getElementById('sellingPriceInputContainer').style.display = 'flex';
+  document.getElementById('updateSellingPriceBtn').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  // ✅ Reset counter to 0
+  const countEl = document.getElementById('selectedCountSellingPrice');
+  if (countEl) countEl.textContent = '0';
+  
+  // ✅ Set up input listener
+  const priceInput = document.getElementById('sellingPriceInput');
+  priceInput.value = ''; // Clear input
+  
+  // ✅ Listen for Enter key or input change
+  priceInput.addEventListener('input', function() {
+    const price = parseFloat(priceInput.value);
+    if (!isNaN(price) && price > 0) {
+      // ✅ Set bulk edit mode
+      bulkEditMode = {
+        active: true,
+        field: 'sellingPrice',
+        value: price,
+        selectedProducts: []
+      };
+      
+      // ✅ Enable product selection
+      enableProductSelection();
+      
+      console.log('✅ Selling price set to:', price);
+    }
+  });
+  
+  // ✅ Focus on input
+  setTimeout(() => priceInput.focus(), 100);
+  
+  console.log('✅ Selling price input shown');
+}
+
+
+/**
+ * Apply Bulk Selling Price Update - FIRESTORE VERSION
+ */
+async function applyBulkSellingPriceUpdate() {
+  const priceInput = document.getElementById('sellingPriceInput');
+  const price = parseFloat(priceInput.value);
+  
+  if (isNaN(price) || price <= 0) {
+    alert('⚠️ Please enter a valid selling price');
+    priceInput.focus();
+    return;
+  }
+  
+  if (bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const count = bulkEditMode.selectedProducts.length;
+  
+  if (!confirm(`Update selling price to ₹${price} for ${count} product(s)?`)) {
+    return;
+  }
+  
+  const btn = document.getElementById('updateSellingPriceBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) throw new Error('Not authenticated');
+    
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    let successCount = 0;
+    for (const productId of bulkEditMode.selectedProducts) {
+      try {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (!product) continue;
+        
+        const updatedProduct = {
+          ...product,
+          price: price,
+          updatedAt: new Date().toISOString()
+        };
+        
+        const productRef = doc(window.db, 'tenants', userId, 'products', productId);
+        await setDoc(productRef, updatedProduct);
+        
+        const cacheIdx = cachedProducts.findIndex(p => p.id === productId);
+        if (cacheIdx !== -1) {
+          cachedProducts[cacheIdx].price = price;
+        }
+        
+        successCount++;
+      } catch (error) {
+        console.error('Error updating product:', productId, error);
+      }
+    }
+    
+    localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    
+    cancelBulkEdit();
+    
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+    alert(`✅ Updated ${successCount} products successfully!`);
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error updating products: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - SIZE
+ * ==========================================
+ */
+
+/**
+ * Show Size Bulk Edit - FIXED: Resets state properly
+ */
+function showSizeBulkEdit() {
+  console.log('📝 Opening size bulk edit mode...');
+  
+  // ✅ RESET STATE FIRST (prevents ghost selections)
+  bulkEditMode = {
+    active: false, // Not active until user enters a size
+    field: null,
+    value: null,
+    selectedProducts: []
+  };
+  
+  // ✅ HIDE THE MAIN DROPDOWN BUTTON
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // ✅ Show size input AND cancel button
+  document.getElementById('sizeInputContainer').style.display = 'flex';
+  document.getElementById('updateSizeBtn').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  // ✅ Reset counter to 0
+  const countEl = document.getElementById('selectedCountSize');
+  if (countEl) countEl.textContent = '0';
+  
+  // ✅ Set up input listener
+  const sizeInput = document.getElementById('sizeInput');
+  sizeInput.value = ''; // Clear input
+  
+  // ✅ Listen for input change
+  sizeInput.addEventListener('input', function() {
+    const size = sizeInput.value.trim();
+    if (size && size.length > 0) {
+      // ✅ Set bulk edit mode
+      bulkEditMode = {
+        active: true,
+        field: 'size',
+        value: size,
+        selectedProducts: []
+      };
+      
+      // ✅ Enable product selection
+      enableProductSelection();
+      
+      console.log('✅ Size set to:', size);
+    }
+  });
+  
+  // ✅ Focus on input
+  setTimeout(() => sizeInput.focus(), 100);
+  
+  console.log('✅ Size input shown');
+}
+
+/**
+ * Apply Bulk Size Update - FIRESTORE VERSION
+ */
+async function applyBulkSizeUpdate() {
+  const sizeInput = document.getElementById('sizeInput');
+  const size = sizeInput.value.trim();
+  
+  // ✅ Validation
+  if (!size || size.length === 0) {
+    alert('⚠️ Please enter a size');
+    sizeInput.focus();
+    return;
+  }
+  
+  if (bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const count = bulkEditMode.selectedProducts.length;
+  
+  if (!confirm(`Update size to "${size}" for ${count} product(s)?`)) {
+    return;
+  }
+  
+  const btn = document.getElementById('updateSizeBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    console.log(`📝 Updating size to "${size}" for ${count} products...`);
+    
+    // ✅ Update each product in Firestore
+    let successCount = 0;
+    for (const productId of bulkEditMode.selectedProducts) {
+      try {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (!product) {
+          console.warn('⚠️ Product not found:', productId);
+          continue;
+        }
+        
+        // Update product data
+        const updatedProduct = {
+          ...product,
+          size: size,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Save to Firestore
+        const productRef = doc(window.db, 'tenants', userId, 'products', productId);
+        await setDoc(productRef, updatedProduct);
+        
+        // Update local cache
+        const cacheIdx = cachedProducts.findIndex(p => p.id === productId);
+        if (cacheIdx !== -1) {
+          cachedProducts[cacheIdx].size = size;
+        }
+        
+        successCount++;
+        console.log(`✅ Updated product ${successCount}/${count}`);
+        
+      } catch (error) {
+        console.error('❌ Error updating product:', productId, error);
+      }
+    }
+    
+    // Update localStorage cache
+    try {
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+      console.log('💾 Cache updated');
+    } catch (e) {
+      console.warn('⚠️ Failed to update cache:', e);
+    }
+    
+    console.log(`✅ Bulk update complete: ${successCount}/${count} products updated`);
+    
+    // ✅ Cancel bulk edit mode
+    cancelBulkEdit();
+    
+    // Re-render products
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+    alert(`✅ Successfully updated ${successCount} product(s)!`);
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error updating products: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - BRAND (SEPARATE DROPDOWN SYSTEM)
+ * ==========================================
+ */
+
+/**
+ * Show Brand Bulk Edit
+ */
+ function showBrandBulkEdit() {
+  console.log('📝 Opening brand bulk edit mode...');
+  
+  // Reset state
+  bulkEditMode = {
+    active: false,
+    field: null,
+    value: null,
+    selectedProducts: []
+  };
+  
+  // Hide main dropdown button
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // Show brand input and buttons
+  document.getElementById('brandInputContainer').style.display = 'flex';
+  document.getElementById('updateBrandBtn').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  // Reset counter
+  const countEl = document.getElementById('selectedCountBrand');
+  if (countEl) countEl.textContent = '0';
+  
+  // Clear input and reset save button
+  const brandInput = document.getElementById('bulkBrandInput');
+  if (brandInput) {
+    brandInput.value = '';
+    
+    // Hide save button
+    const saveBtn = document.getElementById('saveBulkBrandInsideBtn');
+    if (saveBtn) {
+      saveBtn.style.display = 'none';
+      saveBtn.innerHTML = '💾';
+      saveBtn.style.background = '#28a745';
+      saveBtn.disabled = false;
+    }
+    
+    // Force load brand cache if empty
+    if (!brandAutocompleteCache || brandAutocompleteCache.length === 0) {
+      console.log('⚠️ Brand cache empty, loading...');
+      if (typeof loadBrandAutocompleteCache === 'function') {
+        loadBrandAutocompleteCache();
+      }
+    }
+    
+    // Focus and re-attach close handler
+    setTimeout(() => {
+      brandInput.focus();
+      
+      // Re-attach close handler
+      if (typeof attachBrandDropdownCloseHandler === 'function') {
+        attachBrandDropdownCloseHandler();
+      }
+      
+      console.log('✅ Input focused');
+    }, 150);
+  } else {
+    console.error('❌ bulkBrandInput not found');
+  }
+  
+  console.log('✅ Brand bulk edit ready');
+}
+
+/**
+ * Show bulk brand suggestions
+ */
+async function showBulkBrandSuggestions() {
+  const input = document.getElementById('bulkBrandInput');
+  if (!input) return;
+  
+  console.log('👆 Bulk brand field clicked');
+  
+  // Load cache if empty
+  if (!brandAutocompleteCache || brandAutocompleteCache.length === 0) {
+    const user = window.auth.currentUser;
+    if (user) {
+      try {
+        const { collection, getDocs } = window.firebaseImports;
+        const brandsRef = collection(window.db, 'tenants', user.uid, 'brands');
+        const snapshot = await getDocs(brandsRef);
+        
+        const brands = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const brandName = data.name || data.brandName;
+          if (brandName) brands.push(brandName);
+        });
+        
+        brandAutocompleteCache = brands;
+        console.log('✅ Loaded', brands.length, 'brands for Bulk Edit');
+      } catch (error) {
+        console.error('❌ Error loading brands:', error);
+        return;
+      }
+    }
+  }
+  
+  const inputValue = input.value.trim();
+  
+  // Show all or filtered
+  if (!inputValue) {
+    if (brandAutocompleteCache.length > 0) {
+      renderBulkBrandSuggestions(brandAutocompleteCache);
+    }
+  } else {
+    filterBulkBrandSuggestions(inputValue);
+  }
+}
+
+/**
+ * Filter bulk brand suggestions
+ */
+function filterBulkBrandSuggestions(inputText) {
+  const dropdown = document.getElementById('brandSuggestionsDropdown'); // Bulk edit dropdown
+  
+  if (!inputText || inputText.trim().length === 0) {
+    if (dropdown) dropdown.style.display = 'none';
+    return;
+  }
+  
+  const query = inputText.toLowerCase().trim();
+  const matches = brandAutocompleteCache.filter(brand => 
+    brand.toLowerCase().startsWith(query)
+  );
+  
+  if (matches.length > 0) {
+    renderBulkBrandSuggestions(matches);
+  } else {
+    if (dropdown) dropdown.style.display = 'none';
+  }
+}
+
+/**
+ * Render bulk brand suggestions
+ */
+function renderBulkBrandSuggestions(matches) {
+  const dropdown = document.getElementById('brandSuggestionsDropdown'); // Bulk edit dropdown
+  if (!dropdown) return;
+  
+  let html = '';
+  matches.slice(0, 15).forEach(brand => {
+    const escaped = escapeHtml(brand);
+    html += `
+      <div onclick="selectBulkBrandSuggestion('${escaped}')" style="
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+      " onmouseover="this.style.background='#f5f5f5'" 
+         onmouseout="this.style.background='transparent'">
+        <strong>${brand}</strong>
+      </div>
+    `;
+  });
+  
+  dropdown.innerHTML = html;
+  dropdown.style.display = 'block';
+  
+  console.log('✅ Rendered', matches.length, 'brands for Bulk Edit');
+}
+
+/**
+ * Select brand from bulk dropdown
+ */
+function selectBulkBrandSuggestion(brandName) {
+  const input = document.getElementById('bulkBrandInput');
+  const dropdown = document.getElementById('brandSuggestionsDropdown');
+  
+  if (input) {
+    input.value = brandName;
+  }
+  
+  // Update bulkEditMode
+  bulkEditMode = {
+    active: true,
+    field: 'brand',
+    value: brandName,
+    selectedProducts: bulkEditMode?.selectedProducts || []
+  };
+  
+  // Enable product selection
+  if (typeof enableProductSelection === 'function') {
+    enableProductSelection();
+  }
+  
+  console.log('✅ Selected brand:', brandName);
+  console.log('  bulkEditMode:', bulkEditMode);
+  
+  // Hide dropdown
+  if (dropdown) {
+    dropdown.style.display = 'none';
+  }
+  
+  // Hide save button (brand already exists)
+  const saveBtn = document.getElementById('saveBulkBrandInsideBtn');
+  if (saveBtn) {
+    saveBtn.style.display = 'none';
+  }
+}
+
+/**
+ * Update bulkEditMode when typing
+ */
+function updateBulkBrandMode(value) {
+  const brand = value.trim();
+  
+  console.log('🔄 updateBulkBrandMode:', brand);
+  
+  if (brand && brand.length > 0) {
+    bulkEditMode = {
+      active: true,
+      field: 'brand',
+      value: brand,
+      selectedProducts: bulkEditMode?.selectedProducts || []
+    };
+    
+    if (typeof enableProductSelection === 'function') {
+      enableProductSelection();
+      console.log('✅ Product selection enabled');
+    }
+    
+    console.log('✅ Bulk brand set to:', brand);
+  } else {
+    bulkEditMode.active = false;
+    bulkEditMode.value = null;
+  }
+  
+  // Check save button
+  checkAndShowSaveBulkBrandButton(brand);
+}
+
+/**
+ * Check if brand exists and show/hide save button
+ */
+function checkAndShowSaveBulkBrandButton(inputText) {
+  const btn = document.getElementById('saveBulkBrandInsideBtn');
+  if (!btn) return;
+  
+  const input = inputText.trim();
+  
+  if (!input || input.length === 0) {
+    btn.style.display = 'none';
+    return;
+  }
+  
+  if (!brandAutocompleteCache || brandAutocompleteCache.length === 0) {
+    btn.style.display = 'none';
+    return;
+  }
+  
+  const brandExists = brandAutocompleteCache.some(brand => 
+    brand.toLowerCase() === input.toLowerCase()
+  );
+  
+  if (!brandExists) {
+    btn.innerHTML = '💾';
+    btn.style.background = '#28a745';
+    btn.style.cursor = 'pointer';
+    btn.disabled = false;
+    btn.style.display = 'block';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+/**
+ * Save new brand from bulk field
+ */
+async function saveNewBrandFromBulkField() {
+  const input = document.getElementById('bulkBrandInput');
+  const brandName = input.value.trim();
+  const btn = document.getElementById('saveBulkBrandInsideBtn');
+  
+  if (!brandName || brandName.length === 0) {
+    return;
+  }
+  
+  const user = window.auth.currentUser;
+  if (!user) {
+    alert('Please sign in to save brands');
+    return;
+  }
+  
+  const brandExists = brandAutocompleteCache.some(brand => 
+    brand.toLowerCase() === brandName.toLowerCase()
+  );
+  
+  if (brandExists) {
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  
+  console.log('💾 Saving new brand:', brandName);
+  
+  if (btn) {
+    btn.innerHTML = '⏳ Saving...';
+    btn.style.background = '#6c757d';
+    btn.disabled = true;
+  }
+  
+  try {
+    const { collection, addDoc } = window.firebaseImports;
+    
+    const brandsRef = collection(window.db, 'tenants', user.uid, 'brands');
+    await addDoc(brandsRef, {
+      name: brandName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      userId: user.uid
+    });
+    
+    console.log('✅ Brand saved:', brandName);
+    
+    // Add to caches
+    brandAutocompleteCache.push(brandName);
+    if (typeof brandsCache !== 'undefined') {
+      brandsCache.push(brandName);
+    }
+    
+    if (btn) {
+      btn.innerHTML = '✅ Saved';
+      btn.style.background = '#218838';
+    }
+    
+    if (typeof syncBrandCaches === 'function') {
+      syncBrandCaches();
+    }
+    
+  } catch (error) {
+    console.error('❌ Error saving brand:', error);
+    
+    if (btn) {
+      btn.innerHTML = '❌ Error';
+      btn.style.background = '#dc3545';
+      
+      setTimeout(() => {
+        btn.innerHTML = '💾';
+        btn.style.background = '#28a745';
+        btn.disabled = false;
+      }, 2000);
+    }
+    
+    alert('Error saving brand: ' + error.message);
+  }
+}
+
+/**
+ * Apply Bulk Brand Update
+ */
+async function applyBulkBrandUpdate() {
+  const brandInput = document.getElementById('bulkBrandInput');
+  if (!brandInput) {
+    alert('❌ Brand input not found');
+    return;
+  }
+  
+  const brand = brandInput.value.trim();
+  const finalBrand = brand || bulkEditMode.value;
+  
+  console.log('🔍 Applying bulk brand update:');
+  console.log('  Brand:', finalBrand);
+  console.log('  Selected:', bulkEditMode.selectedProducts?.length || 0);
+  
+  if (!finalBrand || finalBrand.length === 0) {
+    alert('⚠️ Please enter a brand');
+    brandInput.focus();
+    return;
+  }
+  
+  if (!bulkEditMode.selectedProducts || bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const count = bulkEditMode.selectedProducts.length;
+  
+  if (!confirm(`Update brand to "${finalBrand}" for ${count} product(s)?`)) {
+    return;
+  }
+  
+  const btn = document.getElementById('updateBrandBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    console.log(`📝 Updating ${count} products to brand: "${finalBrand}"`);
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const productId of bulkEditMode.selectedProducts) {
+      try {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (!product) {
+          errorCount++;
+          continue;
+        }
+        
+        const updatedProduct = {
+          ...product,
+          brand: finalBrand,
+          updatedAt: new Date().toISOString()
+        };
+        
+        const productRef = doc(window.db, 'tenants', userId, 'products', productId);
+        await setDoc(productRef, updatedProduct);
+        
+        const cacheIdx = cachedProducts.findIndex(p => p.id === productId);
+        if (cacheIdx !== -1) {
+          cachedProducts[cacheIdx].brand = finalBrand;
+        }
+        
+        successCount++;
+        
+      } catch (error) {
+        console.error('❌ Error updating product:', productId, error);
+        errorCount++;
+      }
+    }
+    
+    // Update cache
+    try {
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    } catch (e) {
+      console.warn('⚠️ Failed to update cache:', e);
+    }
+    
+    console.log(`✅ Complete: ${successCount} success, ${errorCount} errors`);
+    
+    cancelBulkEdit();
+    
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+    if (errorCount > 0) {
+      alert(`✅ Updated ${successCount} product(s)\n⚠️ ${errorCount} error(s)`);
+    } else {
+      alert(`✅ Successfully updated ${successCount} product(s)!`);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+// ✅ Make all functions global
+window.showBrandBulkEdit = showBrandBulkEdit;
+window.showBulkBrandSuggestions = showBulkBrandSuggestions;
+window.filterBulkBrandSuggestions = filterBulkBrandSuggestions;
+window.renderBulkBrandSuggestions = renderBulkBrandSuggestions;
+window.selectBulkBrandSuggestion = selectBulkBrandSuggestion;
+window.updateBulkBrandMode = updateBulkBrandMode;
+window.checkAndShowSaveBulkBrandButton = checkAndShowSaveBulkBrandButton;
+window.saveNewBrandFromBulkField = saveNewBrandFromBulkField;
+window.applyBulkBrandUpdate = applyBulkBrandUpdate;
+
+console.log('✅ Bulk brand edit functions loaded');
+
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - STOCK ADJUSTMENT (INSTANT CLICK)
+ * ==========================================
+ */
+
+/**
+ * Show Stock Adjustment Mode
+ */
+/**
+ * Show Stock Adjustment Mode
+ */
+function showStockAdjustmentEdit() {
+  console.log('📝 Opening stock adjustment mode...');
+  
+  // ✅ RESET STATE
+  bulkEditMode = {
+    active: true,
+    field: 'stockAdjustment',
+    value: null,
+    operation: 'reduce',
+    amount: 10,
+    selectedProducts: []
+  };
+  
+  // ✅ HIDE THE MAIN DROPDOWN BUTTON
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // ✅ Show stock adjustment UI AND both buttons
+  document.getElementById('stockAdjustmentContainer').style.display = 'block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('updateStockChangesBtn').style.display = 'inline-block'; // ← NEW
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  // ✅ Set default operation
+  setStockOperation('reduce');
+  
+  // ✅ Listen for input changes
+  const stockInput = document.getElementById('stockAdjustmentInput');
+  stockInput.addEventListener('input', function() {
+    const amount = parseInt(stockInput.value);
+    if (!isNaN(amount) && amount > 0) {
+      bulkEditMode.amount = amount;
+      console.log('✅ Stock adjustment amount set to:', amount);
+    }
+  });
+  
+  // ✅ Enable stock adjustment mode
+  enableStockAdjustmentMode();
+  
+  console.log('✅ Stock adjustment mode active');
+}
+
+/**
+ * Set Stock Operation (Add or Reduce)
+ */
+function setStockOperation(operation) {
+  bulkEditMode.operation = operation;
+  
+  const btn = document.getElementById('stockOperationBtn');
+  if (operation === 'add') {
+    btn.innerHTML = '<i class="bi bi-plus-circle"></i> Add by';
+    btn.classList.remove('btn-outline-danger');
+    btn.classList.add('btn-outline-success');
+  } else {
+    btn.innerHTML = '<i class="bi bi-dash-circle"></i> Reduce by';
+    btn.classList.remove('btn-outline-success');
+    btn.classList.add('btn-outline-danger');
+  }
+  
+  console.log('✅ Stock operation set to:', operation);
+}
+
+/**
+ * Enable Stock Adjustment Mode - Click to adjust
+ */
+/**
+ * Enable Stock Adjustment Mode - Click to adjust (NO SELECTION INDICATORS)
+ */
+function enableStockAdjustmentMode() {
+  console.log('🖱️ Stock adjustment mode enabled');
+  
+  // Desktop
+  const tableRows = document.querySelectorAll('#productsTableBody tr[data-product-id]');
+  tableRows.forEach(row => {
+    const productId = row.getAttribute('data-product-id');
+    const product = cachedProducts.find(p => p.id === productId);
+    
+    // Only enable for products with NUMERIC stock
+    if (product && typeof product.stock === 'number') {
+      row.classList.add('stock-adjustable');
+      row.onclick = function(event) {
+        if (event.target.closest('.btn')) return;
+        event.stopPropagation();
+        event.preventDefault();
+        adjustProductStock(productId, row);
+      };
+    }
+  });
+  
+  // Mobile - FIXED: Prevent selection indicator from appearing
+  const mobileCards = document.querySelectorAll('.mobile-item[data-product-id]');
+  mobileCards.forEach(card => {
+    const productId = card.getAttribute('data-product-id');
+    const product = cachedProducts.find(p => p.id === productId);
+    
+    // Only enable for products with NUMERIC stock
+    if (product && typeof product.stock === 'number') {
+      card.classList.add('stock-adjustable');
+      
+      // ✅ FIXED: Remove any existing selection indicator
+      const indicator = card.querySelector('.selection-indicator');
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
+      
+      // ✅ FIXED: Prevent card from being selected
+      card.classList.remove('product-selectable');
+      card.classList.remove('product-selected');
+      
+      // ✅ Set click handler for stock adjustment (NO SELECTION)
+      card.onclick = function(event) {
+        if (event.target.closest('.btn')) return;
+        event.stopPropagation();
+        event.preventDefault();
+        
+        // ✅ FIXED: Ensure indicator stays hidden during adjustment
+        if (indicator) indicator.style.display = 'none';
+        
+        adjustProductStock(productId, card);
+      };
+    }
+  });
+  
+  console.log('✅ Stock adjustment enabled (selection disabled)');
+}
+
+/**
+ * Adjust Product Stock - FIRESTORE VERSION
+ */
+async function adjustProductStock(productId, element) {
+  if (!bulkEditMode.active || bulkEditMode.field !== 'stockAdjustment') return;
+  
+  const operation = bulkEditMode.operation;
+  const amount = bulkEditMode.amount;
+  
+  if (!amount || amount <= 0) {
+    alert('⚠️ Please enter a valid amount');
+    return;
+  }
+  
+  const indicator = element.querySelector('.selection-indicator');
+  if (indicator) indicator.style.display = 'none';
+  
+  element.classList.remove('product-selected');
+  
+  showStockAnimation(element, operation, amount);
+  
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) throw new Error('Not authenticated');
+    
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    // Get product
+    const product = cachedProducts.find(p => p.id === productId);
+    if (!product || typeof product.stock !== 'number') {
+      throw new Error('Invalid product or stock type');
+    }
+    
+    // Calculate new stock
+    let newStock = product.stock;
+    if (operation === 'add') {
+      newStock += amount;
+    } else {
+      newStock = Math.max(0, newStock - amount);
+    }
+    
+    // Update product
+    const updatedProduct = {
+      ...product,
+      stock: newStock,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Save to Firestore
+    const productRef = doc(window.db, 'tenants', userId, 'products', productId);
+    await setDoc(productRef, updatedProduct);
+    
+    // Update cache
+    const cacheIdx = cachedProducts.findIndex(p => p.id === productId);
+    if (cacheIdx !== -1) {
+      cachedProducts[cacheIdx].stock = newStock;
+    }
+    
+    localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    
+    console.log('✅ Stock adjusted successfully');
+    
+    // Re-render
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+      setTimeout(() => {
+        enableStockAdjustmentMode();
+        document.querySelectorAll('.selection-indicator').forEach(ind => {
+          ind.style.display = 'none';
+        });
+      }, 100);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error adjusting stock:', error);
+    alert('❌ Error: ' + error.message);
+  }
+}
+
+
+/**
+ * Show Stock Animation
+ */
+function showStockAnimation(element, operation, amount) {
+  const animationDiv = document.createElement('div');
+  animationDiv.className = 'stock-animation' + (operation === 'reduce' ? ' reduce' : '');
+  animationDiv.textContent = (operation === 'add' ? '+' : '-') + amount;
+  
+  // Position relative to element
+  element.style.position = 'relative';
+  element.appendChild(animationDiv);
+  
+  // Remove after animation
+  setTimeout(() => {
+    animationDiv.remove();
+  }, 1000);
+}
+
+/**
+ * Update Stock Changes - Sync webapp cache to Firestore
+ * FIRESTORE VERSION
+ */
+async function updateStockChanges() {
+  console.log('🔄 Pushing webapp stock to Firestore...');
+  
+  const btn = document.getElementById('updateStockChangesBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Syncing...';
+  
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    // ✅ Get all products with NUMERIC stock from webapp cache
+    const productsToSync = [];
+    
+    if (typeof cachedProducts !== 'undefined') {
+      cachedProducts.forEach(product => {
+        if (typeof product.stock === 'number' && product.id) {
+          productsToSync.push({
+            id: product.id,
+            stock: product.stock,
+            product: product // Include full product data
+          });
+        }
+      });
+    }
+    
+    if (productsToSync.length === 0) {
+      alert('⚠️ No products to sync');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      return;
+    }
+    
+    console.log('📤 Syncing', productsToSync.length, 'products to Firestore');
+    
+    // ✅ Sync each product to Firestore
+    let successCount = 0;
+    for (const item of productsToSync) {
+      try {
+        const updatedProduct = {
+          ...item.product,
+          stock: item.stock,
+          updatedAt: new Date().toISOString()
+        };
+        
+        const productRef = doc(window.db, 'tenants', userId, 'products', item.id);
+        await setDoc(productRef, updatedProduct);
+        
+        successCount++;
+      } catch (error) {
+        console.error('❌ Error syncing product:', item.id, error);
+      }
+    }
+    
+    console.log(`✅ Synced ${successCount}/${productsToSync.length} products to Firestore`);
+    
+    // ✅ Show success message
+    if (typeof showToast === 'function') {
+      showToast('✅ Synced', `Updated ${successCount} products in Firestore`, 'success');
+    } else {
+      alert(`✅ Successfully synced ${successCount} products!`);
+    }
+    
+    // ✅ Cancel bulk edit mode
+    cancelBulkEdit();
+    
+  } catch (error) {
+    console.error('❌ Error syncing:', error);
+    alert('❌ Error syncing to Firestore: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+
+
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - STOCK STATUS
+ * ==========================================
+ */
+
+/**
+ * Show Stock Status Bulk Edit
+ */
+function showStockStatusBulkEdit() {
+  console.log('📝 Opening stock status bulk edit mode...');
+  
+  // ✅ HIDE THE MAIN DROPDOWN BUTTON
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // ✅ Show stock status selection UI AND cancel button
+  document.getElementById('stockStatusSelectionDropdown').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  console.log('✅ Stock status selection UI shown');
+}
+
+/**
+ * Select Bulk Stock Status
+ */
+function selectBulkStockStatus(status) {
+  console.log('📦 Selected stock status:', status);
+  
+  // ✅ Close stock status dropdown
+  document.getElementById('stockStatusDropdownBtn').click();
+  
+  setTimeout(() => {
+    // ✅ Set bulk edit mode
+    bulkEditMode = {
+      active: true,
+      field: 'stockStatus',
+      value: status,
+      selectedProducts: []
+    };
+    
+    // ✅ Update UI with emoji
+    const emoji = {
+      'GOOD': '🟢 Good',
+      'MEDIUM': '🟡 Medium',
+      'LOW': '🔴 Low',
+      'URGENT': '🔵 Urgent'
+    }[status] || status;
+    
+    document.getElementById('selectedStockStatusText').textContent = emoji;
+    document.getElementById('updateStockStatusBtn').style.display = 'inline-block';
+    document.getElementById('selectedCountStockStatus').textContent = '0';
+    
+    // ✅ Enable product selection (ONLY for products with TEXT stock status)
+    enableProductSelectionStockStatus();
+    
+  }, 100);
+}
+
+/**
+ * Enable Product Selection for Stock Status (ONLY TEXT stock status products)
+ */
+function enableProductSelectionStockStatus() {
+  console.log('🖱️ Stock status selection mode enabled');
+  
+  // Desktop
+  const tableRows = document.querySelectorAll('#productsTableBody tr[data-product-id]');
+  tableRows.forEach(row => {
+    const productId = row.getAttribute('data-product-id');
+    const product = cachedProducts.find(p => p.id === productId);
+    
+    // ✅ ONLY enable for products with TEXT stock status (not numeric)
+    if (product && typeof product.stock === 'string' && ['GOOD', 'MEDIUM', 'LOW', 'URGENT'].includes(product.stock.toUpperCase())) {
+      row.classList.add('product-selectable');
+      row.onclick = function(event) {
+        if (event.target.closest('.btn')) return;
+        event.stopPropagation();
+        event.preventDefault();
+        toggleProductSelectionDesktop(productId, row);
+      };
+    }
+  });
+  
+  // Mobile
+  const mobileCards = document.querySelectorAll('.mobile-item[data-product-id]');
+  mobileCards.forEach(card => {
+    const productId = card.getAttribute('data-product-id');
+    const product = cachedProducts.find(p => p.id === productId);
+    
+    // ✅ ONLY enable for products with TEXT stock status (not numeric)
+    if (product && typeof product.stock === 'string' && ['GOOD', 'MEDIUM', 'LOW', 'URGENT'].includes(product.stock.toUpperCase())) {
+      card.classList.add('product-selectable');
+      card.onclick = function(event) {
+        if (event.target.closest('.btn')) return;
+        event.stopPropagation();
+        event.preventDefault();
+        toggleProductSelectionMobile(productId, card);
+      };
+    }
+  });
+  
+  console.log('✅ Stock status selection enabled (TEXT status products only)');
+}
+
+/**
+ * Apply Bulk Stock Status Update - FIRESTORE VERSION
+ */
+async function applyBulkStockStatusUpdate() {
+  if (bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const status = bulkEditMode.value;
+  const count = bulkEditMode.selectedProducts.length;
+  
+  const emoji = {
+    'GOOD': '🟢 Good',
+    'MEDIUM': '🟡 Medium',
+    'LOW': '🔴 Low',
+    'URGENT': '🔵 Urgent'
+  }[status] || status;
+  
+  if (!confirm(`Update stock status to "${emoji}" for ${count} product(s)?`)) {
+    return;
+  }
+  
+  const btn = document.getElementById('updateStockStatusBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    console.log(`📝 Updating stock status to "${status}" for ${count} products...`);
+    
+    // ✅ Update each product in Firestore
+    let successCount = 0;
+    for (const productId of bulkEditMode.selectedProducts) {
+      try {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (!product) {
+          console.warn('⚠️ Product not found:', productId);
+          continue;
+        }
+        
+        // Update product data with stock status
+        const updatedProduct = {
+          ...product,
+          stock: status,
+          stockStatus: status.toLowerCase(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Save to Firestore
+        const productRef = doc(window.db, 'tenants', userId, 'products', productId);
+        await setDoc(productRef, updatedProduct);
+        
+        // Update local cache
+        const cacheIdx = cachedProducts.findIndex(p => p.id === productId);
+        if (cacheIdx !== -1) {
+          cachedProducts[cacheIdx].stock = status;
+          cachedProducts[cacheIdx].stockStatus = status.toLowerCase();
+        }
+        
+        successCount++;
+        console.log(`✅ Updated product ${successCount}/${count}`);
+        
+      } catch (error) {
+        console.error('❌ Error updating product:', productId, error);
+      }
+    }
+    
+    // Update localStorage cache
+    try {
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+      console.log('💾 Cache updated');
+    } catch (e) {
+      console.warn('⚠️ Failed to update cache:', e);
+    }
+    
+    console.log(`✅ Bulk update complete: ${successCount}/${count} products updated`);
+    
+    // ✅ Cancel bulk edit mode
+    cancelBulkEdit();
+    
+    // Re-render products
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+    alert(`✅ Successfully updated ${successCount} product(s)!`);
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error updating products: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+
+
+/**
+ * Toast Notification Helper
+ */
+function showToast(title, message, type = 'info') {
+  let toastContainer = document.getElementById('toastContainer');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toastContainer';
+    toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+    document.body.appendChild(toastContainer);
+  }
+  
+  const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#0d6efd';
+  
+  const toastHTML = `
+    <div class="toast show" role="alert" style="min-width: 300px; margin-bottom: 10px;">
+      <div class="toast-header" style="background: ${bgColor}; color: white;">
+        <strong class="me-auto">${title}</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+      </div>
+      <div class="toast-body">${message}</div>
+    </div>
+  `;
+  
+  toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+  
+  setTimeout(() => {
+    const toasts = toastContainer.querySelectorAll('.toast');
+    if (toasts.length > 0) toasts[0].remove();
+  }, 3000);
+}
+
+/**
+ * ==========================================
+ * 🎯 INITIALIZE ON DOM READY
+ * ==========================================
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('✅ Bulk edit module initialized');
+  
+  // ✅ Make functions globally accessible
+  window.showCategoryBulkEdit = showCategoryBulkEdit;
+  window.selectBulkCategory = selectBulkCategory;
+  window.applyBulkCategoryUpdate = applyBulkCategoryUpdate;
+  
+  window.showUnitTypeBulkEdit = showUnitTypeBulkEdit;
+  window.selectBulkUnitType = selectBulkUnitType;
+  window.applyBulkUnitTypeUpdate = applyBulkUnitTypeUpdate;
+  
+  window.showSellingPriceBulkEdit = showSellingPriceBulkEdit;
+  window.applyBulkSellingPriceUpdate = applyBulkSellingPriceUpdate;
+  
+  window.showSizeBulkEdit = showSizeBulkEdit;
+  window.applyBulkSizeUpdate = applyBulkSizeUpdate;
+  
+  window.showBrandBulkEdit = showBrandBulkEdit;
+  window.applyBulkBrandUpdate = applyBulkBrandUpdate;
+  
+  window.showStockAdjustmentEdit = showStockAdjustmentEdit;
+  window.setStockOperation = setStockOperation;
+  window.updateStockChanges = updateStockChanges;
+  
+  window.showStockStatusBulkEdit = showStockStatusBulkEdit; // ← NEW
+  window.selectBulkStockStatus = selectBulkStockStatus; // ← NEW
+  window.applyBulkStockStatusUpdate = applyBulkStockStatusUpdate; // ← NEW
+  
+  window.cancelBulkEdit = cancelBulkEdit;
+  window.showBrandBulkEdit = showBrandBulkEdit;
+  window.showBrandBulkEdit = showBrandBulkEdit;
+  window.applyBulkBrandUpdate = applyBulkBrandUpdate;
+  window.updateBulkBrandMode = updateBulkBrandMode;
+  window.checkAndShowSaveBulkBrandButton = checkAndShowSaveBulkBrandButton;
+  window.saveNewBrandFromBulkField = saveNewBrandFromBulkField;
+  window.updateBulkBrandMode = updateBulkBrandMode;
+window.checkAndShowSaveBulkBrandButton = checkAndShowSaveBulkBrandButton;
+window.saveNewBrandFromBulkField = saveNewBrandFromBulkField;
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   </script>
 
  <!-- ✅ Change Password Modal -->
