@@ -18220,145 +18220,6 @@ function openInstantProductsModal() {
 
 
 /**
- * Switch between Product and Stock modes - ENHANCED SCROLL
- */
- function switchInstantProductMode(mode) {
-  console.log('🔄 Switching to mode:', mode);
-  
-  if (mode === 'stock' && pendingInstantProducts.length === 0) {
-    alert('⚠️ Please add products first before entering stock');
-    return;
-  }
-  
-  instantProductMode = mode;
-  
-  const input = document.getElementById('instantProductInput');
-  const productBtn = document.getElementById('productNameModeBtn');
-  const stockBtn = document.getElementById('stockModeBtn');
-  const skipBtn = document.getElementById('skipStockBtn');
-  const addBtn = document.getElementById('addToListBtn');
-  const instructions = document.getElementById('instantProductInstructions');
-  
-  if (mode === 'product') {
-    // Product name mode
-    productBtn.classList.add('active');
-    stockBtn.classList.remove('active');
-    skipBtn.style.display = 'none';
-    addBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Add to List';
-    
-    input.blur();
-    
-    setTimeout(() => {
-      input.type = 'text';
-      input.removeAttribute('inputmode');
-      input.removeAttribute('pattern');
-      input.removeAttribute('min');
-      input.removeAttribute('step');
-      input.placeholder = 'e.g., Tilecleaner, Grout, Adhesive...';
-      input.value = '';
-      
-      instructions.innerHTML = 'Enter product names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each product, or click <strong>Add to List</strong>.';
-      selectedProductIndex = -1;
-      updateInstantProductPreview();
-      
-      requestAnimationFrame(() => {
-        input.focus();
-        
-        // ✅ Enhanced scroll for QWERTY keyboard
-        setTimeout(() => {
-          scrollPreviewIntoView();
-          
-          // ✅ Extra upward adjustment for product mode
-          setTimeout(() => {
-            const modalBody = document.querySelector('#instantProductsModal .modal-body');
-            const modalDialog = document.querySelector('#instantProductsModal .modal-dialog');
-            
-            if (modalBody && modalDialog) {
-              // Move modal up
-              modalDialog.style.transform = 'translateY(-60px)';
-              modalDialog.style.transition = 'transform 0.3s ease';
-              
-              // Scroll body up
-              modalBody.scrollBy({
-                top: -80,
-                behavior: 'smooth'
-              });
-              
-              console.log('✅ Applied extra upward scroll for QWERTY');
-            }
-          }, 200);
-        }, 400);
-      });
-    }, 150);
-    
-  } else if (mode === 'stock') {
-    // Stock entry mode
-    productBtn.classList.remove('active');
-    stockBtn.classList.add('active');
-    skipBtn.style.display = 'block';
-    addBtn.innerHTML = '<i class="bi bi-check-lg"></i> Set Stock';
-    
-    input.blur();
-    input.value = '';
-    input.readOnly = true;
-    
-    setTimeout(() => {
-      input.type = 'tel';
-      input.setAttribute('inputmode', 'numeric');
-      input.setAttribute('pattern', '[0-9]*');
-      input.setAttribute('min', '0');
-      input.setAttribute('step', '1');
-      input.placeholder = 'Enter stock quantity...';
-      input.readOnly = false;
-      
-      instructions.innerHTML = 'Enter stock quantity for each product. Press <strong>Enter</strong> or click <strong>Set Stock</strong>. Click <strong>Skip</strong> to skip a product.';
-      
-      selectNextProductWithoutStock();
-      updateInstantProductPreview();
-      
-      requestAnimationFrame(() => {
-        input.focus();
-        
-        setTimeout(() => {
-          input.click();
-          
-          setTimeout(() => {
-            if (document.activeElement !== input) {
-              input.focus();
-              input.setSelectionRange(0, 0);
-            }
-            
-            // ✅ Enhanced scroll for numeric keyboard
-            setTimeout(() => {
-              scrollPreviewIntoView();
-              scrollToSelectedProduct();
-              
-              // ✅ Extra upward adjustment for stock mode
-              setTimeout(() => {
-                const modalBody = document.querySelector('#instantProductsModal .modal-body');
-                const modalDialog = document.querySelector('#instantProductsModal .modal-dialog');
-                
-                if (modalBody && modalDialog) {
-                  modalDialog.style.transform = 'translateY(-60px)';
-                  modalDialog.style.transition = 'transform 0.3s ease';
-                  
-                  modalBody.scrollBy({
-                    top: -80,
-                    behavior: 'smooth'
-                  });
-                }
-              }, 200);
-            }, 300);
-            
-            console.log('✅ Numeric keyboard should be open');
-          }, 100);
-        }, 50);
-      });
-    }, 250);
-  }
-}
-
-/**
  * ✅ FORCE NUMERIC KEYBOARD OPEN (iOS/Android)
  */
 function forceNumericKeyboardOpen() {
@@ -18888,11 +18749,142 @@ async function saveAllInstantProducts() {
   }
 }
 
+/**
+ * Switch between Product and Stock modes - WITHOUT INSTRUCTIONS
+ */
+ function switchInstantProductMode(mode) {
+  console.log('🔄 Switching to mode:', mode);
+  
+  if (mode === 'stock' && pendingInstantProducts.length === 0) {
+    alert('⚠️ Please add products first before entering stock');
+    return;
+  }
+  
+  instantProductMode = mode;
+  
+  const input = document.getElementById('instantProductInput');
+  const productBtn = document.getElementById('productNameModeBtn');
+  const stockBtn = document.getElementById('stockModeBtn');
+  const skipBtn = document.getElementById('skipStockBtn');
+  const addBtn = document.getElementById('addToListBtn');
+  
+  if (mode === 'product') {
+    // Product name mode
+    productBtn.classList.add('active');
+    stockBtn.classList.remove('active');
+    skipBtn.style.display = 'none';
+    addBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Add to List';
+    
+    input.blur();
+    
+    setTimeout(() => {
+      input.type = 'text';
+      input.removeAttribute('inputmode');
+      input.removeAttribute('pattern');
+      input.removeAttribute('min');
+      input.removeAttribute('step');
+      input.placeholder = 'e.g., Tilecleaner, Grout, Adhesive...';
+      input.value = '';
+      
+      // ✅ NO INSTRUCTIONS UPDATE
+      selectedProductIndex = -1;
+      updateInstantProductPreview();
+      
+      requestAnimationFrame(() => {
+        input.focus();
+        
+        setTimeout(() => {
+          performSmartScroll();
+          
+          setTimeout(() => {
+            const modalBody = document.querySelector('#instantProductsModal .modal-body');
+            const modalDialog = document.querySelector('#instantProductsModal .modal-dialog');
+            
+            if (modalBody && modalDialog) {
+              modalDialog.style.transform = 'translateY(-60px)';
+              modalDialog.style.transition = 'transform 0.3s ease';
+              
+              modalBody.scrollBy({
+                top: -80,
+                behavior: 'smooth'
+              });
+              
+              console.log('✅ Applied extra upward scroll for QWERTY');
+            }
+          }, 200);
+        }, 400);
+      });
+    }, 150);
+    
+  } else if (mode === 'stock') {
+    // Stock entry mode
+    productBtn.classList.remove('active');
+    stockBtn.classList.add('active');
+    skipBtn.style.display = 'block';
+    addBtn.innerHTML = '<i class="bi bi-check-lg"></i> Set Stock';
+    
+    input.blur();
+    input.value = '';
+    input.readOnly = true;
+    
+    setTimeout(() => {
+      input.type = 'tel';
+      input.setAttribute('inputmode', 'numeric');
+      input.setAttribute('pattern', '[0-9]*');
+      input.setAttribute('min', '0');
+      input.setAttribute('step', '1');
+      input.placeholder = 'Enter stock quantity...';
+      input.readOnly = false;
+      
+      // ✅ NO INSTRUCTIONS UPDATE
+      
+      selectNextProductWithoutStock();
+      updateInstantProductPreview();
+      
+      requestAnimationFrame(() => {
+        input.focus();
+        
+        setTimeout(() => {
+          input.click();
+          
+          setTimeout(() => {
+            if (document.activeElement !== input) {
+              input.focus();
+              input.setSelectionRange(0, 0);
+            }
+            
+            setTimeout(() => {
+              performSmartScroll();
+              
+              setTimeout(() => {
+                const modalBody = document.querySelector('#instantProductsModal .modal-body');
+                const modalDialog = document.querySelector('#instantProductsModal .modal-dialog');
+                
+                if (modalBody && modalDialog) {
+                  modalDialog.style.transform = 'translateY(-60px)';
+                  modalDialog.style.transition = 'transform 0.3s ease';
+                  
+                  modalBody.scrollBy({
+                    top: -80,
+                    behavior: 'smooth'
+                  });
+                }
+              }, 200);
+            }, 300);
+            
+            console.log('✅ Numeric keyboard should be open');
+          }, 100);
+        }, 50);
+      });
+    }, 250);
+  }
+}
+
 
 /**
- * ✅ RESET MODAL - CLEAR TRANSFORM
+ * ✅ RESET MODAL - WITHOUT INSTRUCTIONS
  */
- function resetInstantProductsModal() {
+function resetInstantProductsModal() {
   console.log('🔄 Resetting Instant Products modal...');
   
   // Clear data
@@ -18937,18 +18929,13 @@ async function saveAllInstantProducts() {
     addBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Add to List';
   }
   
-  // Reset instructions
-  const instructions = document.getElementById('instantProductInstructions');
-  if (instructions) {
-    instructions.innerHTML = 'Enter product names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each product, or click <strong>Add to List</strong>.';
-  }
+  // ✅ NO INSTRUCTIONS RESET
   
   // Update preview to show empty state
   updateInstantProductPreview();
   
   console.log('✅ Instant Products modal reset complete');
 }
-
 
 
 /**
@@ -26166,7 +26153,7 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
-<!-- ✅ INSTANT PRODUCTS MODAL - WITH STOCK TAB -->
+<!-- ✅ INSTANT PRODUCTS MODAL - NO INSTRUCTIONS -->
 <div class="modal fade" id="instantProductsModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -26178,97 +26165,93 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       
       <div class="modal-body">
-    
-          <!-- Instructions -->
-          <div class="alert alert-success" style="font-size: 14px;">
-            <i class="bi bi-info-circle"></i>
-            <span id="instantProductInstructions">
-              Enter product names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each product, or click <strong>Add to List</strong>.
-            </span>
-          </div>
-          
-          <!-- ✅ MODE TABS -->
-          <div class="btn-group w-100 mb-3" role="group">
-            <button 
-              type="button" 
-              id="productNameModeBtn"
-              class="btn btn-outline-success active"
-              onclick="switchInstantProductMode('product')"
-              style="font-weight: 600;">
-              <i class="bi bi-box"></i> Product Names
-            </button>
-            <button 
-              type="button" 
-              id="stockModeBtn"
-              class="btn btn-outline-success"
-              onclick="switchInstantProductMode('stock')"
-              style="font-weight: 600;">
-              <i class="bi bi-calculator"></i> Stock
-            </button>
-          </div>
-          
-          <!-- Input Field Container -->
-          <div style="position: relative;">
-            <input 
-              id="instantProductInput" 
-              type="text" 
-              class="form-control form-control-lg mb-2" 
-              placeholder="e.g., Tilecleaner, Grout, Adhesive..."
-              onkeydown="handleInstantProductInputKeydown(event)"
-              oninput="window.lastInstantProductInput = this.value"
-              autocomplete="off"
-              style="padding: 12px 48px 12px 12px; font-size: 15px; color: #212529; background-color: #fff;">
-            
-            <button 
-              id="skipStockBtn"
-              type="button"
-              class="btn btn-sm btn-warning"
-              onmousedown="event.preventDefault(); skipCurrentProduct();"
-              style="position: absolute; right: 10px; top: 8px; display: none; z-index: 10; font-weight: 600;">
-              <i class="bi bi-skip-forward"></i> Skip
-            </button>
-          </div>
-          
+        
+        <!-- ✅ REMOVED INSTRUCTIONS - SAVES SPACE -->
+        
+        <!-- Mode Toggle Buttons -->
+        <div class="btn-group w-100 mb-3" role="group">
           <button 
+            type="button" 
+            id="productNameModeBtn"
+            class="btn btn-outline-success active" 
+            onclick="switchInstantProductMode('product')">
+            <i class="bi bi-tag"></i> Product Names
+          </button>
+          <button 
+            type="button" 
+            id="stockModeBtn"
+            class="btn btn-outline-success" 
+            onclick="switchInstantProductMode('stock')">
+            <i class="bi bi-box-seam"></i> Stock Entry
+          </button>
+        </div>
+        
+        <!-- Input Field Container -->
+        <div style="position: relative; margin-bottom: 12px;">
+          <input 
+            id="instantProductInput" 
+            type="text" 
+            class="form-control form-control-lg mb-2" 
+            placeholder="e.g., Tilecleaner, Grout, Adhesive..."
+            onkeydown="handleInstantProductInputKeydown(event)"
+            oninput="handleInstantProductInput(event)"
+            autocomplete="off"
+            style="padding: 14px 48px 14px 14px; font-size: 16px;">
+          
+          <!-- Skip Button (Hidden by default) -->
+          <button 
+            id="skipStockBtn"
             type="button"
-            id="addToListBtn"
-            class="btn btn-success w-100"
-            onmousedown="event.preventDefault(); handleAddToListClick();"
-            style="padding: 10px; font-size: 16px; font-weight: 600;">
-            <i class="bi bi-plus-lg"></i> Add to List
+            class="btn btn-sm btn-warning"
+            onmousedown="event.preventDefault(); skipCurrentProduct();"
+            style="position: absolute; right: 10px; top: 10px; display: none; z-index: 10; font-weight: 600; padding: 8px 12px; font-size: 13px;">
+            <i class="bi bi-skip-forward"></i> Skip
           </button>
-          
-          <!-- ✅ Preview Section with ID for scrolling -->
-          <div style="margin-top: 20px;" id="instantProductPreviewSection">
-            <p style="font-weight: 600; margin-bottom: 10px; font-size: 14px; color: #333;" id="instantProductPreviewCount">
-              📝 Products to Save (0):
-            </p>
-            <div 
-              id="instantProductPreviewList" 
-              style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; max-height: 250px; overflow-y: auto; min-height: 80px; padding: 10px;">
-              <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
-                No products added yet
-              </div>
-            </div>
+        </div>
+        
+        <!-- Add to List Button -->
+        <button 
+          type="button"
+          id="addToListBtn"
+          class="btn btn-success w-100"
+          onmousedown="event.preventDefault(); handleAddToListClick();"
+          style="padding: 12px; font-size: 17px; font-weight: 600; margin-bottom: 16px;">
+          <i class="bi bi-plus-lg"></i> Add to List
+        </button>
+        
+        <!-- Preview Header -->
+        <p style="font-weight: 600; margin-bottom: 12px; font-size: 16px; color: #333;" id="instantProductPreviewCount">
+          📝 Products to Save (0):
+        </p>
+        
+        <!-- Preview List Container -->
+        <div id="instantProductPreviewList" style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; max-height: 400px; overflow-y: auto; min-height: 150px; padding: 14px; padding-bottom: 60px;">
+          <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
+            No products added yet
           </div>
         </div>
         
+      </div>
       
-        <div class="modal-footer">
-          <button 
-            type="button" 
-            class="btn btn-secondary" 
-            onclick="cancelInstantProducts()">
-            <i class="bi bi-x-circle me-1"></i>Cancel
-          </button>
-          <button 
-            type="button" 
-            class="btn btn-success" 
-            onclick="saveAllInstantProducts()">
-            <i class="bi bi-check-circle me-1"></i>Save All
-          </button>
-        </div>
-        
+      <div class="modal-footer">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          onclick="cancelInstantProducts()">
+          <i class="bi bi-x-circle me-1"></i>Cancel
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-success" 
+          onclick="saveAllInstantProducts()">
+          <i class="bi bi-check-circle me-1"></i>Save All
+        </button>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
 
 
 
@@ -26768,6 +26751,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
 </body>
 </html>
+
 
 
 
