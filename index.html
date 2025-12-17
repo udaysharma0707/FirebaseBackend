@@ -93,26 +93,33 @@
   
   console.log("✅ Firebase SDK loaded successfully!");
   
-  // Auth state handler (existing code)
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log('✅ User signed in:', user.email);
-      window.currentUser = {
-        email: user.email,
-        uid: user.uid
-      };
-      
-      showApp();
-      
-      if (typeof syncFromFirestore === 'function') {
-        setTimeout(() => syncFromFirestore(), 500);
-      }
-    } else {
-      console.log('❌ No user signed in');
-      window.currentUser = null;
-      showAuthScreen();
+ // Auth state handler
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    console.log('✅ User signed in:', user.email);
+    window.currentUser = {
+      email: user.email,
+      uid: user.uid
+    };
+    
+    showApp();
+    
+    // ✅ Load settings first
+    if (typeof loadAddProductModalSettings === 'function') {
+      await loadAddProductModalSettings();
     }
-  });
+    
+    // Then sync data
+    if (typeof syncFromFirestore === 'function') {
+      setTimeout(() => syncFromFirestore(), 500);
+    }
+  } else {
+    console.log('❌ No user signed in');
+    window.currentUser = null;
+    showAuthScreen();
+  }
+});
+
   
   function showApp() {
     const authScreen = document.getElementById('authScreen');
@@ -334,20 +341,23 @@ onclick="return runIfNotExclusionMode(event, viewSavedInvoices)">
   
   
   <!-- Settings -->
-  <div class="sidebar-section-title">
-      <div class="d-flex align-items-center">
-        <input type="checkbox" class="translation-exclusion-checkbox me-2" data-i18n-key="system" onclick="handleTranslationCheckboxClick(event)">
-        <span data-i18n="system" class="translation-exclusion-label">SYSTEM</span>
-      </div>
+<div class="sidebar-section-title">
+  <div class="d-flex align-items-center">
+    <input type="checkbox" class="translation-exclusion-checkbox me-2" data-i18n-key="system" onclick="handleTranslationCheckboxClick(event)">
+    <span data-i18n="system" class="translation-exclusion-label">SYSTEM</span>
   </div>
+</div>
+
+<!-- ✅ Changed to navigateTo like other items -->
+<div class="sidebar-item" onclick="return runIfNotExclusionMode(event, () => navigateTo('settings'))">
+  <div class="d-flex align-items-center w-100">
+    <input type="checkbox" class="translation-exclusion-checkbox me-2" data-i18n-key="settings" onclick="handleTranslationCheckboxClick(event)">
+    <i class="bi bi-gear"></i>
+    <span data-i18n="settings" class="translation-exclusion-label">Settings</span>
+  </div>
+</div>
+
   
-  <div class="sidebar-item disabled" onclick="return runIfNotExclusionMode(event, () => sidebarAction('settings'))">
-    <div class="d-flex align-items-center w-100">
-        <input type="checkbox" class="translation-exclusion-checkbox me-2" data-i18n-key="settings" onclick="handleTranslationCheckboxClick(event)">
-        <i class="bi bi-gear"></i>
-        <span data-i18n="settings" class="translation-exclusion-label">Settings</span>
-    </div>
-  </div>
 
 </nav>
 
@@ -1231,306 +1241,300 @@ onclick="handleViewSwitchClick(event, 'sales')">
      INVENTORY SECTION (Products + Bulk Edit)
      ========================================== -->
 <div id="inventorySection">
-
 <!-- ==========================================
      🔥 BULK EDIT TOOLBAR - MOBILE OPTIMIZED
      ========================================== -->
-    <!-- Main Dropdown Button - WITH ID FOR CONSISTENT WIDTH -->
-<div id="bulkEditDropdownWrapper" class="dropdown" style="margin-bottom: 12px; display: block;">
-  <button class="btn btn-primary dropdown-toggle" 
-          type="button" 
-          id="bulkEditDropdown" 
-          data-bs-toggle="dropdown" 
-          aria-expanded="false" 
-          style="font-weight: 600; width: 100%;">
-    <i class="bi bi-pencil-square"></i> <span data-i18n="editProductsInBulk">Edit Products in Bulk</span>
-  </button>
-  <ul class="dropdown-menu shadow" aria-labelledby="bulkEditDropdown" style="min-width: 250px;">
-    <li>
-      <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showCategoryBulkEdit();">
-        <span><i class="bi bi-tag"></i> <span data-i18n="updateCategory">Update Category</span></span>
-        <i class="bi bi-chevron-right text-muted"></i>
-      </button>
-    </li>
-    <li><hr class="dropdown-divider"></li>
-    <li>
-      <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showUnitTypeBulkEdit();">
-        <span><i class="bi bi-card-text"></i> <span data-i18n="updateUnitType">Update Unit Type</span></span>
-        <i class="bi bi-chevron-right text-muted"></i>
-      </button>
-    </li>
-    <li><hr class="dropdown-divider"></li>
-    <li>
-      <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showStockAdjustmentEdit();">
-        <span><i class="bi bi-boxes"></i> <span data-i18n="updateStock">Update Stock</span></span>
-        <i class="bi bi-chevron-right text-muted"></i>
-      </button>
-    </li>
-    <li>
-      <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showSellingPriceBulkEdit();">
-        <span><i class="bi bi-currency-rupee"></i> <span data-i18n="updateSellingPrice">Update Selling Price</span></span>
-        <i class="bi bi-chevron-right text-muted"></i>
-      </button>
-    </li>
-    <li>
-      <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showStockStatusBulkEdit();">
-        <span><i class="bi bi-circle-fill"></i> <span data-i18n="updateStockStatus">Update Stock Status</span></span>
-        <i class="bi bi-chevron-right text-muted"></i>
-      </button>
-    </li>
-    <li>
-      <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showBrandBulkEdit();">
-        <span><i class="bi bi-award"></i> <span data-i18n="updateBrand">Update Brand</span></span>
-        <i class="bi bi-chevron-right text-muted"></i>
-      </button>
-    </li>
-    <li>
-      <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showSizeBulkEdit();">
-        <span><i class="bi bi-rulers"></i> <span data-i18n="updateSize">Update Size</span></span>
-        <i class="bi bi-chevron-right text-muted"></i>
-      </button>
-    </li>
-  </ul>
-</div>
 
-    
-    
-      <!-- ✅ BRAND INPUT CONTAINER - MOBILE OPTIMIZED -->
-      <div id="brandInputContainer" style="display: none;">
-        <!-- Input Field with Dropdown -->
-        <div style="position: relative; margin-bottom: 12px;">
-          <input 
-            id="bulkBrandInput" 
-            type="text" 
-            class="form-control" 
-            placeholder="e.g., Somany"
-            data-i18n-placeholder="brandPlaceholder"
-            autocomplete="off"
-            onfocus="showBulkBrandSuggestions()"
-            oninput="filterBulkBrandSuggestions(this.value); updateBulkBrandMode(this.value);"
-            style="padding-right: 40px; font-size: 15px; font-weight: 600;">
-          
-          <!-- Save Brand Button (Inside Input) -->
-          <button 
-            id="saveBulkBrandInsideBtn" 
-            onclick="saveNewBrandFromBulkField()" 
-            style="
-              position: absolute;
-              right: 5px;
-              top: 50%;
-              transform: translateY(-50%);
-              border: none;
-              background: #28a745;
-              color: white;
-              border-radius: 5px;
-              padding: 6px 12px;
-              cursor: pointer;
-              display: none;
-              font-size: 14px;
-              font-weight: 600;
-              z-index: 10;
-            ">
-            💾
-          </button>
-          
-          <!-- ✅ Brand Suggestions Dropdown - FIXED MAX HEIGHT -->
-          <div id="brandSuggestionsDropdown" style="
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 0 0 8px 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 10px;
-          "></div>
-        </div>
-        
-        <!-- ✅ Buttons Stacked Vertically for Mobile -->
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <!-- Update Brand Button - Compact -->
-          <button id="updateBrandBtn" class="btn btn-success" style="display: none; font-weight: 600; color: white; font-size: 14px; padding: 10px 16px;" onclick="applyBulkBrandUpdate()">
-            <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCountBrand" style="font-weight: 700;">0</span>)
-          </button>
-          
-          <!-- Cancel Button -->
-          <button id="cancelBulkEditBrandBtn" class="btn btn-secondary" style="display: none; font-weight: 600; font-size: 14px; padding: 10px 16px;" onclick="cancelBulkEdit()">
-            <i class="bi bi-x-circle"></i> <span data-i18n="cancel">Cancel</span>
-          </button>
-        </div>
-      </div>
-    
-    
-      <!-- Selling Price Input Container -->
-      <div id="sellingPriceInputContainer" style="display: none; margin-bottom: 12px;">
-        <label style="font-size: 14px; font-weight: 600; color: #495057; margin-bottom: 8px; display: block;" data-i18n="enterSellingPriceToUpdate">Enter Selling Price to Update</label>
-        <div class="input-group" style="margin-bottom: 12px;">
-          <span class="input-group-text">₹</span>
-          <input type="number" id="sellingPriceInput" class="form-control" placeholder="400" min="0" step="0.01" style="font-weight: 600; font-size: 15px;">
-        </div>
-      </div>
-        
-      <button id="updateSellingPriceBtn" class="btn btn-success" style="display: none; font-weight: 600; color: white; width: 100%; margin-bottom: 8px;" onclick="applyBulkSellingPriceUpdate()">
-        <i class="bi bi-currency-rupee"></i> <span data-i18n="updateSellingPrice">Update Selling Price</span> (<span id="selectedCountSellingPrice" style="font-weight: 700;">0</span>)
-      </button>
-    
-    
-      <!-- ✅ SIZE INPUT CONTAINER - MOBILE OPTIMIZED -->
-      <div id="sizeInputContainer" style="display: none;">
-        <div style="position: relative; margin-bottom: 12px;">
-          <input 
-            id="bulkSizeInput" 
-            type="text" 
-            class="form-control" 
-            placeholder="e.g., 2x2 feet"
-            data-i18n-placeholder="sizePlaceholder"
-            autocomplete="off"
-            onfocus="showBulkSizeSuggestions()"
-            oninput="filterBulkSizeSuggestions(this.value); updateBulkSizeMode(this.value); checkAndShowSaveBulkSizeButton(this.value);"
-            style="padding-right: 40px; font-size: 15px; font-weight: 600;">
-          
-          <!-- Save Size Button -->
-          <button 
-            id="saveBulkSizeInsideBtn" 
-            onclick="saveNewSizeFromBulkField()" 
-            style="
-              position: absolute;
-              right: 5px;
-              top: 50%;
-              transform: translateY(-50%);
-              border: none;
-              background: #007bff;
-              color: white;
-              border-radius: 5px;
-              padding: 6px 12px;
-              cursor: pointer;
-              display: none;
-              font-size: 14px;
-              font-weight: 600;
-              z-index: 10;
-            ">
-            💾
-          </button>
-          
-          <!-- ✅ Size Suggestions Dropdown - FIXED MAX HEIGHT -->
-          <div id="sizeSuggestionsDropdown" style="
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 0 0 8px 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-          "></div>
-        </div>
-        
-        <!-- Buttons Stacked -->
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button id="updateSizeBtn" class="btn btn-success" style="display: none; font-weight: 600; color: white; font-size: 14px; padding: 10px 16px;" onclick="applyBulkSizeUpdate()">
-            <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCountSize" style="font-weight: 700;">0</span>)
-          </button>
-          
-          <button id="cancelBulkEditSizeBtn" class="btn btn-secondary" style="display: none; font-weight: 600; font-size: 14px; padding: 10px 16px;" onclick="cancelBulkEdit()">
-            <i class="bi bi-x-circle"></i> <span data-i18n="cancel">Cancel</span>
-          </button>
-        </div>
-      </div>
-    
-    
-      <!-- Stock Adjustment Container -->
-      <div id="stockAdjustmentContainer" style="display: none; margin-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
-          <div class="input-group" style="flex: 1; min-width: 120px; max-width: 180px;">
-            <input type="number" id="stockAdjustmentInput" class="form-control" placeholder="10" min="1" step="1" value="10" style="font-weight: 600; font-size: 15px;">
-          </div>
-          <div class="dropdown" style="flex: 1;">
-            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="stockOperationBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600; width: 100%; font-size: 14px;">
-              <i class="bi bi-dash-circle"></i> <span data-i18n="reduceBy">Reduce by</span>
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="stockOperationBtn">
-              <li><button class="dropdown-item" onclick="setStockOperation('add')"><i class="bi bi-plus-circle text-success"></i> <span data-i18n="addBy">Add by</span></button></li>
-              <li><button class="dropdown-item" onclick="setStockOperation('reduce')"><i class="bi bi-dash-circle text-danger"></i> <span data-i18n="reduceBy">Reduce by</span></button></li>
-            </ul>
-          </div>
-        </div>
-        <small class="text-muted" style="display: block; margin-bottom: 8px;" data-i18n="clickToSelect"><i class="bi bi-info-circle"></i> Click on products to select them</small>
-      </div>
-    
-    
-      <!-- Stock Status Dropdown -->
-      <div class="dropdown" id="stockStatusSelectionDropdown" style="display: none; margin-bottom: 12px;">
-        <button class="btn btn-outline-primary dropdown-toggle" type="button" id="stockStatusDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600; width: 100%; font-size: 14px;">
-          <i class="bi bi-circle-fill"></i> <span id="selectedStockStatusText" data-i18n="selectStockStatus">Select Stock Status</span>
+<!-- ✅ WRAPPER ADDED -->
+<div id="bulkEditToolbar" style="margin-bottom: 20px;">
+
+  <!-- Main Dropdown Button - WITH ID FOR CONSISTENT WIDTH -->
+  <div id="bulkEditDropdownWrapper" class="dropdown" style="margin-bottom: 12px; display: block;">
+    <button class="btn btn-primary dropdown-toggle" 
+            type="button" 
+            id="bulkEditDropdown" 
+            data-bs-toggle="dropdown" 
+            aria-expanded="false" 
+            style="font-weight: 600; width: 100%;">
+      <i class="bi bi-pencil-square"></i> <span data-i18n="editProductsInBulk">Edit Products in Bulk</span>
+    </button>
+    <ul class="dropdown-menu shadow" aria-labelledby="bulkEditDropdown" style="min-width: 250px;">
+      <li>
+        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showCategoryBulkEdit();">
+          <span><i class="bi bi-tag"></i> <span data-i18n="updateCategory">Update Category</span></span>
+          <i class="bi bi-chevron-right text-muted"></i>
         </button>
-        <ul class="dropdown-menu" aria-labelledby="stockStatusDropdownBtn">
-          <li><button class="dropdown-item" onclick="selectBulkStockStatus('GOOD')"><span style="color: #28a745;">🟢</span> <span data-i18n="good">Good</span></button></li>
-          <li><button class="dropdown-item" onclick="selectBulkStockStatus('MEDIUM')"><span style="color: #ffc107;">🟡</span> <span data-i18n="medium">Medium</span></button></li>
-          <li><button class="dropdown-item" onclick="selectBulkStockStatus('LOW')"><span style="color: #dc3545;">🔴</span> <span data-i18n="low">Low</span></button></li>
-          <li><button class="dropdown-item" onclick="selectBulkStockStatus('URGENT')"><span style="color: #6f42c1;">🔵</span> <span data-i18n="urgent">Urgent</span></button></li>
-        </ul>
-      </div>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li>
+        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showUnitTypeBulkEdit();">
+          <span><i class="bi bi-card-text"></i> <span data-i18n="updateUnitType">Update Unit Type</span></span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </button>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li>
+        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showStockAdjustmentEdit();">
+          <span><i class="bi bi-boxes"></i> <span data-i18n="updateStock">Update Stock</span></span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showSellingPriceBulkEdit();">
+          <span><i class="bi bi-currency-rupee"></i> <span data-i18n="updateSellingPrice">Update Selling Price</span></span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showStockStatusBulkEdit();">
+          <span><i class="bi bi-circle-fill"></i> <span data-i18n="updateStockStatus">Update Stock Status</span></span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showBrandBulkEdit();">
+          <span><i class="bi bi-award"></i> <span data-i18n="updateBrand">Update Brand</span></span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showSizeBulkEdit();">
+          <span><i class="bi bi-rulers"></i> <span data-i18n="updateSize">Update Size</span></span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ✅ BRAND INPUT CONTAINER - MOBILE OPTIMIZED -->
+  <div id="brandInputContainer" style="display: none;">
+    <!-- Input Field with Dropdown -->
+    <div style="position: relative; margin-bottom: 12px;">
+      <input 
+        id="bulkBrandInput" 
+        type="text" 
+        class="form-control" 
+        placeholder="e.g., Somany"
+        data-i18n-placeholder="brandPlaceholder"
+        autocomplete="off"
+        onfocus="showBulkBrandSuggestions()"
+        oninput="filterBulkBrandSuggestions(this.value); updateBulkBrandMode(this.value);"
+        style="padding-right: 40px; font-size: 15px; font-weight: 600;">
       
-      <button id="updateStockStatusBtn" class="btn btn-success" style="display: none; font-weight: 600; width: 100%; margin-bottom: 8px; font-size: 14px; padding: 10px;" onclick="applyBulkStockStatusUpdate()">
-        <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCountStockStatus">0</span>)
+      <!-- Save Brand Button (Inside Input) -->
+      <button 
+        id="saveBulkBrandInsideBtn" 
+        onclick="saveNewBrandFromBulkField()" 
+        style="
+          position: absolute;
+          right: 5px;
+          top: 50%;
+          transform: translateY(-50%);
+          border: none;
+          background: #28a745;
+          color: white;
+          border-radius: 5px;
+          padding: 6px 12px;
+          cursor: pointer;
+          display: none;
+          font-size: 14px;
+          font-weight: 600;
+          z-index: 10;
+        ">
+        💾
       </button>
+      
+      <!-- ✅ Brand Suggestions Dropdown - FIXED MAX HEIGHT -->
+      <div id="brandSuggestionsDropdown" style="
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 0 0 8px 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
+      "></div>
+    </div>
     
-    
-      <!-- Category Dropdown -->
-      <div id="categorySelectionDropdown" class="dropdown" style="display: none; margin-bottom: 12px;">
-        <button class="btn btn-outline-primary dropdown-toggle" type="button" id="categoryDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600; width: 100%; font-size: 14px;">
-          <i class="bi bi-funnel"></i> <span id="selectedCategoryText" data-i18n="selectCategory">Select Category</span>
-        </button>
-        <ul class="dropdown-menu shadow" aria-labelledby="categoryDropdownBtn" id="bulkCategoryDropdownMenu">
-          <li><a class="dropdown-item text-muted" href="javascript:void(0);">Loading categories...</a></li>
-        </ul>
-      </div>
-    
-      <button id="updateCategoryBtn" class="btn btn-success" style="display: none; font-weight: 600; width: 100%; margin-bottom: 8px; font-size: 14px; padding: 10px;" onclick="applyBulkCategoryUpdate()">
-        <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCount" style="font-weight: 700;">0</span>)
+    <!-- ✅ Buttons Stacked Vertically for Mobile -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <!-- Update Brand Button - Compact -->
+      <button id="updateBrandBtn" class="btn btn-success" style="display: none; font-weight: 600; color: white; font-size: 14px; padding: 10px 16px;" onclick="applyBulkBrandUpdate()">
+        <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCountBrand" style="font-weight: 700;">0</span>)
       </button>
-    
-    
-      <!-- Unit Type Dropdown -->
-      <div id="unitTypeSelectionDropdown" class="dropdown" style="display: none; margin-bottom: 12px;">
-        <button class="btn btn-outline-info dropdown-toggle" type="button" id="unitTypeDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600; width: 100%; font-size: 14px;">
-          <i class="bi bi-card-text"></i> <span id="selectedUnitTypeText">Select Unit Type</span>
-        </button>
-        <ul class="dropdown-menu shadow" aria-labelledby="unitTypeDropdownBtn" id="bulkUnitTypeDropdownMenu">
-          <li><a class="dropdown-item text-muted" href="javascript:void(0);">Loading unit types...</a></li>
-        </ul>
-      </div>
-    
-      <button id="updateUnitTypeBtn" class="btn btn-info" style="display: none; font-weight: 600; color: white; width: 100%; margin-bottom: 8px; font-size: 14px; padding: 10px;" onclick="applyBulkUnitTypeUpdate()">
-        <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCountUnitType" style="font-weight: 700;">0</span>)
-      </button>
-    
-    
-      <!-- ✅ UNIVERSAL CANCEL BUTTON -->
-      <button id="cancelBulkEditBtn" class="btn btn-secondary" style="display: none; width: 100%; font-weight: 600; font-size: 14px; padding: 10px;" onclick="cancelBulkEdit()">
+      
+      <!-- Cancel Button -->
+      <button id="cancelBulkEditBrandBtn" class="btn btn-secondary" style="display: none; font-weight: 600; font-size: 14px; padding: 10px 16px;" onclick="cancelBulkEdit()">
         <i class="bi bi-x-circle"></i> <span data-i18n="cancel">Cancel</span>
       </button>
-    
-    
-      <button id="updateStockChangesBtn" class="btn btn-primary" style="display: none; font-weight: 600; width: 100%; margin-bottom: 8px; font-size: 14px; padding: 10px;" onclick="updateStockChanges()">
-        <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span>
-      </button>
-    
-    
-      <div id="bulkEditInfoText" style="display: none; color: #6c757d; font-size: 13px; font-weight: 500; text-align: center; margin-top: 8px;">
-        <i class="bi bi-info-circle"></i> <span data-i18n="clickToSelect">Click on products to select them</span>
-      </div>
-    
     </div>
+  </div>
+
+  <!-- Selling Price Input Container -->
+  <div id="sellingPriceInputContainer" style="display: none; margin-bottom: 12px;">
+    <label style="font-size: 14px; font-weight: 600; color: #495057; margin-bottom: 8px; display: block;" data-i18n="enterSellingPriceToUpdate">Enter Selling Price to Update</label>
+    <div class="input-group" style="margin-bottom: 12px;">
+      <span class="input-group-text">₹</span>
+      <input type="number" id="sellingPriceInput" class="form-control" placeholder="400" min="0" step="0.01" style="font-weight: 600; font-size: 15px;">
+    </div>
+  </div>
+    
+  <button id="updateSellingPriceBtn" class="btn btn-success" style="display: none; font-weight: 600; color: white; width: 100%; margin-bottom: 8px;" onclick="applyBulkSellingPriceUpdate()">
+    <i class="bi bi-currency-rupee"></i> <span data-i18n="updateSellingPrice">Update Selling Price</span> (<span id="selectedCountSellingPrice" style="font-weight: 700;">0</span>)
+  </button>
+
+  <!-- ✅ SIZE INPUT CONTAINER - MOBILE OPTIMIZED -->
+  <div id="sizeInputContainer" style="display: none;">
+    <div style="position: relative; margin-bottom: 12px;">
+      <input 
+        id="bulkSizeInput" 
+        type="text" 
+        class="form-control" 
+        placeholder="e.g., 2x2 feet"
+        data-i18n-placeholder="sizePlaceholder"
+        autocomplete="off"
+        onfocus="showBulkSizeSuggestions()"
+        oninput="filterBulkSizeSuggestions(this.value); updateBulkSizeMode(this.value); checkAndShowSaveBulkSizeButton(this.value);"
+        style="padding-right: 40px; font-size: 15px; font-weight: 600;">
+      
+      <!-- Save Size Button -->
+      <button 
+        id="saveBulkSizeInsideBtn" 
+        onclick="saveNewSizeFromBulkField()" 
+        style="
+          position: absolute;
+          right: 5px;
+          top: 50%;
+          transform: translateY(-50%);
+          border: none;
+          background: #007bff;
+          color: white;
+          border-radius: 5px;
+          padding: 6px 12px;
+          cursor: pointer;
+          display: none;
+          font-size: 14px;
+          font-weight: 600;
+          z-index: 10;
+        ">
+        💾
+      </button>
+      
+      <!-- ✅ Size Suggestions Dropdown - FIXED MAX HEIGHT -->
+      <div id="sizeSuggestionsDropdown" style="
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 0 0 8px 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      "></div>
+    </div>
+    
+    <!-- Buttons Stacked -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <button id="updateSizeBtn" class="btn btn-success" style="display: none; font-weight: 600; color: white; font-size: 14px; padding: 10px 16px;" onclick="applyBulkSizeUpdate()">
+        <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCountSize" style="font-weight: 700;">0</span>)
+      </button>
+      
+      <button id="cancelBulkEditSizeBtn" class="btn btn-secondary" style="display: none; font-weight: 600; font-size: 14px; padding: 10px 16px;" onclick="cancelBulkEdit()">
+        <i class="bi bi-x-circle"></i> <span data-i18n="cancel">Cancel</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stock Adjustment Container -->
+  <div id="stockAdjustmentContainer" style="display: none; margin-bottom: 12px;">
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+      <div class="input-group" style="flex: 1; min-width: 120px; max-width: 180px;">
+        <input type="number" id="stockAdjustmentInput" class="form-control" placeholder="10" min="1" step="1" value="10" style="font-weight: 600; font-size: 15px;">
+      </div>
+      <div class="dropdown" style="flex: 1;">
+        <button class="btn btn-outline-primary dropdown-toggle" type="button" id="stockOperationBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600; width: 100%; font-size: 14px;">
+          <i class="bi bi-dash-circle"></i> <span data-i18n="reduceBy">Reduce by</span>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="stockOperationBtn">
+          <li><button class="dropdown-item" onclick="setStockOperation('add')"><i class="bi bi-plus-circle text-success"></i> <span data-i18n="addBy">Add by</span></button></li>
+          <li><button class="dropdown-item" onclick="setStockOperation('reduce')"><i class="bi bi-dash-circle text-danger"></i> <span data-i18n="reduceBy">Reduce by</span></button></li>
+        </ul>
+      </div>
+    </div>
+    <small class="text-muted" style="display: block; margin-bottom: 8px;" data-i18n="clickToSelect"><i class="bi bi-info-circle"></i> Click on products to select them</small>
+  </div>
+
+  <!-- Stock Status Dropdown -->
+  <div class="dropdown" id="stockStatusSelectionDropdown" style="display: none; margin-bottom: 12px;">
+    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="stockStatusDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600; width: 100%; font-size: 14px;">
+      <i class="bi bi-circle-fill"></i> <span id="selectedStockStatusText" data-i18n="selectStockStatus">Select Stock Status</span>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="stockStatusDropdownBtn">
+      <li><button class="dropdown-item" onclick="selectBulkStockStatus('GOOD')"><span style="color: #28a745;">🟢</span> <span data-i18n="good">Good</span></button></li>
+      <li><button class="dropdown-item" onclick="selectBulkStockStatus('MEDIUM')"><span style="color: #ffc107;">🟡</span> <span data-i18n="medium">Medium</span></button></li>
+      <li><button class="dropdown-item" onclick="selectBulkStockStatus('LOW')"><span style="color: #dc3545;">🔴</span> <span data-i18n="low">Low</span></button></li>
+      <li><button class="dropdown-item" onclick="selectBulkStockStatus('URGENT')"><span style="color: #6f42c1;">🔵</span> <span data-i18n="urgent">Urgent</span></button></li>
+    </ul>
+  </div>
+  
+  <button id="updateStockStatusBtn" class="btn btn-success" style="display: none; font-weight: 600; width: 100%; margin-bottom: 8px; font-size: 14px; padding: 10px;" onclick="applyBulkStockStatusUpdate()">
+    <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCountStockStatus">0</span>)
+  </button>
+
+  <!-- Category Dropdown -->
+  <div id="categorySelectionDropdown" class="dropdown" style="display: none; margin-bottom: 12px;">
+    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="categoryDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600; width: 100%; font-size: 14px;">
+      <i class="bi bi-funnel"></i> <span id="selectedCategoryText" data-i18n="selectCategory">Select Category</span>
+    </button>
+    <ul class="dropdown-menu shadow" aria-labelledby="categoryDropdownBtn" id="bulkCategoryDropdownMenu">
+      <li><a class="dropdown-item text-muted" href="javascript:void(0);">Loading categories...</a></li>
+    </ul>
+  </div>
+
+  <button id="updateCategoryBtn" class="btn btn-success" style="display: none; font-weight: 600; width: 100%; margin-bottom: 8px; font-size: 14px; padding: 10px;" onclick="applyBulkCategoryUpdate()">
+    <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCount" style="font-weight: 700;">0</span>)
+  </button>
+
+  <!-- Unit Type Dropdown -->
+  <div id="unitTypeSelectionDropdown" class="dropdown" style="display: none; margin-bottom: 12px;">
+    <button class="btn btn-outline-info dropdown-toggle" type="button" id="unitTypeDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600; width: 100%; font-size: 14px;">
+      <i class="bi bi-card-text"></i> <span id="selectedUnitTypeText">Select Unit Type</span>
+    </button>
+    <ul class="dropdown-menu shadow" aria-labelledby="unitTypeDropdownBtn" id="bulkUnitTypeDropdownMenu">
+      <li><a class="dropdown-item text-muted" href="javascript:void(0);">Loading unit types...</a></li>
+    </ul>
+  </div>
+
+  <button id="updateUnitTypeBtn" class="btn btn-info" style="display: none; font-weight: 600; color: white; width: 100%; margin-bottom: 8px; font-size: 14px; padding: 10px;" onclick="applyBulkUnitTypeUpdate()">
+    <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span> (<span id="selectedCountUnitType" style="font-weight: 700;">0</span>)
+  </button>
+
+  <!-- ✅ UNIVERSAL CANCEL BUTTON -->
+  <button id="cancelBulkEditBtn" class="btn btn-secondary" style="display: none; width: 100%; font-weight: 600; font-size: 14px; padding: 10px;" onclick="cancelBulkEdit()">
+    <i class="bi bi-x-circle"></i> <span data-i18n="cancel">Cancel</span>
+  </button>
+
+  <button id="updateStockChangesBtn" class="btn btn-primary" style="display: none; font-weight: 600; width: 100%; margin-bottom: 8px; font-size: 14px; padding: 10px;" onclick="updateStockChanges()">
+    <i class="bi bi-check-circle"></i> <span data-i18n="update">Update</span>
+  </button>
+
+  <div id="bulkEditInfoText" style="display: none; color: #6c757d; font-size: 13px; font-weight: 500; text-align: center; margin-top: 8px;">
+    <i class="bi bi-info-circle"></i> <span data-i18n="clickToSelect">Click on products to select them</span>
+  </div>
+
+<!-- ✅ CLOSE WRAPPER -->
+</div>
+
 
 
     <!-- Controls Row -->
@@ -2397,7 +2401,220 @@ onclick="handleViewSwitchClick(event, 'sales')">
   </div>
 </div>
 
+<!-- ==========================================
+     ⚙️ SETTINGS PAGE
+     ========================================== -->
+     <div class="page-view" id="settingsPage">
+      <!-- Header -->
+      <div class="page-header">
+        <button class="back-btn" onclick="navigateToHome()">
+          <i class="bi bi-arrow-left"></i> Back
+        </button>
+        <h3><i class="bi bi-gear-fill"></i> Settings</h3>
+        <div style="width: 60px;"></div> <!-- Spacer for alignment -->
+      </div>
+      
+      <!-- Settings Content -->
+      <div class="container-fluid" style="padding: 20px;">
+        
+        <!-- Settings Categories -->
+        <div class="row g-3">
+          
+          <!-- Add Product Modal Settings -->
+          <div class="col-md-6 col-lg-4">
+            <div class="card h-100" style="border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" onclick="openAddProductModalSettings()">
+              <div class="card-body" style="padding: 25px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                  <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                    <i class="bi bi-box-seam" style="font-size: 1.5rem; color: white;"></i>
+                  </div>
+                  <div>
+                    <h5 class="card-title mb-1" style="font-weight: 700;" data-i18n="addProductModalSettings">Add Product Modal Settings</h5>
+                    <p class="card-text text-muted mb-0" style="font-size: 0.9rem;" data-i18n="customizeFields">Customize which fields to show/hide</p>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <i class="bi bi-chevron-right" style="font-size: 1.5rem; color: #667eea;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+    
+          <!-- Invoice Settings (Placeholder for future) -->
+          <div class="col-md-6 col-lg-4">
+            <div class="card h-100" style="border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; opacity: 0.6;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+              <div class="card-body" style="padding: 25px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                  <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                    <i class="bi bi-receipt" style="font-size: 1.5rem; color: white;"></i>
+                  </div>
+                  <div>
+                    <h5 class="card-title mb-1" style="font-weight: 700;" data-i18n="invoiceSettings">Invoice Settings</h5>
+                    <p class="card-text text-muted mb-0" style="font-size: 0.9rem;" data-i18n="comingSoon">Coming Soon</p>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <i class="bi bi-lock" style="font-size: 1.5rem; color: #999;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+    
+          <!-- Backup & Restore -->
+          <div class="col-md-6 col-lg-4">
+            <div class="card h-100" style="border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; opacity: 0.6;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+              <div class="card-body" style="padding: 25px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                  <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                    <i class="bi bi-cloud-arrow-up" style="font-size: 1.5rem; color: white;"></i>
+                  </div>
+                  <div>
+                    <h5 class="card-title mb-1" style="font-weight: 700;" data-i18n="backupRestore">Backup & Restore</h5>
+                    <p class="card-text text-muted mb-0" style="font-size: 0.9rem;" data-i18n="comingSoon">Coming Soon</p>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <i class="bi bi-lock" style="font-size: 1.5rem; color: #999;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+    
+          <!-- Language Settings -->
+          <div class="col-md-6 col-lg-4">
+            <div class="card h-100" style="border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; opacity: 0.6;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+              <div class="card-body" style="padding: 25px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                  <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                    <i class="bi bi-translate" style="font-size: 1.5rem; color: white;"></i>
+                  </div>
+                  <div>
+                    <h5 class="card-title mb-1" style="font-weight: 700;" data-i18n="languageSettings">Language Settings</h5>
+                    <p class="card-text text-muted mb-0" style="font-size: 0.9rem;" data-i18n="comingSoon">Coming Soon</p>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <i class="bi bi-lock" style="font-size: 1.5rem; color: #999;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+    
+        </div>
+    
+      </div>
+    </div>
+<!-- ==========================================
+     📦 ADD PRODUCT MODAL SETTINGS - FRESH
+     ========================================== -->
+     <div class="modal fade" id="addProductModalSettingsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          
+          <!-- Header -->
+          <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h5 class="modal-title">
+              <i class="bi bi-gear-fill"></i> Configure Add Product Fields
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          
+          <!-- Body -->
+          <div class="modal-body" style="padding: 25px;">
+            
+            <p style="color: #6c757d; font-size: 0.95rem; margin-bottom: 20px;">
+              <i class="bi bi-info-circle-fill" style="color: #17a2b8;"></i>
+              Choose which fields to display in the Add Product form:
+            </p>
+            
+            <!-- Checkbox 1: Category -->
+            <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px; cursor: pointer; border-left: 4px solid #667eea;">
+              <input type="checkbox" id="showCategoryField" style="width: 24px; height: 24px; margin-right: 12px; cursor: pointer; flex-shrink: 0;">
+              <span style="font-size: 1rem; font-weight: 500;">
+                <i class="bi bi-tag" style="color: #667eea;"></i> Category
+              </span>
+            </label>
+            
+            <!-- Checkbox 2: Unit Type -->
+            <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px; cursor: pointer; border-left: 4px solid #667eea;">
+              <input type="checkbox" id="showUnitTypeField" style="width: 24px; height: 24px; margin-right: 12px; cursor: pointer; flex-shrink: 0;">
+              <span style="font-size: 1rem; font-weight: 500;">
+                <i class="bi bi-card-text" style="color: #667eea;"></i> Unit Type
+              </span>
+            </label>
+            
+            <!-- Checkbox 3: Selling Price -->
+            <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px; cursor: pointer; border-left: 4px solid #28a745;">
+              <input type="checkbox" id="showSellingPriceField" style="width: 24px; height: 24px; margin-right: 12px; cursor: pointer; flex-shrink: 0;">
+              <span style="font-size: 1rem; font-weight: 500;">
+                <i class="bi bi-currency-rupee" style="color: #28a745;"></i> Selling Price
+              </span>
+            </label>
+            
+            <!-- Checkbox 4: Brand -->
+            <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px; cursor: pointer; border-left: 4px solid #ffc107;">
+              <input type="checkbox" id="showBrandField" style="width: 24px; height: 24px; margin-right: 12px; cursor: pointer; flex-shrink: 0;">
+              <span style="font-size: 1rem; font-weight: 500;">
+                <i class="bi bi-award" style="color: #ffc107;"></i> Brand
+              </span>
+            </label>
+            
+            <!-- Checkbox 5: Size -->
+            <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px; cursor: pointer; border-left: 4px solid #17a2b8;">
+              <input type="checkbox" id="showSizeField" style="width: 24px; height: 24px; margin-right: 12px; cursor: pointer; flex-shrink: 0;">
+              <span style="font-size: 1rem; font-weight: 500;">
+                <i class="bi bi-rulers" style="color: #17a2b8;"></i> Size
+              </span>
+            </label>
+            
+            <!-- Checkbox 6: Pieces per Box -->
+            <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px; cursor: pointer; border-left: 4px solid #6c757d;">
+              <input type="checkbox" id="showPiecesPerBoxField" style="width: 24px; height: 24px; margin-right: 12px; cursor: pointer; flex-shrink: 0;">
+              <span style="font-size: 1rem; font-weight: 500;">
+                <i class="bi bi-box" style="color: #6c757d;"></i> Pieces per Box
+              </span>
+            </label>
+            
+            <!-- Checkbox 7: SFT per Box -->
+            <label style="display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px; cursor: pointer; border-left: 4px solid #dc3545;">
+              <input type="checkbox" id="showSftPerBoxField" style="width: 24px; height: 24px; margin-right: 12px; cursor: pointer; flex-shrink: 0;">
+              <span style="font-size: 1rem; font-weight: 500;">
+                <i class="bi bi-bounding-box" style="color: #dc3545;"></i> SFT per Box
+              </span>
+            </label>
+            
+            <!-- Info Alert -->
+            <div class="alert alert-info" style="margin-top: 20px; border-left: 4px solid #17a2b8;">
+              <i class="bi bi-info-circle"></i>
+              <strong>Always Visible:</strong> Product Name, Photo, Stock Status, and Stock Quantity
+            </div>
+            
+          </div>
+          
+          <!-- Footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle"></i> Cancel
+            </button>
+            <button type="button" class="btn btn-primary" onclick="saveAddProductModalSettings()">
+              <i class="bi bi-check-circle"></i> Apply Settings
+            </button>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    
+    
 
+    
+            </div>
+    
+          </div>
+        </div>
+      </div>
+    </div>
+    
 
 <!-- ✅✅✅ INVOICE CUSTOMERS PAGE ✅✅✅ -->
 <div class="page-view" id="invoiceCustomersPage">
@@ -2793,9 +3010,9 @@ onclick="handleViewSwitchClick(event, 'sales')">
             <div class="col-md-3">
               <label class="form-label">Payment Terms</label>
               <select class="form-select" id="paymentTerms" onchange="calculateDueDate()">
-                <option value="0">Due on Receipt</option>
+                <option value="0" selected>Due on Receipt</option>
                 <option value="7">Net 7</option>
-                <option value="15" selected>Net 15</option>
+                <option value="15">Net 15</option>
                 <option value="30">Net 30</option>
                 <option value="45">Net 45</option>
                 <option value="60">Net 60</option>
@@ -2874,10 +3091,10 @@ onclick="handleViewSwitchClick(event, 'sales')">
                     <select class="form-select form-select-sm d-inline-block" 
                             style="width: 90px" id="invoiceTaxRate" 
                             onchange="calculateInvoiceTotal()">
-                      <option value="0">No Tax</option>
+                      <option value="0" selected>No Tax</option>
                       <option value="5">5%</option>
                       <option value="12">12%</option>
-                      <option value="18" selected>18%</option>
+                      <option value="18">18%</option>
                       <option value="28">28%</option>
                     </select>
                   </td>
@@ -3072,289 +3289,287 @@ onclick="handleViewSwitchClick(event, 'sales')">
           <hr>
           
           <!-- Product Name & Category -->
-          <div class="row mb-3">
-            <div class="col-md-8">
-              <label class="form-label" data-i18n="productName">Product Name *</label>
-              <input id="productName" class="form-control" required/>
-            </div>
-            
-            <!-- ✅ Category (OPTIONAL NOW) -->
-            <div class="col-md-4">
-              <label class="form-label" data-i18n="category">Category</label>
-              <select id="category" class="form-select">
-                <option value="" data-i18n="selectCategory">Select Category</option>
-                <!-- Options will be populated dynamically from categoriesCache -->
-              </select>
-            </div>
-          </div>
-
-
-          <!-- Unit Type, Price, Current Stock -->
-          <div class="row mb-3">
-            <!-- ✅ Unit Type (OPTIONAL NOW) -->
-            <div class="col-md-4">
-              <label class="form-label" data-i18n="unitType">Unit Type</label>
-              <select id="unitType" class="form-select">
-                <option value="" data-i18n="selectUnitType">Select Unit Type</option>
-                <!-- Options will be populated dynamically from unitTypesCache -->
-              </select>
-            </div>
-            
-            <!-- ✅ Selling Price (OPTIONAL NOW) -->
-            <div class="col-md-4">
-              <label class="form-label" data-i18n="sellingPrice">Selling Price</label>
-              <input id="price" class="form-control" type="number" step="0.01" placeholder="0"/>
-            </div>
-            
-            <!-- ✅ Current Stock (ONE OF TWO REQUIRED) -->
-            <div class="col-md-4">
-              <label class="form-label" data-i18n="currentStock">Current Stock *</label>
-              <input id="productCurrentStock" class="form-control" type="number" min="0" max="9999" data-i18n-placeholder="orSelectStatus" placeholder="Or select status below"/>
-              <small class="text-muted" data-i18n="stockOrStatusRequired">Stock qty OR status required</small>
-            </div>
-          </div>
-
-
-          <!-- ✅ Stock Status Selection (ONE OF TWO REQUIRED) -->
-          <div class="row mb-3">
-            <div class="col-md-12">
-              <label class="form-label" data-i18n="stockStatus">Stock Status *</label>
-              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                <!-- Good -->
-                <button type="button" class="btn stock-btn" 
-                        id="stockBtn-good" 
-                        onclick="selectStockStatus('good')"
-                        style="background: #28a745; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
-                  🟢 <span data-i18n="good">Good</span>
-                </button>
-                
-                <!-- Medium -->
-                <button type="button" class="btn stock-btn" 
-                        id="stockBtn-medium" 
-                        onclick="selectStockStatus('medium')"
-                        style="background: #ffc107; color: black; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
-                  🟡 <span data-i18n="medium">Medium</span>
-                </button>
-                
-                <!-- Low -->
-                <button type="button" class="btn stock-btn" 
-                        id="stockBtn-low" 
-                        onclick="selectStockStatus('low')"
-                        style="background: #dc3545; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
-                  🔴 <span data-i18n="low">Low</span>
-                </button>
-                
-                <!-- Urgent -->
-                <button type="button" class="btn stock-btn" 
-                        id="stockBtn-urgent" 
-                        onclick="selectStockStatus('urgent')"
-                        style="background: #6f42c1; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
-                  🔵 <span data-i18n="urgent">Urgent</span>
-                </button>
-              </div>
-              
-              <!-- Hidden input to track selected status -->
-              <input type="hidden" id="selectedStockStatus" value="">
-              
-              <!-- ✅ Helper text -->
-              <small class="text-muted" style="display: block; margin-top: 8px;">
-                <i class="bi bi-info-circle"></i> <span data-i18n="stockOrStatusRequired">Either stock quantity or status is required</span>
-              </small>
-            </div>
-          </div>
-
-
-          <!-- ✅ MINIMUM STOCK (MOVED HERE - BELOW STOCK STATUS) -->
-          <div class="row mb-3">
-            <div class="col-md-12">
-              <label class="form-label" data-i18n="minimumStock">Minimum Stock</label>
-              <input id="minStock" class="form-control" type="number" value="5" style="max-width: 200px;"/>
-              <small class="text-muted"></small>
-            </div>
-          </div>
-          
-          <!-- ✅ ADVANCED OPTIONS (EXPANDABLE) -->
-          <div style="margin-bottom: 15px;">
-            <button 
-              type="button" 
-              class="btn btn-link btn-sm" 
-              onclick="toggleAdvancedOptions()"
-              style="padding: 0; text-decoration: none;">
-              <i class="bi bi-chevron-down" id="advOptionsIcon"></i>
-              <span style="color: #007bff; font-weight: 500;" data-i18n="advancedOptions">+ Advanced Options</span>
-            </button>
-          </div>
-          
-          <!-- Advanced Options Container (Hidden by default) -->
-          <div id="advancedOptionsContainer" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 15px;">
-            
-            <!-- Brand & Size -->
-            <div class="row mb-3">
-              
-              <!-- ✅ Brand Field with Autocomplete -->
-              <div class="col-md-6" style="position: relative;">
-                <label class="form-label" data-i18n="brand">Brand</label>
-                
-                <!-- Input Field Container -->
-                <div style="position: relative;">
-                  <input 
-                    id="brand" 
-                    class="form-control" 
-                    type="text"
-                    autocomplete="off"
-                    oninput="filterBrandSuggestions(this.value); checkAndShowSaveBrandButton(this.value)"
-                    onfocus="showBrandSuggestions()"
-                    onblur="setTimeout(() => hideBrandSuggestions(), 200)"
-                    data-i18n-placeholder="typeToSearchBrands"
-                    placeholder="Type to search brands..."
-                    style="padding-right: 40px;">
-                  
-                  <!-- 💾 Save Brand Button -->
-                  <button id="saveBrandInsideBtn" 
-                    type="button"
-                    onclick="saveNewBrandFromProductField()"
-                    data-i18n-title="saveThisBrand"
-                    style="
-                      display: none;
-                      position: absolute;
-                      right: 8px;
-                      top: 50%;
-                      transform: translateY(-50%);
-                      background: #28a745;
-                      color: white;
-                      border: none;
-                      padding: 6px 10px;
-                      border-radius: 4px;
-                      cursor: pointer;
-                      font-size: 14px;
-                      font-weight: bold;
-                      transition: all 0.2s;
-                      z-index: 10;
-                    "
-                    onmouseover="this.style.background='#218838'"
-                    onmouseout="this.style.background='#28a745'"
-                    title="Save this brand">
-                    💾
-                  </button>
-                </div>
-                
-                <!-- Brand Suggestions Dropdown -->
-                <div id="addProductBrandSuggestionsDropdown" style="
-                  display: none;
-                  position: absolute;
-                  top: 100%;
-                  left: 0;
-                  right: 0;
-                  background: white;
-                  border: 1px solid #ddd;
-                  border-top: none;
-                  border-radius: 0 0 8px 8px;
-                  max-height: 200px;
-                  overflow-y: auto;
-                  z-index: 1000;
-                  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                  margin-top: -1px;
-                ">
-                  <!-- Suggestions rendered here -->
-                </div>
-              </div>
-              
-              <!-- ✅ Size Field with Autocomplete -->
-              <div class="col-md-6" style="position: relative;">
-                <label class="form-label" data-i18n="size">Size</label>
-                
-                <!-- Input Field Container -->
-                <div style="position: relative;">
-                  <input 
-                    id="size" 
-                    class="form-control" 
-                    type="text"
-                    autocomplete="off"
-                    oninput="filterSizeSuggestions(this.value); checkAndShowSaveSizeButton(this.value)"
-                    onfocus="showSizeSuggestions()"
-                    onblur="setTimeout(() => hideSizeSuggestions(), 200)"
-                    data-i18n-placeholder="typeToSearchSizes"
-                    placeholder="Type to search sizes..."
-                    style="padding-right: 40px;">
-                  
-                  <!-- 💾 Save Size Button -->
-                  <button id="saveSizeInsideBtn" 
-                    type="button"
-                    onclick="saveNewSizeFromProductField()"
-                    data-i18n-title="saveThisSize"
-                    style="
-                      display: none;
-                      position: absolute;
-                      right: 8px;
-                      top: 50%;
-                      transform: translateY(-50%);
-                      background: #007bff;
-                      color: white;
-                      border: none;
-                      padding: 6px 10px;
-                      border-radius: 4px;
-                      cursor: pointer;
-                      font-size: 14px;
-                      font-weight: bold;
-                      transition: all 0.2s;
-                      z-index: 10;
-                    "
-                    onmouseover="this.style.background='#0056b3'"
-                    onmouseout="this.style.background='#007bff'"
-                    title="Save this size">
-                    💾
-                  </button>
-                </div>
-                
-                <!-- Size Suggestions Dropdown -->
-                <div id="addProductSizeSuggestionsDropdown" style="
-                  display: none;
-                  position: absolute;
-                  top: 100%;
-                  left: 0;
-                  right: 0;
-                  background: white;
-                  border: 1px solid #ddd;
-                  border-top: none;
-                  border-radius: 0 0 8px 8px;
-                  max-height: 200px;
-                  overflow-y: auto;
-                  z-index: 1000;
-                  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                  margin-top: -1px;
-                ">
-                  <!-- Suggestions rendered here -->
-                </div>
-              </div>
-
-
-            </div>
-            <!-- ✅ END of Brand & Size Row -->
-            
-            <!-- Pieces per Box & SFT per Box -->
-            <div class="row mb-0">
-              <div class="col-md-6">
-                <label class="form-label" data-i18n="piecesPerBox">Pieces per Box</label>
-                <input id="piecesPerBox" class="form-control" type="number" value="1"/>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label" data-i18n="sftPerBox">SFT per Box</label>
-                <input id="sftPerBox" class="form-control" type="number" step="0.01"/>
-              </div>
-            </div>
-            
-          </div>
-          
-        </form>
-      </div>
-      
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
-        <button class="btn btn-primary" onclick="saveProduct()" data-i18n="saveProduct">Save Product</button>
-      </div>
-    </div>
+<div class="row mb-3">
+  <div class="col-md-8" id="productNameContainer">
+    <label class="form-label" data-i18n="productName">Product Name *</label>
+    <input id="productName" class="form-control" required/>
+  </div>
+  
+  <!-- ✅ Category with data-field -->
+  <div class="col-md-4" id="categoryContainer" data-field="category">
+    <label class="form-label" data-i18n="category">Category</label>
+    <select id="category" class="form-select">
+      <option value="" data-i18n="selectCategory">Select Category</option>
+    </select>
   </div>
 </div>
+
+<!-- Unit Type, Price, Current Stock -->
+<div class="row mb-3">
+  <!-- ✅ Unit Type with data-field -->
+  <div class="col-md-4" id="unitTypeContainer" data-field="unitType">
+    <label class="form-label" data-i18n="unitType">Unit Type</label>
+    <select id="unitType" class="form-select">
+      <option value="" data-i18n="selectUnitType">Select Unit Type</option>
+    </select>
+  </div>
+  
+  <!-- ✅ Selling Price with data-field -->
+  <div class="col-md-4" id="priceContainer" data-field="sellingPrice">
+    <label class="form-label" data-i18n="sellingPrice">Selling Price</label>
+    <input id="price" class="form-control" type="number" step="0.01" placeholder="0"/>
+  </div>
+  
+  <div class="col-md-4" id="stockContainer">
+    <label class="form-label" data-i18n="currentStock">Current Stock *</label>
+    <input id="productCurrentStock" class="form-control" type="number" min="0" max="9999" data-i18n-placeholder="orSelectStatus" placeholder="Or select status below"/>
+    <small class="text-muted" data-i18n="stockOrStatusRequired">Stock qty OR status required</small>
+  </div>
+</div>
+
+<!-- ✅ Stock Status Selection (ONE OF TWO REQUIRED) -->
+<div class="row mb-3">
+  <div class="col-md-12">
+    <label class="form-label" data-i18n="stockStatus">Stock Status *</label>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+      <!-- Good -->
+      <button type="button" class="btn stock-btn" 
+              id="stockBtn-good" 
+              onclick="selectStockStatus('good')"
+              style="background: #28a745; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
+        🟢 <span data-i18n="good">Good</span>
+      </button>
+      
+      <!-- Medium -->
+      <button type="button" class="btn stock-btn" 
+              id="stockBtn-medium" 
+              onclick="selectStockStatus('medium')"
+              style="background: #ffc107; color: black; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
+        🟡 <span data-i18n="medium">Medium</span>
+      </button>
+      
+      <!-- Low -->
+      <button type="button" class="btn stock-btn" 
+              id="stockBtn-low" 
+              onclick="selectStockStatus('low')"
+              style="background: #dc3545; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
+        🔴 <span data-i18n="low">Low</span>
+      </button>
+      
+      <!-- Urgent -->
+      <button type="button" class="btn stock-btn" 
+              id="stockBtn-urgent" 
+              onclick="selectStockStatus('urgent')"
+              style="background: #6f42c1; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
+        🔵 <span data-i18n="urgent">Urgent</span>
+      </button>
+    </div>
+    
+    <!-- Hidden input to track selected status -->
+    <input type="hidden" id="selectedStockStatus" value="">
+    
+    <!-- ✅ Helper text -->
+    <small class="text-muted" style="display: block; margin-top: 8px;">
+      <i class="bi bi-info-circle"></i> <span data-i18n="stockOrStatusRequired">Either stock quantity or status is required</span>
+    </small>
+  </div>
+</div>
+
+<!-- ✅ MINIMUM STOCK (MOVED HERE - BELOW STOCK STATUS) -->
+<div class="row mb-3">
+  <div class="col-md-12">
+    <label class="form-label" data-i18n="minimumStock">Minimum Stock</label>
+    <input id="minStock" class="form-control" type="number" value="5" style="max-width: 200px;"/>
+    <small class="text-muted"></small>
+  </div>
+</div>
+
+<!-- ✅ ADVANCED OPTIONS (EXPANDABLE) -->
+<div style="margin-bottom: 15px;">
+  <button 
+    type="button" 
+    class="btn btn-link btn-sm" 
+    onclick="toggleAdvancedOptions()"
+    style="padding: 0; text-decoration: none;">
+    <i class="bi bi-chevron-down" id="advOptionsIcon"></i>
+    <span style="color: #007bff; font-weight: 500;" data-i18n="advancedOptions">+ Advanced Options</span>
+  </button>
+</div>
+
+<!-- Advanced Options Container (Hidden by default) -->
+<div id="advancedOptionsContainer" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 15px;">
+  
+  <!-- Brand & Size -->
+  <div class="row mb-3">
+    
+    <!-- ✅ Brand Field with data-field -->
+    <div class="col-md-6" id="brandContainer" style="position: relative;" data-field="brand">
+      <label class="form-label" data-i18n="brand">Brand</label>
+      
+      <!-- Input Field Container -->
+      <div style="position: relative;">
+        <input 
+          id="brand" 
+          class="form-control" 
+          type="text"
+          autocomplete="off"
+          oninput="filterBrandSuggestions(this.value); checkAndShowSaveBrandButton(this.value)"
+          onfocus="showBrandSuggestions()"
+          onblur="setTimeout(() => hideBrandSuggestions(), 200)"
+          data-i18n-placeholder="typeToSearchBrands"
+          placeholder="Type to search brands..."
+          style="padding-right: 40px;">
+        
+        <!-- 💾 Save Brand Button -->
+        <button id="saveBrandInsideBtn" 
+          type="button"
+          onclick="saveNewBrandFromProductField()"
+          data-i18n-title="saveThisBrand"
+          style="
+            display: none;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            z-index: 10;
+          "
+          onmouseover="this.style.background='#218838'"
+          onmouseout="this.style.background='#28a745'"
+          title="Save this brand">
+          💾
+        </button>
+      </div>
+      
+      <!-- Brand Suggestions Dropdown -->
+      <div id="addProductBrandSuggestionsDropdown" style="
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-top: -1px;
+      ">
+        <!-- Suggestions rendered here -->
+      </div>
+    </div>
+    
+    <!-- ✅ Size Field with data-field -->
+    <div class="col-md-6" id="sizeContainer" style="position: relative;" data-field="size">
+      <label class="form-label" data-i18n="size">Size</label>
+      
+      <!-- Input Field Container -->
+      <div style="position: relative;">
+        <input 
+          id="size" 
+          class="form-control" 
+          type="text"
+          autocomplete="off"
+          oninput="filterSizeSuggestions(this.value); checkAndShowSaveSizeButton(this.value)"
+          onfocus="showSizeSuggestions()"
+          onblur="setTimeout(() => hideSizeSuggestions(), 200)"
+          data-i18n-placeholder="typeToSearchSizes"
+          placeholder="Type to search sizes..."
+          style="padding-right: 40px;">
+        
+        <!-- 💾 Save Size Button -->
+        <button id="saveSizeInsideBtn" 
+          type="button"
+          onclick="saveNewSizeFromProductField()"
+          data-i18n-title="saveThisSize"
+          style="
+            display: none;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            z-index: 10;
+          "
+          onmouseover="this.style.background='#0056b3'"
+          onmouseout="this.style.background='#007bff'"
+          title="Save this size">
+          💾
+        </button>
+      </div>
+      
+      <!-- Size Suggestions Dropdown -->
+      <div id="addProductSizeSuggestionsDropdown" style="
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-top: -1px;
+      ">
+        <!-- Suggestions rendered here -->
+      </div>
+    </div>
+
+  </div>
+  <!-- ✅ END of Brand & Size Row -->
+  
+  <!-- Pieces per Box & SFT per Box -->
+  <div class="row mb-0">
+    <!-- ✅ Pieces per Box with data-field -->
+    <div class="col-md-6" id="piecesPerBoxContainer" data-field="piecesPerBox">
+      <label class="form-label" data-i18n="piecesPerBox">Pieces per Box</label>
+      <input id="piecesPerBox" class="form-control" type="number" value="1"/>
+    </div>
+    
+    <!-- ✅ SFT per Box with data-field -->
+    <div class="col-md-6" id="sftPerBoxContainer" data-field="sftPerBox">
+      <label class="form-label" data-i18n="sftPerBox">SFT per Box</label>
+      <input id="sftPerBox" class="form-control" type="number" step="0.01"/>
+    </div>
+  </div>
+  
+</div>
+</form>
+</div>
+
+<div class="modal-footer">
+  <button class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+  <button class="btn btn-primary" onclick="saveProduct()" data-i18n="saveProduct">Save Product</button>
+</div>
+</div>
+</div>
+</div>
+
+
+
 
 
   <!-- SALES MODAL (grid) - WITH TRANSLATION -->
@@ -3521,9 +3736,9 @@ onclick="handleViewSwitchClick(event, 'sales')">
             <div class="col-md-3">
               <label class="form-label">Payment Terms</label>
               <select class="form-select" id="paymentTerms" onchange="calculateDueDate()">
-                <option value="0">Due on Receipt</option>
+                <option value="0" selected>Due on Receipt</option>
                 <option value="7">Net 7</option>
-                <option value="15" selected>Net 15</option>
+                <option value="15">Net 15</option>
                 <option value="30">Net 30</option>
                 <option value="45">Net 45</option>
                 <option value="60">Net 60</option>
@@ -3590,10 +3805,10 @@ onclick="handleViewSwitchClick(event, 'sales')">
                     <select class="form-select form-select-sm d-inline-block" 
                             style="width: 100px" id="invoiceTaxRate" 
                             onchange="calculateInvoiceTotal()">
-                      <option value="0">No Tax</option>
+                      <option value="0" selected>No Tax</option>
                       <option value="5">GST 5%</option>
                       <option value="12">GST 12%</option>
-                      <option value="18" selected>GST 18%</option>
+                      <option value="18">GST 18%</option>
                       <option value="28">GST 28%</option>
                     </select>
                   </td>
@@ -4055,6 +4270,16 @@ let userEmail = null;
 })();
 
 
+// Default settings
+let addProductModalSettings = {
+  showCategory: true,
+  showUnitType: true,
+  showSellingPrice: true,
+  showBrand: true,
+  showSize: true,
+  showPiecesPerBox: true,
+  showSftPerBox: true
+};
 /**
  * ==========================================
  * AUTOFILL MODE - GLOBAL STATE INITIALIZATION
@@ -5930,8 +6155,10 @@ function categoryIconColor(cat){
   const inStockText = translations.inStock || 'IN STOCK';
   return `<span style="background: #a5d6a7; color: #1b5e20; border-color: #2e7d32; ${baseStyle}">${inStockText.toUpperCase()} (${stock})</span>`;
 }
-
-function renderProducts() {
+/**
+ * Render products with custom order (HIDE EMPTY FIELDS)
+ */
+ function renderProducts() {
   const tbody = document.getElementById('productsTableBody');
   
   if (!hasInitialLoaded) {
@@ -5947,7 +6174,13 @@ function renderProducts() {
     
     let html = '';
     orderedProducts.forEach((p, index) => {
-      const priceText = (p.price !== undefined && p.price !== null) ? `₹${parseFloat(p.price).toFixed(2)}/${p.unitType}` : '-';
+      
+      // ✅ Price display - only show if has value
+      let priceText = '<span class="text-muted">-</span>';
+      if (shouldDisplayField(p.price, 'price')) {
+        const unitType = shouldDisplayField(p.unitType) ? p.unitType : '';
+        priceText = `<strong>₹${parseFloat(p.price).toFixed(2)}</strong>${unitType ? '/' + unitType : ''}`;
+      }
       
       // Variant badge
       const variantBadge = p.isGroupVariant ? 
@@ -5968,6 +6201,19 @@ function renderProducts() {
       const isSelected = bulkEditMode.active && bulkEditMode.selectedProducts.includes(p.id);
       const rowClass = isSelected ? 'product-selected' : '';
       
+      // ✅ Conditional field displays
+      const categoryDisplay = shouldDisplayField(p.category) 
+        ? escapeHtml(p.category) 
+        : '<span class="text-muted">-</span>';
+      
+      const brandDisplay = shouldDisplayField(p.brand) 
+        ? escapeHtml(p.brand) 
+        : '<span class="text-muted">-</span>';
+      
+      const sizeDisplay = shouldDisplayField(p.size) 
+        ? `<strong>${escapeHtml(p.size)}</strong>` 
+        : '<span class="text-muted">-</span>';
+      
       // ✅ MAKE ROW CLICKABLE - Add onclick to tr
       html += `<tr class="${rowClass}" 
                    data-product-id="${p.id}" 
@@ -5978,11 +6224,11 @@ function renderProducts() {
                    onmouseout="if(!this.classList.contains('product-selected')) this.style.backgroundColor=''">
         <td style="text-align: center;">${photoHtml}</td>
         <td><strong>${escapeHtml(p.name)}</strong>${variantBadge}</td>
-        <td>${escapeHtml(p.category || '')}</td>
-        <td>${escapeHtml(p.brand || '')}</td>
-        <td><strong>${escapeHtml(p.size || '')}</strong></td>
+        <td>${categoryDisplay}</td>
+        <td>${brandDisplay}</td>
+        <td>${sizeDisplay}</td>
         <td data-field="stock">${stockBadgeHtml(p.stock, p.minStock)}</td>
-        <td><strong>${priceText}</strong></td>
+        <td>${priceText}</td>
         <td onclick="event.stopPropagation()">
           <button class="btn btn-sm btn-primary btn-action-sm me-1" onclick="editProduct('${p.id}', ${p.isGroupVariant})"><i class="bi bi-pencil"></i> Edit</button>
           <button class="btn btn-sm btn-danger btn-action-sm" onclick="deleteProduct('${p.id}', ${p.isGroupVariant})"><i class="bi bi-trash"></i> Delete</button>
@@ -5996,7 +6242,7 @@ function renderProducts() {
     }
   }
   
-  // ✅ MOBILE LIST - Make cards clickable
+  // ✅ MOBILE LIST - Make cards clickable (HIDE EMPTY FIELDS)
   const container = document.getElementById('mobileProductsList');
   if (!hasInitialLoaded) { 
     container.innerHTML = `<div class="mobile-item text-center"><div class="spinner-border"></div><div class="mt-2 text-muted">Loading inventory…</div></div>`; 
@@ -6024,6 +6270,26 @@ function renderProducts() {
       const isSelected = bulkEditMode.active && bulkEditMode.selectedProducts.includes(p.id);
       const cardClass = isSelected ? 'product-selected' : '';
       
+      // ✅ Build info line (only non-empty fields)
+      let infoLine = [];
+      if (shouldDisplayField(p.category)) infoLine.push(escapeHtml(p.category));
+      if (shouldDisplayField(p.brand)) infoLine.push(escapeHtml(p.brand));
+      const infoLineHTML = infoLine.length > 0 
+        ? `<div class="small-muted">${infoLine.join(' • ')}</div>` 
+        : '';
+      
+      // ✅ Size line
+      const sizeLineHTML = shouldDisplayField(p.size) 
+        ? `<div class="small-muted"><strong>${escapeHtml(p.size)}</strong></div>` 
+        : '';
+      
+      // ✅ Price line
+      let priceLineHTML = '';
+      if (shouldDisplayField(p.price, 'price')) {
+        const unitType = shouldDisplayField(p.unitType) ? p.unitType : '';
+        priceLineHTML = `<div style="margin-top:8px;"><strong>₹${parseFloat(p.price).toFixed(2)}</strong>${unitType ? '/' + unitType : ''}</div>`;
+      }
+      
       // ✅ MAKE CARD CLICKABLE - Add onclick to mobile-item div
       html += `<div class="mobile-item ${cardClass} d-flex align-items-start justify-content-between" 
                     data-product-id="${p.id}" 
@@ -6040,9 +6306,9 @@ function renderProducts() {
           <div style="flex:1;">
             <div style="font-weight:600;font-size:1rem;margin-bottom:4px;">${escapeHtml(p.name)}</div>
             ${variantBadge}
-            <div class="small-muted">${escapeHtml(p.category || '')} • ${escapeHtml(p.brand || '')}</div>
-            <div class="small-muted"><strong>${escapeHtml(p.size || '')}</strong></div>
-            <div style="margin-top:8px;"><strong>₹${parseFloat(p.price || 0).toFixed(2)}</strong>/${p.unitType}</div>
+            ${infoLineHTML}
+            ${sizeLineHTML}
+            ${priceLineHTML}
             <div style="margin-top:8px;" data-field="stock">${stockBadgeHtml(p.stock, p.minStock)}</div>
           </div>
         </div>
@@ -6063,6 +6329,8 @@ function renderProducts() {
   
   updateSummaryFromCache();
   loadProductsForSaleFromCache();
+  
+  console.log('✅ Products rendered (empty fields hidden)');
 }
 
 
@@ -11011,7 +11279,7 @@ console.log('✅ Backup & Restore System Loaded');
 }
 /**
  * ==========================================
- * DISPLAY PRODUCTS - DESKTOP & MOBILE (WITH CUSTOM ORDER)
+ * DISPLAY PRODUCTS - DESKTOP & MOBILE (HIDE EMPTY FIELDS)
  * ==========================================
  */
  function displayProducts(products) {
@@ -11067,15 +11335,35 @@ console.log('✅ Backup & Restore System Loaded');
                 <i class="bi bi-image" style="font-size: 1.8rem; color: white;"></i>
                </div>`;
        
+        // ✅ Conditional field display
+        const categoryDisplay = shouldDisplayField(product.category) 
+            ? escapeHtml(product.category) 
+            : '<span class="text-muted">-</span>';
+        
+        const brandDisplay = shouldDisplayField(product.brand) 
+            ? escapeHtml(product.brand) 
+            : '<span class="text-muted">-</span>';
+        
+        const sizeDisplay = shouldDisplayField(product.size) 
+            ? `<strong>${escapeHtml(product.size)}</strong>` 
+            : '<span class="text-muted">-</span>';
+        
+        // ✅ Price and unit type - only show if price has value
+        let priceDisplay = '<span class="text-muted">-</span>';
+        if (shouldDisplayField(product.price, 'price')) {
+            const unitType = shouldDisplayField(product.unitType) ? product.unitType : '';
+            priceDisplay = `<strong>₹${parseFloat(product.price).toFixed(2)}</strong>${unitType ? '/' + unitType : ''}`;
+        }
+       
         html += `
             <tr data-product-id="${product.id}">
                 <td>${photoHtml}</td>
                 <td><strong>${escapeHtml(product.name)}</strong></td>
-                <td>${escapeHtml(product.category)}</td>
-                <td>${escapeHtml(product.brand) || '-'}</td>
-                <td><strong>${escapeHtml(product.size) || ''}</strong></td>
+                <td>${categoryDisplay}</td>
+                <td>${brandDisplay}</td>
+                <td>${sizeDisplay}</td>
                 <td>${stockBadge}</td>
-                <td><strong>₹${product.price.toFixed(2)}</strong>/${product.unitType}</td>
+                <td>${priceDisplay}</td>
                 <td>
                     <button class="btn btn-sm btn-primary btn-action-sm me-1" onclick="editProduct('${product.id}')">
                         <i class="bi bi-pencil"></i> Edit
@@ -11109,6 +11397,26 @@ console.log('✅ Backup & Restore System Loaded');
             : `<div style="width: 70px; height: 70px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
                 <i class="bi bi-image" style="font-size: 2.2rem; color: white;"></i>
                </div>`;
+        
+        // ✅ Build product info line (only show non-empty fields)
+        let infoLine = [];
+        if (shouldDisplayField(p.category)) infoLine.push(escapeHtml(p.category));
+        if (shouldDisplayField(p.brand)) infoLine.push(escapeHtml(p.brand));
+        const infoLineHTML = infoLine.length > 0 
+            ? `<div class="small-muted">${infoLine.join(' • ')}</div>` 
+            : '';
+        
+        // ✅ Size line (only if has value)
+        const sizeLineHTML = shouldDisplayField(p.size) 
+            ? `<div class="small-muted"><strong>${escapeHtml(p.size)}</strong></div>` 
+            : '';
+        
+        // ✅ Price line (only if has value)
+        let priceLineHTML = '';
+        if (shouldDisplayField(p.price, 'price')) {
+            const unitType = shouldDisplayField(p.unitType) ? p.unitType : '';
+            priceLineHTML = `<div style="margin-top:8px;"><strong>₹${parseFloat(p.price).toFixed(2)}</strong>${unitType ? '/' + unitType : ''}</div>`;
+        }
        
         mobileHtml += `
             <div class="mobile-item d-flex align-items-start justify-content-between" style="gap: 1rem; position: relative;" data-product-id="${p.id}">
@@ -11123,9 +11431,9 @@ console.log('✅ Backup & Restore System Loaded');
                     </div>
                     <div style="flex:1;">
                         <div style="font-weight:600;font-size:1rem;margin-bottom:4px;">${escapeHtml(p.name)}</div>
-                        <div class="small-muted">${escapeHtml(p.category)} • ${escapeHtml(p.brand) || 'No Brand'}</div>
-                        <div class="small-muted"><strong>${escapeHtml(p.size) || ''}</strong></div>
-                        <div style="margin-top:8px;"><strong>₹${parseFloat(p.price || 0).toFixed(2)}</strong>/${p.unitType}</div>
+                        ${infoLineHTML}
+                        ${sizeLineHTML}
+                        ${priceLineHTML}
                         <div style="margin-top:8px;">${stockBadge}</div>
                     </div>
                 </div>
@@ -11145,7 +11453,7 @@ console.log('✅ Backup & Restore System Loaded');
    
     mobileContainer.innerHTML = mobileHtml;
    
-    console.log(`✅ Displayed ${products.length} products`);
+    console.log(`✅ Displayed ${products.length} products (empty fields hidden)`);
    
     // ✅ CRITICAL FIX: Re-enable bulk edit selection if active
     if (bulkEditMode.active) {
@@ -17675,6 +17983,124 @@ function escapeHtml(text) {
 }
 
 /**
+ * Navigate to Settings Page
+ */
+ function navigateToSettings() {
+  console.log('⚙️ Navigating to Settings');
+  
+  currentPage = 'settings';
+  
+  // Get page elements
+  const mainApp = document.getElementById('mainApp');
+  const allProductsPage = document.getElementById('allProductsPage');
+  const productGroupsPage = document.getElementById('productGroupsPage');
+  const customersPage = document.getElementById('customersPage');
+  const groupDetailPage = document.getElementById('groupDetailPage');
+  const brandsPage = document.getElementById('brandsPage');
+  const sizesPage = document.getElementById('sizesPage');
+  const categoriesPage = document.getElementById('categoriesPage');
+  const unitTypesPage = document.getElementById('unitTypesPage');
+  const vendorsPage = document.getElementById('vendorsPage');
+  const invoiceCustomersPage = document.getElementById('invoiceCustomersPage');
+  const settingsPage = document.getElementById('settingsPage');
+  
+  // Hide all other pages
+  if (mainApp) {
+    mainApp.style.display = 'none';
+    mainApp.classList.remove('active');
+  }
+  
+  if (allProductsPage) {
+    allProductsPage.classList.remove('active');
+    allProductsPage.style.display = 'none';
+  }
+  
+  if (productGroupsPage) {
+    productGroupsPage.classList.remove('active');
+    productGroupsPage.style.display = 'none';
+  }
+  
+  if (customersPage) {
+    customersPage.classList.remove('active');
+    customersPage.style.display = 'none';
+  }
+  
+  if (groupDetailPage) {
+    groupDetailPage.classList.remove('active');
+    groupDetailPage.style.display = 'none';
+  }
+  
+  if (brandsPage) {
+    brandsPage.classList.remove('active');
+    brandsPage.style.display = 'none';
+  }
+  
+  if (sizesPage) {
+    sizesPage.classList.remove('active');
+    sizesPage.style.display = 'none';
+  }
+  
+  if (categoriesPage) {
+    categoriesPage.classList.remove('active');
+    categoriesPage.style.display = 'none';
+  }
+  
+  if (unitTypesPage) {
+    unitTypesPage.classList.remove('active');
+    unitTypesPage.style.display = 'none';
+  }
+  
+  if (vendorsPage) {
+    vendorsPage.classList.remove('active');
+    vendorsPage.style.display = 'none';
+  }
+  
+  if (invoiceCustomersPage) {
+    invoiceCustomersPage.classList.remove('active');
+    invoiceCustomersPage.style.display = 'none';
+  }
+  
+  // ✅ Hide main app navbar (like Brands page does)
+  const mainNavbar = document.getElementById('mainAppNavbar');
+  if (mainNavbar) {
+    mainNavbar.style.display = 'none';
+    console.log('✅ Hidden main app navbar');
+  }
+  
+  // Also hide by class selector as backup
+  const stickyNavbar = document.querySelector('.navbar.sticky-top');
+  if (stickyNavbar) {
+    stickyNavbar.style.display = 'none';
+    console.log('✅ Hidden sticky navbar');
+  }
+  
+  // Show settings page
+  if (settingsPage) {
+    settingsPage.classList.add('active');
+    settingsPage.style.display = 'block';
+    settingsPage.style.marginTop = '0';
+    settingsPage.style.paddingTop = '0';
+    console.log('✅ Settings page displayed');
+  } else {
+    console.error('❌ settingsPage element not found!');
+    return;
+  }
+  
+  // Close sidebar and scroll
+  if (typeof closeSidebar === 'function') {
+    closeSidebar();
+  }
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  console.log('✅ Settings displayed');
+}
+
+// Make it global
+window.navigateToSettings = navigateToSettings;
+
+
+/**
  * ==========================================
  * BRAND AUTOCOMPLETE SYSTEM - FIREBASE VERSION
  * ==========================================
@@ -19345,13 +19771,7 @@ async function createProductGroup(groupData) {
 
 
 
-
-
-
-/**
- * Navigate to Home
- */
- function navigateToHome() {
+function navigateToHome() {
   console.log('🏠 Navigating to Home');
   
   currentPage = 'home';
@@ -19367,6 +19787,7 @@ async function createProductGroup(groupData) {
   const unitTypesPage = document.getElementById('unitTypesPage');
   const vendorsPage = document.getElementById('vendorsPage'); 
   const invoiceCustomersPage = document.getElementById('invoiceCustomersPage');
+  const settingsPage = document.getElementById('settingsPage'); // ✅ ADD THIS
   
   // Show main app
   if (mainApp) mainApp.style.display = 'block';
@@ -19408,6 +19829,11 @@ async function createProductGroup(groupData) {
     invoiceCustomersPage.classList.remove('active');
     invoiceCustomersPage.style.display = 'none';
   }
+  // ✅ ADD THIS
+  if (settingsPage) {
+    settingsPage.classList.remove('active');
+    settingsPage.style.display = 'none';
+  }
   if (groupDetailPage) {
     groupDetailPage.classList.remove('active');
     groupDetailPage.style.display = 'none';
@@ -19444,51 +19870,68 @@ async function createProductGroup(groupData) {
   console.log('✅ Home displayed');
 }
 
+
 // Make it global
 window.navigateToHome = navigateToHome;
 
- 
 /**
  * ==========================================
  * CENTRALIZED NAVIGATION FUNCTION - UPDATED
  * ==========================================
- */
- /**
- * Centralized navigation function
  */
  function navigateTo(page) {
   console.log('🔷 navigateTo called with:', page);
   
   if (page === 'dashboard') {
     navigateToHome();
-  } else if (page === 'allProducts') {
+  } 
+  else if (page === 'allProducts') {
     navigateToAllProducts();
-  } else if (page === 'customers') {
+  } 
+  else if (page === 'customers') {
     navigateToCustomers();
-  } else if (page === 'productGroups') {
+  } 
+  else if (page === 'productGroups') {
     navigateToProductGroups();
-  } else if (page === 'brands') {
+  } 
+  else if (page === 'brands') {
     navigateToBrands();
-  } else if (page === 'sizes') {
+  } 
+  else if (page === 'sizes') {
     navigateToSizes();
-  } else if (page === 'categories') {
+  } 
+  else if (page === 'categories') {
     navigateToCategories();
-  } else if (page === 'unitTypes') {
+  } 
+  else if (page === 'unitTypes') {
     navigateToUnitTypes();
-  } else if (page === 'vendor') {
+  } 
+  else if (page === 'vendor') {
     navigateToVendors();
-  } else if (page === 'invoiceCustomer' || page === 'invoiceCustomers') {  // ✅ ADD THIS
+  } 
+  else if (page === 'invoiceCustomer' || page === 'invoiceCustomers') {
     navigateToInvoiceCustomers();
-  } else if (page === 'sales') {
+  } 
+  else if (page === 'sales') {
     navigateToSales();
-  } else if (page === 'purchases') {
+  } 
+  else if (page === 'purchases') {
     navigateToPurchases();
-  } else if (page === 'invoices') {
+  } 
+  else if (page === 'invoices') {
     window.location.href = 'invoices.html';
-  } else {
+  }
+  else if (page === 'settings') {
+    // ✅ Navigate to settings page (not modal)
+    navigateToSettings();
+  }
+  else {
     console.error('❌ Unknown page:', page);
   }
 }
+
+// Make global
+window.navigateTo = navigateTo;
 
 
 
@@ -20938,9 +21381,8 @@ function removePendingInstantProduct(index) {
   updateInstantProductPreview();
   console.log('🗑️ Removed product at index:', index);
 }
-
 /**
- * Save all instant products to Firebase - WITH TRANSLATION
+ * Save all instant products to Firebase - CLEAN VERSION (NO DEFAULT VALUES)
  */
  async function saveAllInstantProducts() {
   const lang = window.currentLanguage || 'en';
@@ -20991,17 +21433,22 @@ function removePendingInstantProduct(index) {
       const newProductRef = doc(productsCollectionRef);
       const productId = newProductRef.id;
       
-      // Create product data with stock
+      // ✅ NEW: Create product data WITHOUT default values
+      // Only include fields that have actual values
       const productData = {
         id: productId,
         name: productName,
-        category: translations.uncategorized || '',
-        brand: translations.notApplicable || '',
-        size: translations.notApplicable || '',
-        unitType: translations.piece || 'Piece',
-        piecesPerBox: 1,
-        sftPerBox: 0,
-        price: 0,
+        
+        // ✅ EMPTY VALUES - will be hidden in display
+        category: '',           // Empty instead of "Uncategorized"
+        brand: '',              // Empty instead of "N/A"
+        size: '',               // Empty instead of "N/A"
+        unitType: '',           // Empty instead of "Piece"
+        piecesPerBox: null,     // Null instead of 1
+        sftPerBox: null,        // Null instead of 0
+        price: null,            // Null instead of 0
+        
+        // ✅ ACTUAL VALUES
         stock: stockValue,
         minStock: 5,
         imageUrl: '',
@@ -21050,6 +21497,41 @@ function removePendingInstantProduct(index) {
     loadProducts();
   }
 }
+
+
+/**
+ * ==========================================
+ * 🎨 DISPLAY HELPERS - HIDE EMPTY FIELDS
+ * ==========================================
+ */
+
+/**
+ * Check if a field value should be displayed
+ */
+function shouldDisplayField(value, fieldType = 'text') {
+  if (value === null || value === undefined) return false;
+  
+  const strValue = String(value).trim().toLowerCase();
+  if (strValue === '') return false;
+  
+  const emptyValues = ['n/a', 'na', 'not applicable', 'uncategorized', 'piece', 'pieces', 'none', 'null', 'undefined', '-'];
+  if (emptyValues.includes(strValue)) return false;
+  
+  if (fieldType === 'number') {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue === 0) return false;
+  }
+  
+  if (fieldType === 'price') {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue === 0 || numValue === 0.00) return false;
+  }
+  
+  return true;
+}
+
+console.log('✅ Display helper functions loaded');
+
 /**
  * Switch between Product and Stock modes - WITH TRANSLATION
  */
@@ -33054,6 +33536,328 @@ window.showAutofillCompleteToast = showAutofillCompleteToast;
 window.showInlineButtons = showInlineButtons;
 window.hideInlineButtons = hideInlineButtons;
 
+/**
+ * ==========================================
+ * 🔧 ADD PRODUCT MODAL SETTINGS
+ * ==========================================
+ */
+
+
+
+/**
+ * Load settings from Firestore
+ */
+async function loadAddProductModalSettings() {
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) return;
+    
+    const { doc, getDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    const settingsRef = doc(window.db, 'tenants', userId, 'settings', 'addProductModal');
+    const settingsDoc = await getDoc(settingsRef);
+    
+    if (settingsDoc.exists()) {
+      addProductModalSettings = settingsDoc.data();
+      console.log('✅ Loaded Add Product Modal settings:', addProductModalSettings);
+    } else {
+      console.log('ℹ️ No settings found, using defaults');
+    }
+    
+    // Apply settings
+    applyAddProductModalSettings();
+    
+  } catch (error) {
+    console.error('❌ Error loading settings:', error);
+  }
+}
+
+/**
+ * Save settings to Firestore
+ */
+async function saveAddProductModalSettingsToFirestore() {
+  try {
+    const user = window.auth?.currentUser;
+    if (!user) {
+      console.error('❌ No user signed in');
+      return false;
+    }
+    
+    const { doc, setDoc } = window.firebaseImports;
+    const userId = user.uid;
+    
+    const settingsRef = doc(window.db, 'tenants', userId, 'settings', 'addProductModal');
+    
+    await setDoc(settingsRef, {
+      ...addProductModalSettings,
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log('✅ Settings saved to Firestore:', addProductModalSettings);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Error saving settings:', error);
+    return false;
+  }
+}
+
+/**
+ * Apply settings to modal
+ */
+function applyAddProductModalSettings() {
+  console.log('🎨 Applying Add Product Modal settings...');
+  
+  // Category
+  const categoryContainer = document.querySelector('[data-field="category"]');
+  if (categoryContainer) {
+    categoryContainer.style.display = addProductModalSettings.showCategory ? '' : 'none';
+  }
+  
+  // Unit Type
+  const unitTypeContainer = document.querySelector('[data-field="unitType"]');
+  if (unitTypeContainer) {
+    unitTypeContainer.style.display = addProductModalSettings.showUnitType ? '' : 'none';
+  }
+  
+  // Selling Price
+  const priceContainer = document.querySelector('[data-field="sellingPrice"]');
+  if (priceContainer) {
+    priceContainer.style.display = addProductModalSettings.showSellingPrice ? '' : 'none';
+  }
+  
+  // Brand
+  const brandContainer = document.querySelector('[data-field="brand"]');
+  if (brandContainer) {
+    brandContainer.style.display = addProductModalSettings.showBrand ? '' : 'none';
+  }
+  
+  // Size
+  const sizeContainer = document.querySelector('[data-field="size"]');
+  if (sizeContainer) {
+    sizeContainer.style.display = addProductModalSettings.showSize ? '' : 'none';
+  }
+  
+  // Pieces per Box
+  const piecesContainer = document.querySelector('[data-field="piecesPerBox"]');
+  if (piecesContainer) {
+    piecesContainer.style.display = addProductModalSettings.showPiecesPerBox ? '' : 'none';
+  }
+  
+  // SFT per Box
+  const sftContainer = document.querySelector('[data-field="sftPerBox"]');
+  if (sftContainer) {
+    sftContainer.style.display = addProductModalSettings.showSftPerBox ? '' : 'none';
+  }
+  
+  // Adjust column sizes dynamically
+  adjustProductModalColumns();
+  
+  console.log('✅ Settings applied');
+}
+
+/**
+ * Adjust column sizes based on visible fields
+ */
+function adjustProductModalColumns() {
+  // First row: Product Name + Category
+  const productNameContainer = document.getElementById('productNameContainer');
+  const categoryContainer = document.querySelector('[data-field="category"]');
+  
+  if (productNameContainer && categoryContainer) {
+    if (addProductModalSettings.showCategory) {
+      productNameContainer.className = 'col-md-8';
+      categoryContainer.className = 'col-md-4';
+    } else {
+      productNameContainer.className = 'col-md-12';
+    }
+  }
+  
+  // Second row: Unit Type, Price, Stock
+  const unitTypeContainer = document.querySelector('[data-field="unitType"]');
+  const priceContainer = document.querySelector('[data-field="sellingPrice"]');
+  const stockContainer = document.getElementById('stockContainer');
+  
+  let visibleCount = 0;
+  if (addProductModalSettings.showUnitType) visibleCount++;
+  if (addProductModalSettings.showSellingPrice) visibleCount++;
+  visibleCount++; // Stock is always visible
+  
+  const colClass = visibleCount === 1 ? 'col-md-12' : visibleCount === 2 ? 'col-md-6' : 'col-md-4';
+  
+  if (unitTypeContainer) unitTypeContainer.className = addProductModalSettings.showUnitType ? colClass : 'col-md-4 d-none';
+  if (priceContainer) priceContainer.className = addProductModalSettings.showSellingPrice ? colClass : 'col-md-4 d-none';
+  if (stockContainer) stockContainer.className = colClass;
+  
+  // Advanced options: Brand & Size
+  const brandContainer = document.querySelector('[data-field="brand"]');
+  const sizeContainer = document.querySelector('[data-field="size"]');
+  
+  if (brandContainer && sizeContainer) {
+    const showBrand = addProductModalSettings.showBrand;
+    const showSize = addProductModalSettings.showSize;
+    
+    if (showBrand && showSize) {
+      brandContainer.className = 'col-md-6';
+      sizeContainer.className = 'col-md-6';
+    } else if (showBrand && !showSize) {
+      brandContainer.className = 'col-md-12';
+    } else if (!showBrand && showSize) {
+      sizeContainer.className = 'col-md-12';
+    }
+  }
+  
+  // Pieces per Box & SFT per Box
+  const piecesContainer = document.querySelector('[data-field="piecesPerBox"]');
+  const sftContainer = document.querySelector('[data-field="sftPerBox"]');
+  
+  if (piecesContainer && sftContainer) {
+    const showPieces = addProductModalSettings.showPiecesPerBox;
+    const showSft = addProductModalSettings.showSftPerBox;
+    
+    if (showPieces && showSft) {
+      piecesContainer.className = 'col-md-6';
+      sftContainer.className = 'col-md-6';
+    } else if (showPieces && !showSft) {
+      piecesContainer.className = 'col-md-12';
+    } else if (!showPieces && showSft) {
+      sftContainer.className = 'col-md-12';
+    }
+  }
+}
+
+/**
+ * Open settings modal
+ */
+function openSettingsModal() {
+  console.log('🔧 Opening settings modal');
+  new bootstrap.Modal(document.getElementById('settingsModal')).show();
+}
+
+/**
+ * Open Add Product Modal Settings
+ */
+ function openAddProductModalSettings() {
+  console.log('📦 Opening Add Product Modal Settings');
+  
+  // Check if modal exists
+  const modal = document.getElementById('addProductModalSettingsModal');
+  if (!modal) {
+    console.error('❌ Modal not found!');
+    alert('Settings modal not found. Please refresh the page.');
+    return;
+  }
+  
+  // ✅ Load current settings into checkboxes (NO name attribute issues)
+  const checkboxes = {
+    showCategoryField: document.getElementById('showCategoryField'),
+    showUnitTypeField: document.getElementById('showUnitTypeField'),
+    showSellingPriceField: document.getElementById('showSellingPriceField'),
+    showBrandField: document.getElementById('showBrandField'),
+    showSizeField: document.getElementById('showSizeField'),
+    showPiecesPerBoxField: document.getElementById('showPiecesPerBoxField'),
+    showSftPerBoxField: document.getElementById('showSftPerBoxField')
+  };
+  
+  // Check if all checkboxes exist
+  const missingCheckboxes = Object.keys(checkboxes).filter(key => !checkboxes[key]);
+  if (missingCheckboxes.length > 0) {
+    console.error('❌ Missing checkboxes:', missingCheckboxes);
+    alert('Some settings are missing. Please refresh.');
+    return;
+  }
+  
+  // ✅ Set checkbox states (multiple can be true)
+  checkboxes.showCategoryField.checked = addProductModalSettings.showCategory !== false;
+  checkboxes.showUnitTypeField.checked = addProductModalSettings.showUnitType !== false;
+  checkboxes.showSellingPriceField.checked = addProductModalSettings.showSellingPrice !== false;
+  checkboxes.showBrandField.checked = addProductModalSettings.showBrand !== false;
+  checkboxes.showSizeField.checked = addProductModalSettings.showSize !== false;
+  checkboxes.showPiecesPerBoxField.checked = addProductModalSettings.showPiecesPerBox !== false;
+  checkboxes.showSftPerBoxField.checked = addProductModalSettings.showSftPerBox !== false;
+  
+  console.log('✅ Loaded settings:', addProductModalSettings);
+  console.log('✅ Checkbox states:', {
+    category: checkboxes.showCategoryField.checked,
+    unitType: checkboxes.showUnitTypeField.checked,
+    price: checkboxes.showSellingPriceField.checked,
+    brand: checkboxes.showBrandField.checked,
+    size: checkboxes.showSizeField.checked,
+    pieces: checkboxes.showPiecesPerBoxField.checked,
+    sft: checkboxes.showSftPerBoxField.checked
+  });
+  
+  // Show modal
+  new bootstrap.Modal(modal).show();
+  console.log('✅ Modal opened');
+}
+
+// Ensure it's global
+window.openAddProductModalSettings = openAddProductModalSettings;
+
+
+/**
+ * Save Add Product Modal Settings
+ */
+async function saveAddProductModalSettings() {
+  const lang = window.currentLanguage || 'en';
+  const translations = window.translations[lang];
+  
+  console.log('💾 Saving Add Product Modal settings...');
+  
+  // Get checkbox values
+  addProductModalSettings = {
+    showCategory: document.getElementById('showCategoryField').checked,
+    showUnitType: document.getElementById('showUnitTypeField').checked,
+    showSellingPrice: document.getElementById('showSellingPriceField').checked,
+    showBrand: document.getElementById('showBrandField').checked,
+    showSize: document.getElementById('showSizeField').checked,
+    showPiecesPerBox: document.getElementById('showPiecesPerBoxField').checked,
+    showSftPerBox: document.getElementById('showSftPerBoxField').checked
+  };
+  
+  console.log('📝 New settings:', addProductModalSettings);
+  
+  // Save to Firestore
+  const success = await saveAddProductModalSettingsToFirestore();
+  
+  if (success) {
+    // Apply settings immediately
+    applyAddProductModalSettings();
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModalSettingsModal'));
+    if (modal) modal.hide();
+    
+    // Show success message
+    if (typeof showSyncIndicator === 'function') {
+      showSyncIndicator(translations.settingsSaved || 'Settings saved', 1500);
+    } else {
+      alert(translations.settingsSaved || '✅ Settings saved successfully!');
+    }
+  } else {
+    alert(translations.settingsSaveFailed || '❌ Failed to save settings. Please try again.');
+  }
+}
+
+/**
+ * Initialize settings on page load
+ */
+window.addEventListener('DOMContentLoaded', () => {
+  // Load settings after auth is ready
+  if (window.auth?.currentUser) {
+    loadAddProductModalSettings();
+  }
+});
+
+// Make functions global
+window.openSettingsModal = openSettingsModal;
+window.openAddProductModalSettings = openAddProductModalSettings;
+window.saveAddProductModalSettings = saveAddProductModalSettings;
+window.applyAddProductModalSettings = applyAddProductModalSettings;
+
+console.log('✅ Add Product Modal Settings functions loaded');
 
 
   </script>
@@ -34216,6 +35020,11 @@ onmouseout="this.style.background='#dc3545'; this.style.transform='scale(1)'; th
       </div>
     </div>
     
+
+
+
+
+
 
 
   
